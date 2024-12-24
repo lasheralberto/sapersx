@@ -34,7 +34,7 @@ class SAPExpertProfile extends StatelessWidget {
 
   Widget _buildExperienceSection(context) {
     return Card(
-       color: AppStyles().getCardColor(context),
+      color: AppStyles().getCardColor(context),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
@@ -132,7 +132,8 @@ class SAPExpertProfile extends StatelessWidget {
                   );
                 }
 
-                final reviews = snapshot.data!.docs.first['reviews'] as List;
+                final reviews =
+                    snapshot.data?.docs.first['reviews'] as List? ?? [];
 
                 return ListView.separated(
                   shrinkWrap: true,

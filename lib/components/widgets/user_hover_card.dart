@@ -3,7 +3,6 @@ import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/user.dart';
 
-import 'package:sapers/components/widgets/profile_header.dart';
 
 class UserHoverCard extends StatelessWidget {
   final UserInfoPopUp? profile;

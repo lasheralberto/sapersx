@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:random_avatar/random_avatar.dart';
-import 'package:sapers/components/widgets/profile_header.dart';
 import 'package:sapers/models/styles.dart';
 
 class ProfileAvatar extends StatelessWidget {

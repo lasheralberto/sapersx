@@ -19,7 +19,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   String _selectedModule = 'FI';
-  bool _isQuestion = false;
+  final bool _isQuestion = false;
   AppStyles styles = AppStyles();
   List<PlatformFile> selectedFiles = [];
   String postId = '';
@@ -205,7 +205,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
 
                       setState(() {
                         postId = DateTime.now().toString();
-                        replyId = UtilsSapers().getReplyId();
+                        replyId = UtilsSapers().getReplyId(context);
                       });
 
                       if (selectedFiles.isNotEmpty) {

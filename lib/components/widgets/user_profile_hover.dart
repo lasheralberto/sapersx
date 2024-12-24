@@ -85,8 +85,9 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
   }
 
   void _showHoverCard() {
-    if (_isLoading || user == null)
+    if (_isLoading || user == null) {
       return; // No mostrar si está cargando o no hay usuario
+    }
 
     _removeOverlay();
 

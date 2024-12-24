@@ -8,8 +8,7 @@ import 'package:sapers/models/texts.dart';
 class TextEditorWithCode extends StatefulWidget {
   final TextEditingController textController;
 
-  const TextEditorWithCode({Key? key, required this.textController})
-      : super(key: key);
+  const TextEditorWithCode({super.key, required this.textController});
 
   @override
   _TextEditorWithCodeState createState() => _TextEditorWithCodeState();
@@ -17,7 +16,7 @@ class TextEditorWithCode extends StatefulWidget {
 
 class _TextEditorWithCodeState extends State<TextEditorWithCode> {
   bool _isCodeMode = false;
-  bool _isDarkMode = false;
+  final bool _isDarkMode = false;
   final TextEditingController _formattedController = TextEditingController();
   final double _minHeight = 100.0; // Altura mínima inicial
   final double _maxHeight = 500.0; // Altura máxima permitida

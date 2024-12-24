@@ -32,13 +32,13 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
     super.initState();
 
     _animationController = AnimationController(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
 
     _offsetAnimation = Tween<Offset>(
-      begin: Offset(-1, -1), // Comienza fuera de la pantalla (arriba)
-      end: Offset(-1, -1.1), // Finaliza en el centro
+      begin: const Offset(-1, -1), // Comienza fuera de la pantalla (arriba)
+      end: const Offset(-1, -1.1), // Finaliza en el centro
     ).animate(CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeOut,
@@ -47,7 +47,7 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
 
   void _showAttachmentsList() {
     _overlayEntry = _createOverlayEntry();
-    Overlay.of(context)!.insert(_overlayEntry!);
+    Overlay.of(context).insert(_overlayEntry!);
     _animationController
         .forward(); // Inicia la animación cuando aparece el overlay
   }
@@ -212,9 +212,9 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
             color: Colors.grey[100],
             borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Icon(
                 Icons.attach_file,
                 size: 18,

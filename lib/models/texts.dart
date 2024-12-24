@@ -45,9 +45,13 @@ class Texts {
       'seguir':'Seguir',
       'unfollow':'Dejar de seguir',
       'experiencia':'Experiencia',
-      'reviews':'Reseñas'
+      'reviews':'Reseñas',
+      'feedGeneralTab':'General',
+      'FollowingTab':'Siguiendo',
+      'noposts':'No hay publicaciones disponibles',
     },
     'en': {
+
       'addAttachment': 'Add attachment',
       'attachments': 'Attachments',
       'givestar': 'Recognize',
@@ -90,7 +94,10 @@ class Texts {
       'seguir':'Follow',
       'unfollow':'Unfollow',
       'experiencia':'Experience',
-      'reviews':'Reviews'
+      'reviews':'Reviews',
+      'feedGeneralTab':'General',
+      'FollowingTab':'Following',
+      'noposts':'No posts available',
     },
   };
 

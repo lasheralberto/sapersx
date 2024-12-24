@@ -30,7 +30,8 @@ class _AttachmentsViewerState extends State<AttachmentsViewer>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300), // Tiempo rápido para la animación
+      duration:
+          const Duration(milliseconds: 300), // Tiempo rápido para la animación
       vsync: this,
     );
 
@@ -45,7 +46,7 @@ class _AttachmentsViewerState extends State<AttachmentsViewer>
 
   void _showAttachmentsList() {
     _overlayEntry = _createOverlayEntry();
-    Overlay.of(context)!.insert(_overlayEntry!);
+    Overlay.of(context).insert(_overlayEntry!);
     _animationController
         .forward(); // Inicia la animación cuando aparece el overlay
   }

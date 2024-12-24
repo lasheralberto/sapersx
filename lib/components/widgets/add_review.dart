@@ -6,7 +6,7 @@ import 'package:sapers/models/styles.dart';
 class AddReviewDialog extends StatefulWidget {
   final String username; // Nombre del usuario al que se le añadirá la reseña
 
-  const AddReviewDialog({Key? key, required this.username}) : super(key: key);
+  const AddReviewDialog({super.key, required this.username});
 
   @override
   State<AddReviewDialog> createState() => _AddReviewDialogState();
@@ -53,9 +53,9 @@ class _AddReviewDialogState extends State<AddReviewDialog> {
               const SizedBox(height: 16),
               TextField(
                 controller: _reviewController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Escribe un comentario',
-                  border: const OutlineInputBorder(),
+                  border: OutlineInputBorder(),
                 ),
                 maxLines: 4,
               ),

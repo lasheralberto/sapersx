@@ -1,5 +1,7 @@
 // firebase_service.dart
 
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,8 +15,12 @@ import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
 import 'package:sapers/models/user_reviews.dart';
+import 'package:rxdart/rxdart.dart';
 
 class FirebaseService {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   final CollectionReference postsCollection =
       FirebaseFirestore.instance.collection('posts');
   final CollectionReference userCollection =
@@ -69,29 +75,108 @@ class FirebaseService {
     }
   }
 
-  // Método para obtener todos los posts en tiempo real
-  Stream<List<SAPPost>> getPosts() {
-    return postsCollection
+// Usar BehaviorSubject en lugar de StreamController
+  final BehaviorSubject<List<SAPPost>> _postsSubject =
+      BehaviorSubject<List<SAPPost>>.seeded([]);
+
+  Future<List<SAPPost>> getPostsFollowingFuture() async {
+    final currentUser = _auth.currentUser;
+
+    if (currentUser == null) {
+      // Si no hay usuario, retornar una lista vacía
+      return [];
+    }
+
+    final userDoc =
+        await _firestore.collection('userinfo').doc(currentUser.uid).get();
+
+    if (!userDoc.exists || !userDoc.data()!.containsKey('following')) {
+      // Si no tiene campo 'following', retornar una lista vacía
+      return [];
+    }
+
+    final List<String> following =
+        List<String>.from(userDoc.data()!['following'] ?? []);
+
+    if (following.isEmpty) {
+      // Si no sigue a nadie, retornar una lista vacía
+      return [];
+    }
+
+    final chunks = _chunkList(
+        following, 10); // Dividimos la lista de seguidores en trozos de 10
+    List<SAPPost> allPosts = [];
+
+    for (final chunk in chunks) {
+      final snapshot = await _firestore
+          .collection('posts') // Asegúrate de usar la colección correcta
+          .where('author', whereIn: chunk)
+          .orderBy('timestamp', descending: true)
+          .limit(50)
+          .get();
+
+      final posts = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return SAPPost(
+          id: doc.id,
+          title: data['title'] ?? '',
+          content: data['content'] ?? '',
+          author: data['author'] ?? '',
+          timestamp: (data['timestamp'] as Timestamp).toDate(),
+          module: data['module'] ?? '',
+          isQuestion: data['isQuestion'] ?? false,
+          tags: List<String>.from(data['tags'] ?? []),
+          attachments:
+              List<Map<String, dynamic>>.from(data['attachments'] ?? []),
+          replyCount: data['replyCount'] ?? 0,
+        );
+      }).toList();
+
+      allPosts.addAll(posts);
+    }
+
+    // Ordenamos los posts por timestamp
+    allPosts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+    return allPosts;
+  }
+
+  void dispose() {
+    _postsSubject
+        .close(); // Asegúrate de cerrar el BehaviorSubject cuando ya no sea necesario
+  }
+
+  List<List<String>> _chunkList(List<String> list, int chunkSize) {
+    List<List<String>> chunks = [];
+    for (int i = 0; i < list.length; i += chunkSize) {
+      chunks.add(list.sublist(
+          i, i + chunkSize > list.length ? list.length : i + chunkSize));
+    }
+    return chunks;
+  }
+
+// Método para obtener todos los posts una sola vez
+  Future<List<SAPPost>> getPostsFuture() async {
+    final snapshot = await postsCollection
         .orderBy('timestamp', descending: true)
         .limit(50)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return SAPPost(
-            id: doc.id,
-            title: data['title'] ?? '',
-            content: data['content'] ?? '',
-            author: data['author'] ?? '',
-            timestamp: (data['timestamp'] as Timestamp).toDate(),
-            module: data['module'] ?? '',
-            isQuestion: data['isQuestion'] ?? false,
-            tags: List<String>.from(data['tags'] ?? []),
-            attachments:
-                List<Map<String, dynamic>>.from(data['attachments'] ?? []),
-            replyCount: data['replyCount'] ?? 0);
-      }).toList();
-    });
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return SAPPost(
+        id: doc.id,
+        title: data['title'] ?? '',
+        content: data['content'] ?? '',
+        author: data['author'] ?? '',
+        timestamp: (data['timestamp'] as Timestamp).toDate(),
+        module: data['module'] ?? '',
+        isQuestion: data['isQuestion'] ?? false,
+        tags: List<String>.from(data['tags'] ?? []),
+        attachments: List<Map<String, dynamic>>.from(data['attachments'] ?? []),
+        replyCount: data['replyCount'] ?? 0,
+      );
+    }).toList();
   }
 
   Future<UserInfoPopUp?> getUserInfoByUsername(String username) async {
@@ -133,54 +218,80 @@ class FirebaseService {
       final userCollection = FirebaseFirestore.instance.collection('userinfo');
       final cleanedEmail = mail.trim().toLowerCase();
 
-      print('Buscando usuario con email: $cleanedEmail');
+      print('DEBUG: Iniciando búsqueda para email: $cleanedEmail');
 
-      // Primer intento: búsqueda precisa con isEqualTo
-      var querySnapshot =
-          await userCollection.where('email', isEqualTo: cleanedEmail).get();
+      // Primera búsqueda: exacta y case-sensitive
+      var querySnapshot = await userCollection
+          .where('email', isEqualTo: cleanedEmail)
+          .limit(1) // Optimización: solo necesitamos uno
+          .get();
 
+      print(
+          'DEBUG: Resultado búsqueda exacta: ${querySnapshot.docs.length} documentos');
+
+      // Si no hay resultados, intentar búsqueda case-insensitive
       if (querySnapshot.docs.isEmpty) {
-        // Si isEqualTo no encuentra resultados, intentamos con un rango seguro
-        print('No se encontró un email exacto, buscando con rango.');
+        print('DEBUG: Intentando búsqueda case-insensitive');
+
+        // Obtener todos los documentos que podrían coincidir
         querySnapshot = await userCollection
-            .where('email', isGreaterThanOrEqualTo: cleanedEmail)
-            .where('email', isLessThanOrEqualTo: '$cleanedEmail\uf8ff')
+            .orderBy('email')
+            .startAt([cleanedEmail])
+            .endAt(['$cleanedEmail\uf8ff'])
+            .limit(10) // Limitamos para evitar cargar demasiados docs
             .get();
-      }
 
-      // Validar si se encontraron documentos
-      if (querySnapshot.docs.isNotEmpty) {
-        final doc = querySnapshot.docs.first;
+        print('DEBUG: Resultados encontrados: ${querySnapshot.docs.length}');
 
-        // Validar que el email del documento coincida exactamente con el email limpio
-        if (doc['email']?.toString().toLowerCase() == cleanedEmail) {
-          final data = doc.data();
+        // Buscar coincidencia exacta ignorando mayúsculas/minúsculas
+        for (var doc in querySnapshot.docs) {
+          String docEmail = doc['email']?.toString().toLowerCase() ?? '';
+          print('DEBUG: Comparando con documento email: $docEmail');
 
-          print('Datos del usuario: $data');
-
-          return UserInfoPopUp(
-              uid: data['uid'] ?? '',
-              username: data['username'] ?? '',
-              bio: data['bio'] ?? '',
-              location: data['location'] ?? '',
-              email: data['email'] ?? '',
-              website: data['website'] ?? '',
-              isAvailable: data['isAvailable'] ?? false,
-              isExpert: data['isExpert'] ?? false,
-              hourlyRate: (data['hourlyRate'] ?? 0.0).toDouble(),
-              joinDate: data['joinDate'] ?? DateTime.now().toString(),
-              experience: data['experience'] ?? '',
-              reviews: List<Map<String, dynamic>>.from(data['reviews'] ?? []),
-              specialty: data['specialty'] ?? '');
-        } else {
-          print('El email del documento no coincide exactamente.');
+          if (docEmail == cleanedEmail) {
+            print('DEBUG: ¡Coincidencia encontrada!');
+            return _createUserInfoFromDoc(doc.data());
+          }
         }
+      } else {
+        // Si encontramos directamente, crear el objeto
+        print('DEBUG: Usando resultado de búsqueda exacta');
+        return _createUserInfoFromDoc(querySnapshot.docs.first.data());
       }
 
-      print('No se encontró ningún documento con ese email.');
+      print(
+          'DEBUG: No se encontró ninguna coincidencia para el email: $cleanedEmail');
       return null;
     } catch (e) {
-      print('Error al obtener información del usuario: $e');
+      print('ERROR: Excepción al buscar usuario: $e');
+      print('ERROR: Stack trace: ${StackTrace.current}');
+      rethrow;
+    }
+  }
+
+// Método separado para crear el objeto UserInfoPopUp
+  UserInfoPopUp _createUserInfoFromDoc(Map<String, dynamic> data) {
+    print('DEBUG: Creando UserInfoPopUp con datos: $data');
+
+    try {
+      return UserInfoPopUp(
+          uid: data['uid']?.toString() ?? '',
+          username: data['username']?.toString() ?? '',
+          bio: data['bio']?.toString() ?? '',
+          location: data['location']?.toString() ?? '',
+          email: data['email']?.toString().toLowerCase() ??
+              '', // Aseguramos lowercase
+          website: data['website']?.toString() ?? '',
+          isAvailable: data['isAvailable'] as bool? ?? false,
+          isExpert: data['isExpert'] as bool? ?? false,
+          hourlyRate: (data['hourlyRate'] ?? 0.0).toDouble(),
+          joinDate: data['joinDate']?.toString() ?? DateTime.now().toString(),
+          experience: data['experience']?.toString() ?? '',
+          reviews: List<Map<String, dynamic>>.from(data['reviews'] ?? []),
+          specialty: data['specialty']?.toString() ?? '');
+    } catch (e) {
+      print('ERROR: Error al crear UserInfoPopUp: $e');
+      print('ERROR: Datos problemáticos: $data');
       rethrow;
     }
   }
@@ -215,27 +326,54 @@ class FirebaseService {
     });
   }
 
-  // Método para filtrar posts por módulo
-  Stream<List<SAPPost>> getPostsByModule(String module) {
-    return postsCollection
+  Future<List<SAPPost>> getPostsByKeyword(String keyword) async {
+    final snapshot =
+        await postsCollection.get(); // Obtiene todos los documentos
+    final posts = snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+
+      // Convertir timestamp antes de pasarlo a SAPPost
+      if (data['timestamp'] is Timestamp) {
+        data['timestamp'] = (data['timestamp'] as Timestamp).toDate();
+      }
+
+      // Crear el objeto SAPPost a partir de los datos del documento
+      return SAPPost.fromMap(data, doc.id);
+    }).toList();
+
+    // Filtrar los posts por la palabra clave (insensible a mayúsculas/minúsculas)
+    return posts
+        .where((post) =>
+            post.content.toLowerCase().contains(keyword.toLowerCase()))
+        .toList();
+  }
+
+  // Método para filtrar posts por módulo (consulta única)
+  Future<List<SAPPost>> getPostsByModuleFuture(String module) async {
+    final snapshot = await postsCollection
         .where('module', isEqualTo: module)
         .orderBy('timestamp', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return SAPPost(
-            id: doc.id,
-            title: data['title'] ?? '',
-            content: data['content'] ?? '',
-            author: data['author'] ?? '',
-            timestamp: (data['timestamp'] as Timestamp).toDate(),
-            module: data['module'] ?? '',
-            isQuestion: data['isQuestion'] ?? false,
-            tags: List<String>.from(data['tags'] ?? []),
-            replyCount: data['replyCount'] ?? 0);
-      }).toList();
-    });
+        .get();
+
+    if (snapshot.docs.isEmpty) {
+      // Si no hay documentos, retornar una lista vacía
+      return [];
+    }
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return SAPPost(
+        id: doc.id,
+        title: data['title'] ?? '',
+        content: data['content'] ?? '',
+        author: data['author'] ?? '',
+        timestamp: (data['timestamp'] as Timestamp).toDate(),
+        module: data['module'] ?? '',
+        isQuestion: data['isQuestion'] ?? false,
+        tags: List<String>.from(data['tags'] ?? []),
+        replyCount: data['replyCount'] ?? 0,
+      );
+    }).toList();
   }
 
   // Método para buscar posts
@@ -389,19 +527,15 @@ class FirebaseService {
                 try {
                   final data = doc.data();
                   // Asegurarse de que data sea un Map<String, dynamic>
-                  if (data is Map<String, dynamic>) {
-                    data['id'] = doc.id;
-                    data['postId'] = postId;
-                    // Procesar la lista de attachments (si existe)
-                    final attachments =
-                        (data['attachments'] as List<dynamic>? ?? [])
-                            .map((e) => e as Map<String, dynamic>)
-                            .toList();
-                    data['attachments'] = attachments;
-                    return SAPReply.fromMap(data);
-                  } else {
-                    throw Exception('Invalid document data format');
-                  }
+                  data['id'] = doc.id;
+                  data['postId'] = postId;
+                  // Procesar la lista de attachments (si existe)
+                  final attachments =
+                      (data['attachments'] as List<dynamic>? ?? [])
+                          .map((e) => e as Map<String, dynamic>)
+                          .toList();
+                  data['attachments'] = attachments;
+                  return SAPReply.fromMap(data);
                 } catch (e) {
                   print('Error processing document ${doc.id}: $e');
                   // Retornar un objeto válido con valores por defecto
@@ -444,13 +578,13 @@ class FirebaseService {
 
       await FirebaseFirestore.instance.runTransaction((transaction) async {
         // Añadir la respuesta a la subcolección
-        await transaction.set(
+        transaction.set(
           postRef.collection('replies').doc(),
           reply,
         );
 
         // Actualizar el contador de respuestas en el post principal
-        await transaction.update(postRef, {
+        transaction.update(postRef, {
           'replyCount':
               FieldValue.increment(1), // Usar increment para evitar conflictos
         });
@@ -483,14 +617,15 @@ class AuthService {
   }
 
   // Iniciar sesión con email y contraseña
-  Future<bool?> signIn(String email, String password) async {
+  Future<User?> signIn(String email, String password) async {
     var emailCleaned = email.trim().toLowerCase();
     try {
-      final user = await _auth.signInWithEmailAndPassword(
-        email: emailCleaned,
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
         password: password,
       );
-      return true;
+      return userCredential.user; // Devuelve el usuario logueado
     } on FirebaseAuthException catch (e) {
       // Manejo específico de errores de Firebase Authentication
       switch (e.code) {
@@ -516,7 +651,7 @@ class AuthService {
         default:
           print('Error desconocido: ${e.code}');
 
-          return false;
+          return null;
       }
 
       // Opcional: lanzar una excepción personalizada para manejar en el UI
@@ -528,9 +663,20 @@ class AuthService {
     }
   }
 
-  Future<void> signUp(String email, String pass) async {
-    var success = await _auth.createUserWithEmailAndPassword(
-        email: email, password: pass);
+  Future<bool> signUp(String email, String pass) async {
+    try {
+      print('Intentando signup con email: $email');
+      var emailCleaned = email.trim().toLowerCase();
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+          email: emailCleaned, password: pass);
+      print('Signup exitoso. Usuario: ${userCredential.user?.uid}');
+      // Añadir delay
+      await Future.delayed(const Duration(seconds: 3));
+      return userCredential.user != null;
+    } on FirebaseAuthException catch (e) {
+      print('Error en signup: ${e.code} - ${e.message}');
+      rethrow;
+    }
   }
 
   // Cerrar sesión
@@ -578,9 +724,14 @@ class UtilsSapers {
   }
 
   //Función para obtener un id unico para las replies de los posts basado en el usuario loguado y la fecha
-  String getReplyId() {
-    return FirebaseAuth.instance.currentUser!.uid +
-        DateTime.now().millisecondsSinceEpoch.toString();
+  String getReplyId(context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return '';
+    } else {
+      return user.uid + DateTime.now().millisecondsSinceEpoch.toString();
+    }
   }
 
   /// Método para formatear fecha
@@ -591,6 +742,27 @@ class UtilsSapers {
     } catch (e) {
       return 'Invalid Date'; // En caso de error
     }
+  }
+
+  /// Método para formatear fecha
+  String formatDateStringWithTime(String dateTimeString) {
+    try {
+      final dateTime = DateTime.parse(dateTimeString);
+      return DateFormat('dd/MM/yyyy hh:mm').format(dateTime);
+    } catch (e) {
+      return 'Invalid Date'; // En caso de error
+    }
+  }
+
+  String formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inMinutes < 1) return Texts.translate('now', globalLanguage);
+    if (difference.inHours < 1) return '${difference.inMinutes}m';
+    if (difference.inDays < 1) return '${difference.inHours}h';
+    if (difference.inDays < 7) return '${difference.inDays}d';
+    return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
   }
 
   String getContentType(String fileName) {

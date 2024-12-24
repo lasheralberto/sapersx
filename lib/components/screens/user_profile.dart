@@ -131,7 +131,7 @@ class ResponsiveProfileLayout extends StatelessWidget {
               if (data.isExpert == true)
                 Expanded(
                   child: SAPExpertProfile(
-                    profile: data as UserInfoPopUp,
+                    profile: data,
                   ),
                 ),
             ],
@@ -140,11 +140,11 @@ class ResponsiveProfileLayout extends StatelessWidget {
           // Layout móvil (Column)
           return Column(
             children: [
-              ProfileHeader(profile: data as UserInfoPopUp),
+              ProfileHeader(profile: data),
               const SizedBox(height: 16),
-              if (data?.isExpert == true)
+              if (data.isExpert == true)
                 SAPExpertProfile(
-                  profile: data as UserInfoPopUp,
+                  profile: data,
                 ),
             ],
           );

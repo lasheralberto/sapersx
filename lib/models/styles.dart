@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter/material.dart';
-
 class AppStyles {
   // Paleta de colores principal - Amazon Inspired
   static const Color _amazonOrange = Color(0xFFFF9900);
@@ -103,7 +101,7 @@ class AppStyles {
   }
 
   double getCardElevation(context) {
-    return 5.0;
+    return 2.0;
   }
 
   Color getButtonColor(context) {
@@ -134,14 +132,26 @@ class AppStyles {
             : _pureWhite);
   }
 
-  TextStyle getTextStyle(context) {
+  TextStyle getTextStyle(
+    BuildContext context, {
+    Color? color,
+    FontWeight? fontWeight,
+    double? fontSize,
+  }) {
+    // Valores predeterminados
+
+    const FontWeight defaultWeight = FontWeight.normal;
+    const double defaultSize = 12;
+
     return TextStyle(
-        fontWeight: FontWeight.w300,
-        fontSize: 12,
-        fontStyle: FontStyle.normal,
-        color: Theme.of(context).brightness == Brightness.dark
-            ? _warmWhite
-            : _darkGray);
+      fontWeight: fontWeight ?? defaultWeight,
+      fontSize: fontSize ?? defaultSize,
+      fontStyle: FontStyle.normal,
+      color: color ??
+          (Theme.of(context).brightness == Brightness.dark
+              ? _warmWhite
+              : _darkGray),
+    );
   }
 
   InputDecoration getInputDecoration(

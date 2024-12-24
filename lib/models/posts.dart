@@ -32,14 +32,20 @@ class SAPPost {
       content: map['content'] ?? '',
       author: map['author'] ?? '',
       timestamp: map['timestamp'] != null
-          ? DateTime.parse(map['timestamp'])
-          : DateTime.now(),
+          ? map['timestamp'] is String
+              ? DateTime.parse(
+                  map['timestamp']) // Si es un String, lo parseamos
+              : map['timestamp'] is DateTime
+                  ? map[
+                      'timestamp'] // Si ya es DateTime, lo usamos directamente
+                  : DateTime
+                      .now() // Si no es String ni DateTime, ponemos la fecha actual
+          : DateTime.now(), // Si es null, usamos la fecha actual
       module: map['module'] ?? '',
       isQuestion: map['isQuestion'] ?? false,
-      replyCount: map['replyCount'] ?? 0, // Toma el valor de Firestore
+      replyCount: map['replyCount'] ?? 0,
       tags: List<String>.from(map['tags'] ?? []),
-      attachments: List<Map<String, dynamic>>.from(
-          map['attachments'] ?? []), // Add this line
+      attachments: List<Map<String, dynamic>>.from(map['attachments'] ?? []),
     );
   }
 

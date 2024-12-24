@@ -71,7 +71,7 @@ class _PostCardState extends State<PostCard> {
   // Función para insertar imágenes en el texto del TextField
   void _insertImage() {
     if (_imageUrl.isNotEmpty) {
-      _replyController.text = _replyController.text + ' $_imageUrl';
+      _replyController.text = '${_replyController.text} $_imageUrl';
     }
   }
 
@@ -88,17 +88,18 @@ class _PostCardState extends State<PostCard> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          //  margin: const EdgeInsets.symmetric(vertical: 8.0),
           color: AppStyles().getCardColor(context),
           elevation: 0,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildPostHeader(constraints.maxWidth, widget.post.id),
+              const SizedBox(height: 4),
               if (isExpanded) ...[
                 const Divider(height: 1),
                 _buildReplySection(constraints.maxWidth, widget.post.id,
-                    UtilsSapers().getReplyId()),
+                    UtilsSapers().getReplyId(context)),
               ],
             ],
           ),
@@ -164,13 +165,12 @@ class _PostCardState extends State<PostCard> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Attachments (${selectedFiles.length})',
+          Text('(${selectedFiles.length})',
               style: AppStyles().getTextStyle(context)),
           const SizedBox(height: 8),
           Wrap(
@@ -189,12 +189,11 @@ class _PostCardState extends State<PostCard> {
     return Container(
       constraints: const BoxConstraints(maxWidth: 200),
       child: Chip(
-        backgroundColor: Colors.white,
         label: Text(
           file.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AppStyles().getButtontTextStyle(context),
+          style: AppStyles().getTextStyle(context),
         ),
         side: BorderSide.none,
         deleteIcon: const Icon(Icons.close, size: 16),
@@ -275,6 +274,8 @@ class _PostCardState extends State<PostCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildAuthorInfo(),
+                  const SizedBox(height: 2),
+                  _buildTimestamp(widget.post), // Agrega la fecha aquí
                   const SizedBox(height: 8),
                   _buildPostContent(),
                   const SizedBox(height: 12),
@@ -427,6 +428,25 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
+  Widget _buildTimestamp(post) {
+    // Formatear la fecha y hora
+    final formattedDate = UtilsSapers().formatTimestamp(post.timestamp);
+
+    return Padding(
+      padding: const EdgeInsets.all(0.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          formattedDate,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.grey[600],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildReplyCard(SAPReply reply) {
     return Card(
       color: AppStyles().getCardColor(context),
@@ -473,7 +493,7 @@ class _PostCardState extends State<PostCard> {
                   reply
                       .author, // Changed from widget.post.author to reply.author
                   style: AppStyles().getTextStyle(context)),
-              Text(_formatTimestamp(reply.timestamp),
+              Text(UtilsSapers().formatTimestamp(reply.timestamp),
                   style: AppStyles().getTextStyle(context)),
             ],
           ),
@@ -519,7 +539,6 @@ class _PostCardState extends State<PostCard> {
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-        color: Colors.white,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -578,7 +597,7 @@ class _PostCardState extends State<PostCard> {
                 SnackBar(
                   content: Text(
                       Texts.translate('copiarAlPortapapeles', globalLanguage)),
-                  duration: Duration(seconds: 2),
+                  duration: const Duration(seconds: 2),
                 ),
               );
             },
@@ -587,16 +606,5 @@ class _PostCardState extends State<PostCard> {
         ],
       ),
     );
-  }
-
-  String _formatTimestamp(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
-    if (difference.inMinutes < 1) return Texts.translate('now', globalLanguage);
-    if (difference.inHours < 1) return '${difference.inMinutes}m';
-    if (difference.inDays < 1) return '${difference.inHours}h';
-    if (difference.inDays < 7) return '${difference.inDays}d';
-    return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
   }
 }

@@ -24,10 +24,10 @@ class ProfileHeader extends StatefulWidget {
 }
 
 class _ProfileHeaderState extends State<ProfileHeader> {
-  FirebaseService _firebaseService = FirebaseService();
+  final FirebaseService _firebaseService = FirebaseService();
   bool isFollowing = false;
   bool _initialized = false; // Para evitar múltiples llamadas
-  Map<String, bool> _loadingStates = {};
+  final Map<String, bool> _loadingStates = {};
 
   @override
   void initState() {
@@ -80,10 +80,10 @@ class _ProfileHeaderState extends State<ProfileHeader> {
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              _buildButton(context, 'conectar', () {
-                Navigator.pushNamed(context, '/conectar');
-              }),
-              const SizedBox(width: TwitterDimensions.spacing),
+              // _buildButton(context, 'conectar', () {
+              //   Navigator.pushNamed(context, '/conectar');
+              // }),
+              // const SizedBox(width: TwitterDimensions.spacing),
               _buildButton(context, isFollowing == true ? 'unfollow' : 'seguir',
                   () async {
                 //follow action

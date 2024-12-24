@@ -6,6 +6,7 @@ import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 
+import 'package:sapers/main.dart';
 class LoginDialog extends StatefulWidget {
   const LoginDialog({super.key});
 
@@ -32,7 +33,7 @@ class _LoginDialogState extends State<LoginDialog> {
     super.dispose();
   }
 
-  Future _submitForm(email, pass) async {
+  Future<bool?> _submitForm(String email, String pass) async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -41,35 +42,33 @@ class _LoginDialogState extends State<LoginDialog> {
 
       try {
         if (_isSignUp) {
+          // Primero crear el usuario
           await _authService.signUp(email, pass);
-          //Añadir para que rellene información adicional sobre él.
-          Future.delayed(Duration(milliseconds: 100), () {
-            UserProfilePopup.show(context);
-          });
-        } else {
-          var isLoguedIn = await _authService.signIn(email, pass);
 
-          if (isLoguedIn == true) {
-            Navigator.of(context).pop();
-        
+          // Esperar a que el estado de autenticación cambie
+          await FirebaseAuth.instance.authStateChanges().first;
+
+          // Mostrar el popup de perfil y esperar a que se complete
+          await UserProfilePopup.show(context);
+
+          // Si todo fue exitoso, retornar true
+          return true;
+        } else {
+          final user = await _authService.signIn(email, pass);
+          if (user != null) {
+            // Aquí puedes realizar alguna acción una vez que el usuario esté logueado, por ejemplo:
+            // Actualizar el estado global del usuario o realizar alguna acción adicional.
+       
+            return true;
           } else {
-            showBottomSheet(
-                context: context,
-                builder: (context) {
-                  return Container(
-                    height: 100,
-                    color: Colors.red,
-                    child: const Center(
-                      child: Text('Error al iniciar sesión.'),
-                    ),
-                  );
-                });
+            return false;
           }
         }
       } on FirebaseAuthException catch (e) {
         setState(() {
           _errorMessage = e.message;
         });
+        return false;
       } finally {
         if (mounted) {
           setState(() {
@@ -78,6 +77,7 @@ class _LoginDialogState extends State<LoginDialog> {
         }
       }
     }
+    return false;
   }
 
   void _toggleMode() {
@@ -110,11 +110,8 @@ class _LoginDialogState extends State<LoginDialog> {
                   _isSignUp
                       ? Texts.translate('crearCuenta', globalLanguage)
                       : Texts.translate('iniciarSesion', globalLanguage),
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
-                  ),
+                  style: AppStyles().getTextStyle(context,
+                      fontSize: 18, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
@@ -186,7 +183,8 @@ class _LoginDialogState extends State<LoginDialog> {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+                      borderRadius:
+                          BorderRadius.circular(AppStyles.borderRadiusValue),
                     ),
                     child: Text(
                       _errorMessage!,
@@ -202,21 +200,18 @@ class _LoginDialogState extends State<LoginDialog> {
                 ElevatedButton(
                   onPressed: () async {
                     if (_isLoading == false) {
-                      await _submitForm(
+                      var isLogued = await _submitForm(
                         _emailController.text,
                         _passwordController.text,
                       );
+
+                      if (isLogued == true) {
+                        // Navega a la pantalla de feed y reemplaza la actual
+                        Navigator.pop(context, true);
+                      }
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:BorderRadius.circular(AppStyles.borderRadiusValue),
-                    ),
-                    elevation: 0,
-                  ),
+                  style: AppStyles().getButtonStyle(context),
                   child: _isLoading
                       ? const SizedBox(
                           height: 20,
@@ -232,17 +227,17 @@ class _LoginDialogState extends State<LoginDialog> {
                               ? Texts.translate('crearCuenta', globalLanguage)
                               : Texts.translate(
                                   'iniciarSesion', globalLanguage),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: AppStyles().getTextStyle(context,
+                              fontSize: 18,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.white),
                         ),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: _isLoading ? null : _toggleMode,
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.blue[600],
+                    foregroundColor: AppStyles.colorAvatarBorder,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: Text(
