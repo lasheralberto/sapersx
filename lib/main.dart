@@ -68,7 +68,7 @@ class AuthProvider with ChangeNotifier {
       await FirebaseAuth.instance.signOut();
       setUser(null);
     } catch (e) {
-      print('Error signing out: $e');
+      print('Error signing outt: $e');
     }
   }
 

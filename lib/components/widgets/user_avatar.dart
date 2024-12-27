@@ -18,10 +18,11 @@ class UserAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Si no hay un usuario autenticado, mostramos el icono de login
     if (user == null) {
-      return IconButton(
-        icon: const Icon(Icons.account_circle_outlined),
-        onPressed: () => _showLoginDialog(context),
-      );
+      if (1 == 1)
+        return IconButton(
+          icon: const Icon(Icons.account_circle_outlined),
+          onPressed: () => _showLoginDialog(context),
+        );
     }
 
     // Si hay un usuario autenticado, mostramos el avatar del usuario

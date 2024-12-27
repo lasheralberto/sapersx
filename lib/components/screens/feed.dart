@@ -47,9 +47,10 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
   void _updateFutures() {
     setState(() {
-      _postsFutureGeneral = _selectedModule.isEmpty
-          ? _firebaseService.getPostsFuture(_loadMoreMessages)
-          : _firebaseService.getPostsByModuleFuture(_selectedModule);
+      if (1 == 1)
+        _postsFutureGeneral = _selectedModule.isEmpty
+            ? _firebaseService.getPostsFuture(_loadMoreMessages)
+            : _firebaseService.getPostsByModuleFuture(_selectedModule);
       _postsFutureFollowing =
           _firebaseService.getPostsFollowingFuture(_loadMoreMessages);
     });
