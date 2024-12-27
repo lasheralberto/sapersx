@@ -28,6 +28,9 @@ class FirebaseService {
   final CollectionReference repliesCollection =
       FirebaseFirestore.instance.collection('replies');
 
+  // Constantes para paginación
+  static const int postsPerPage = 10;
+
   // Cache para información de usuarios
   final Map<String, UserInfoPopUp> _userCache = {};
 
@@ -79,7 +82,7 @@ class FirebaseService {
   final BehaviorSubject<List<SAPPost>> _postsSubject =
       BehaviorSubject<List<SAPPost>>.seeded([]);
 
-  Future<List<SAPPost>> getPostsFollowingFuture() async {
+  Future<List<SAPPost>> getPostsFollowingFuture(int morePosts) async {
     final currentUser = _auth.currentUser;
 
     if (currentUser == null) {
@@ -112,7 +115,7 @@ class FirebaseService {
           .collection('posts') // Asegúrate de usar la colección correcta
           .where('author', whereIn: chunk)
           .orderBy('timestamp', descending: true)
-          .limit(50)
+          .limit(morePosts)
           .get();
 
       final posts = snapshot.docs.map((doc) {
@@ -156,10 +159,10 @@ class FirebaseService {
   }
 
 // Método para obtener todos los posts una sola vez
-  Future<List<SAPPost>> getPostsFuture() async {
+  Future<List<SAPPost>> getPostsFuture(int morePosts) async {
     final snapshot = await postsCollection
         .orderBy('timestamp', descending: true)
-        .limit(50)
+        .limit(morePosts)
         .get();
 
     return snapshot.docs.map((doc) {

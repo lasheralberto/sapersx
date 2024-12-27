@@ -46,34 +46,8 @@ class _PostCardState extends State<PostCard> {
   final ScrollController _scrollController = ScrollController();
   final FocusNode _replyFocusNode = FocusNode();
   final FirebaseService _firebaseService = FirebaseService();
-
-  String _imageUrl = ''; // Para guardar la URL de la imagen pegada
-
   List<PlatformFile> selectedFiles = [];
   bool isUploading = false;
-  int counter = 0;
-
-  // Función para detectar imágenes en el portapapeles
-  Future<void> _handlePaste() async {
-    final ClipboardData? clipboardData = await Clipboard.getData('text/plain');
-
-    if (clipboardData != null && clipboardData.text != null) {
-      final text = clipboardData.text!;
-      if (text.contains('data:image')) {
-        // Si el portapapeles contiene una imagen en formato base64
-        setState(() {
-          _imageUrl = text; // Asignamos la URL base64 a la variable
-        });
-      }
-    }
-  }
-
-  // Función para insertar imágenes en el texto del TextField
-  void _insertImage() {
-    if (_imageUrl.isNotEmpty) {
-      _replyController.text = '${_replyController.text} $_imageUrl';
-    }
-  }
 
   @override
   void dispose() {
@@ -87,101 +61,349 @@ class _PostCardState extends State<PostCard> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Card(
-          //  margin: const EdgeInsets.symmetric(vertical: 8.0),
-          color: AppStyles().getCardColor(context),
-          elevation: 0,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildPostHeader(constraints.maxWidth, widget.post.id),
-              const SizedBox(height: 4),
-              if (isExpanded) ...[
-                const Divider(height: 1),
-                _buildReplySection(constraints.maxWidth, widget.post.id,
-                    UtilsSapers().getReplyId(context)),
-              ],
+        return Column(
+          children: [
+            InkWell(
+              onTap: () => setState(() => isExpanded = !isExpanded),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: constraints.maxWidth * 0.03,
+                  vertical: 12,
+                ),
+                child: _buildPostContent(constraints),
+              ),
+            ),
+            if (isExpanded) ...[
+              const Divider(height: 1, thickness: 0.5),
+              _buildReplySection(constraints),
             ],
-          ),
+            const Divider(height: 1, thickness: 0.5, color: Colors.grey),
+          ],
         );
       },
     );
   }
 
-  Future<void> _handleReply(String postId, String replyId) async {
-    if (_replyController.text.isEmpty && selectedFiles.isEmpty) return;
-
-    bool isLoguedIn = AuthService().isUserLoggedIn(context);
-
-    if (isLoguedIn) {
-      try {
-        setState(() {
-          isUploading = true;
-        });
-
-        List<Map<String, dynamic>> attachmentsList = [];
-        if (selectedFiles.isNotEmpty) {
-          attachmentsList = await _firebaseService.addAttachments(
-              postId, replyId, selectedFiles);
-        }
-
-        await _firebaseService.createReply(
-            widget.post.id, _replyController.text, widget.post.replyCount + 1,
-            attachments: attachmentsList);
-
-        setState(() {
-          isUploading = false;
-          selectedFiles.clear();
-        });
-        _replyController.clear();
-
-        if (!mounted) return;
-        await Future.delayed(const Duration(milliseconds: 100));
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(Texts.translate('passError', globalLanguage))),
-        );
-        setState(() {
-          isUploading = false;
-          selectedFiles.clear();
-        });
-      }
-    }
+  Widget _buildPostContent(BoxConstraints constraints) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildAuthorAvatar(),
+        SizedBox(width: constraints.maxWidth * 0.02),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeaderInfo(),
+              const SizedBox(height: 4),
+              _buildMainContent(),
+              const SizedBox(height: 8),
+              _buildPostFooter(constraints),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
-  Widget _buildAttachmentUploadedReply() {
-    if (selectedFiles.isEmpty) {
-      return const SizedBox.shrink();
-    }
+  Widget _buildHeaderInfo() {
+    return Row(
+      children: [
+        Text(
+          widget.post.author,
+          style: AppStyles().getTextStyle(context).copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          widget.post.module,
+          style: AppStyles().getTextStyle(context).copyWith(
+                color: Colors.grey,
+                fontSize: 14,
+              ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '·',
+          style: AppStyles().getTextStyle(context).copyWith(
+                color: Colors.grey,
+              ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          UtilsSapers().formatTimestamp(widget.post.timestamp),
+          style: AppStyles().getTextStyle(context).copyWith(
+                color: Colors.grey,
+                fontSize: 14,
+              ),
+        ),
+      ],
+    );
+  }
 
+  Widget _buildMainContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return Container(
+              constraints:
+                  BoxConstraints(maxWidth: constraints.maxWidth * 0.95),
+              child: Text(
+                widget.post.content,
+                style: AppStyles().getTextStyle(context).copyWith(
+                      fontSize: 15,
+                    ),
+                maxLines: isExpanded ? null : 4,
+                overflow: isExpanded ? null : TextOverflow.fade,
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPostFooter(BoxConstraints constraints) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        CommentButton(
+          replyCount: widget.post.replyCount,
+          // size: constraints.maxWidth * 0.04,
+        ),
+        const SizedBox(width: 16),
+        SAPAttachmentsViewerHeader(
+          reply: widget.post,
+          onAttachmentOpen: (attachment) {
+            if (attachment['url'] != null) {
+              final Uri uri = Uri.parse(attachment['url']);
+              launchUrl(uri, mode: LaunchMode.externalApplication);
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReplySection(BoxConstraints constraints) {
     return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+      width: constraints.maxWidth,
+      padding: EdgeInsets.symmetric(
+        horizontal: constraints.maxWidth * 0.03,
       ),
       child: Column(
+        children: [
+          _buildReplyInput(),
+          _buildRepliesList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReplyInput() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('(${selectedFiles.length})',
-              style: AppStyles().getTextStyle(context)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: selectedFiles
-                .map((file) => _buildAttachmentChip(file))
-                .toList(),
+          ProfileAvatar(
+            seed: FirebaseAuth.instance.currentUser?.email ?? '',
+            showBorder: true,
+            size: 32,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              children: [
+                TextEditorWithCode(textController: _replyController),
+                const SizedBox(height: 8),
+                _buildAttachmentUploadedReply(),
+                const SizedBox(height: 8),
+                _buildReplyActions(),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildReplyActions() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.attach_file, size: 20),
+          onPressed: () async {
+            final files = await UtilsSapers().pickFiles(selectedFiles, context);
+            if (files != null) {
+              setState(() => selectedFiles = files);
+            }
+          },
+          tooltip: Texts.translate('addAttachment', globalLanguage),
+        ),
+        const SizedBox(width: 8),
+        if (isUploading)
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        else
+          CustomButton(
+            text: Texts.translate('responder', globalLanguage),
+            onPressed: () => _handleReply(
+              widget.post.id,
+              UtilsSapers().getReplyId(context),
+            ),
+            width: 100,
+            // height: 32,
+            customColor: AppStyles().getButtonColor(context),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildRepliesList() {
+    return StreamBuilder<List<SAPReply>>(
+      stream: _firebaseService.getRepliesForPost(widget.post.id),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _buildErrorMessage();
+        }
+
+        if (!snapshot.hasData) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        final replies = snapshot.data!;
+        if (replies.isEmpty) {
+          return _buildEmptyRepliesMessage();
+        }
+
+        return ListView.separated(
+          padding: const EdgeInsets.only(bottom: 16),
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: replies.length,
+          separatorBuilder: (_, __) => const Divider(height: 1, thickness: 0.5),
+          itemBuilder: (_, index) => _buildReplyCard(replies[index]),
+        );
+      },
+    );
+  }
+
+  Widget _buildReplyCard(SAPReply reply) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ProfileAvatar(
+            seed: reply.author,
+            showBorder: true,
+            size: 32,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      reply.author,
+                      style: AppStyles().getTextStyle(context).copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      UtilsSapers().formatTimestamp(reply.timestamp),
+                      style: AppStyles().getTextStyle(context).copyWith(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                _buildCodeContent(reply.content),
+                if (reply.attachments != null && reply.attachments!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: AttachmentsViewer(
+                      reply: reply,
+                      onAttachmentOpen: (attachment) {
+                        if (attachment['url'] != null) {
+                          final Uri uri = Uri.parse(attachment['url']);
+                          launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper methods remain the same
+  Widget _buildAuthorAvatar() => UserProfileCardHover(
+        post: widget.post,
+        onProfileOpen: () {},
+      );
+
+  Widget _buildErrorMessage() => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            Texts.translate('passError', globalLanguage),
+            style: AppStyles().getTextStyle(context),
+          ),
+        ),
+      );
+
+  Widget _buildEmptyRepliesMessage() => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            Texts.translate('serElPrimeroEnResponder', globalLanguage),
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      );
+
+  Widget _buildAttachmentUploadedReply() {
+    if (selectedFiles.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '(${selectedFiles.length})',
+          style: AppStyles().getTextStyle(context),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: selectedFiles.map(_buildAttachmentChip).toList(),
+        ),
+      ],
     );
   }
 
@@ -195,322 +417,75 @@ class _PostCardState extends State<PostCard> {
           overflow: TextOverflow.ellipsis,
           style: AppStyles().getTextStyle(context),
         ),
-        side: BorderSide.none,
         deleteIcon: const Icon(Icons.close, size: 16),
-        onDeleted: () {
-          setState(() {
-            selectedFiles.remove(file);
-          });
-        },
+        onDeleted: () => setState(() => selectedFiles.remove(file)),
       ),
     );
   }
 
-  // Update the reply input section
-  Widget _buildReplyInput(String postId, String replyId) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextEditorWithCode(textController: _replyController),
-          const SizedBox(height: 12),
-          _buildAttachmentUploadedReply(),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.attach_file),
-                  onPressed: () async {
-                    await UtilsSapers()
-                        .pickFiles(selectedFiles, context)
-                        .then((value) {
-                      if (value != null) {
-                        setState(() {
-                          selectedFiles = value;
-                        });
-                      }
-                    });
-                  },
-                  tooltip: Texts.translate('addAttachment', globalLanguage),
-                ),
-                const SizedBox(width: 8),
-                if (isUploading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  CustomButton(
-                    text: Texts.translate('responder', globalLanguage),
-                    onPressed: () => _handleReply(postId, replyId),
-                    width: 120,
-                    customColor: AppStyles().getButtonColor(context),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Future<void> _handleReply(String postId, String replyId) async {
+    if (_replyController.text.isEmpty && selectedFiles.isEmpty) return;
 
-  Widget _buildPostHeader(double maxWidth, String postId) {
-    return InkWell(
-      onTap: () => setState(() => isExpanded = !isExpanded),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildAuthorAvatar(),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildAuthorInfo(),
-                  const SizedBox(height: 2),
-                  _buildTimestamp(widget.post), // Agrega la fecha aquí
-                  const SizedBox(height: 8),
-                  _buildPostContent(),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CommentButton(replyCount: widget.post.replyCount),
-                      SAPAttachmentsViewerHeader(
-                        reply: widget.post,
-                        onAttachmentOpen: (attachment) {
-                          // Manejar la apertura del archivo
-                          if (attachment['url'] != null) {
-                            final Uri uri = Uri.parse(attachment['url']);
-                            launchUrl(uri,
-                                mode: LaunchMode.externalApplication);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    if (AuthService().isUserLoggedIn(context)) {
+      try {
+        setState(() => isUploading = true);
 
-  Widget _buildAuthorAvatar() {
-    return UserProfileCardHover(
-      post: widget.post,
-      onProfileOpen: () {
-        // Opcional: Añade aquí lógica adicional cuando se abre el perfil
-      },
-    );
-  }
-
-  Widget _buildAuthorInfo() {
-    return Row(
-      children: [
-        Text(widget.post.author, style: AppStyles().getTextStyle(context)),
-        const SizedBox(width: 8),
-        Text(widget.post.module, style: AppStyles().getTextStyle(context)),
-      ],
-    );
-  }
-
-  Widget _buildPostContent() {
-    Widget content = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.post.content,
-          style: AppStyles().getTextStyle(context),
-          maxLines: isExpanded ? null : 4,
-        ),
-      ],
-    );
-
-    if (!isExpanded) {
-      return ShaderMask(
-        shaderCallback: (Rect bounds) {
-          return const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.black, Colors.white, Colors.transparent],
-            stops: [0.0, 0.8, 1.0],
-          ).createShader(bounds);
-        },
-        blendMode: BlendMode.dstIn,
-        child: content,
-      );
-    }
-
-    return content;
-  }
-
-  Widget _buildReplySection(double maxWidth, postid, replyId) {
-    return Container(
-      constraints: BoxConstraints(maxWidth: maxWidth),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildReplyInput(postid, replyId),
-          _buildRepliesList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRepliesList() {
-    return StreamBuilder<List<SAPReply>>(
-      stream: _firebaseService.getRepliesForPost(widget.post.id),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return _buildErrorMessage(snapshot.error.toString());
-        }
-
-        if (!snapshot.hasData) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: CircularProgressIndicator(),
-            ),
+        List<Map<String, dynamic>> attachmentsList = [];
+        if (selectedFiles.isNotEmpty) {
+          attachmentsList = await _firebaseService.addAttachments(
+            postId,
+            replyId,
+            selectedFiles,
           );
         }
 
-        final replies = snapshot.data!;
-        if (replies.isEmpty) {
-          return _buildEmptyRepliesMessage();
-        }
-
-        return ListView.separated(
-          padding: const EdgeInsets.all(10),
-          physics: const NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          itemCount: replies.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (_, index) => _buildReplyCard(replies[index]),
+        await _firebaseService.createReply(
+          widget.post.id,
+          _replyController.text,
+          widget.post.replyCount + 1,
+          attachments: attachmentsList,
         );
-      },
-    );
-  }
 
-  Widget _buildErrorMessage(String error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Text(
-          Texts.translate('passError', globalLanguage),
-          style: AppStyles().getTextStyle(context),
-        ),
-      ),
-    );
-  }
+        setState(() {
+          isUploading = false;
+          selectedFiles.clear();
+        });
+        _replyController.clear();
 
-  Widget _buildEmptyRepliesMessage() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Text(
-          Texts.translate('serElPrimeroEnResponder', globalLanguage),
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 16,
+        if (mounted && _scrollController.hasClients) {
+          await Future.delayed(const Duration(milliseconds: 100));
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(Texts.translate('passError', globalLanguage)),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTimestamp(post) {
-    // Formatear la fecha y hora
-    final formattedDate = UtilsSapers().formatTimestamp(post.timestamp);
-
-    return Padding(
-      padding: const EdgeInsets.all(0.0),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          formattedDate,
-          style: TextStyle(
-            fontSize: 10,
-            color: Colors.grey[600],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReplyCard(SAPReply reply) {
-    return Card(
-      color: AppStyles().getCardColor(context),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildReplyHeader(reply),
-            const SizedBox(height: 12),
-            _buildCodeContent(reply.content),
-            if (reply.attachments != null && reply.attachments!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              AttachmentsViewer(
-                reply: reply,
-                onAttachmentOpen: (attachment) {
-                  if (attachment['url'] != null) {
-                    final Uri uri = Uri.parse(attachment['url']);
-                    launchUrl(uri, mode: LaunchMode.externalApplication);
-                  }
-                },
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReplyHeader(SAPReply reply) {
-    return Row(
-      children: [
-        ProfileAvatar(
-            seed: reply.author,
-            showBorder: true,
-            size: AppStyles.avatarSize - 10),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                  reply
-                      .author, // Changed from widget.post.author to reply.author
-                  style: AppStyles().getTextStyle(context)),
-              Text(UtilsSapers().formatTimestamp(reply.timestamp),
-                  style: AppStyles().getTextStyle(context)),
-            ],
-          ),
-        ),
-      ],
-    );
+        );
+        setState(() {
+          isUploading = false;
+          selectedFiles.clear();
+        });
+      }
+    }
   }
 
   Widget _buildCodeContent(String content) {
     if (content.isEmpty || !content.contains('```')) {
-      return Text(content, style: const TextStyle(fontSize: 15));
+      return Text(
+        content,
+        style: AppStyles().getTextStyle(context).copyWith(fontSize: 15),
+      );
     }
 
     final parts = content.split('```');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
       children: parts.asMap().entries.map((entry) {
         final index = entry.key;
         final part = entry.value.trim();
@@ -518,12 +493,14 @@ class _PostCardState extends State<PostCard> {
         if (index % 2 == 0 && part.isNotEmpty) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Text(part, style: const TextStyle(fontSize: 15)),
+            child: Text(
+              part,
+              style: AppStyles().getTextStyle(context).copyWith(fontSize: 15),
+            ),
           );
         } else if (index % 2 == 1) {
           return _buildCodeBlock(part);
         }
-
         return const SizedBox.shrink();
       }).toList(),
     );
@@ -537,71 +514,71 @@ class _PostCardState extends State<PostCard> {
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (language.isNotEmpty) _buildCodeHeader(language, codeContent),
+          if (language.isNotEmpty)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    language.toUpperCase(),
+                    style: AppStyles().getTextStyle(context),
+                  ),
+                ),
+                IconButton(
+                  iconSize: 20,
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  icon: const Icon(Icons.copy, size: 20),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: codeContent.trim()));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          Texts.translate(
+                              'copiarAlPortapapeles', globalLanguage),
+                        ),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  tooltip:
+                      Texts.translate('copiarAlPortapapeles', globalLanguage),
+                ),
+              ],
+            ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: HighlightView(
-              codeContent,
-              languageId: 'abap',
-              theme: githubTheme,
-              padding: const EdgeInsets.all(16),
-              textStyle: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 14,
-              ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SizedBox(
+                  width: constraints.maxWidth,
+                  child: HighlightView(
+                    codeContent,
+                    languageId: 'abap',
+                    theme: githubTheme,
+                    padding: const EdgeInsets.all(16),
+                    textStyle: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 14,
+                    ),
+                  ),
+                );
+              },
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCodeHeader(String language, String code) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-            ),
-            child: Text(
-              language.toUpperCase(),
-              style: AppStyles().getTextStyle(context),
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            iconSize: 20,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 32,
-              minHeight: 32,
-            ),
-            icon: const Icon(Icons.copy, size: 20),
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: code.trim()));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                      Texts.translate('copiarAlPortapapeles', globalLanguage)),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
-            tooltip: Texts.translate('copiarAlPortapapeles', globalLanguage),
           ),
         ],
       ),

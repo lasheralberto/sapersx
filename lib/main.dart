@@ -25,18 +25,22 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   void setUser(User? user) {
-    _user = user;
-    notifyListeners();
-    if (user != null) {
-      refreshUserInfo();
-    } else {
-      setUserInfo(null);
+    if (_user != user) {
+      _user = user;
+      notifyListeners();
+      if (user != null) {
+        refreshUserInfo();
+      } else {
+        setUserInfo(null);
+      }
     }
   }
 
   void setUserInfo(UserInfoPopUp? userInfo) {
-    _userInfo = userInfo;
-    notifyListeners();
+    if (_userInfo != userInfo) {
+      _userInfo = userInfo;
+      notifyListeners();
+    }
   }
 
   void setLoading(bool loading) {
@@ -65,6 +69,13 @@ class AuthProvider with ChangeNotifier {
       setUser(null);
     } catch (e) {
       print('Error signing out: $e');
+    }
+  }
+
+  Future<void> loadUserInfo(User user) async {
+    if (_userInfo == null) {
+      _userInfo = await FirebaseService().getUserInfoByEmail(user.email!);
+      notifyListeners();
     }
   }
 }
