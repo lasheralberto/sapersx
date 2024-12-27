@@ -25,13 +25,13 @@ class SearchBarCustom extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
       ),
-      elevation: 4,
+      elevation: 2,
       shadowColor: Colors.black.withOpacity(0.2),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: SizedBox(
           height:
-              MediaQuery.of(context).size.height / 15, // Altura más compacta
+              MediaQuery.of(context).size.height / 21, // Altura más compacta
           child: TextField(
             controller: controller,
             decoration: InputDecoration(
@@ -47,16 +47,15 @@ class SearchBarCustom extends StatelessWidget {
               fillColor: Theme.of(context)
                   .cardColor
                   .withOpacity(0.05), // Color de fondo más sutil
-           
+
               suffixIcon: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   PopupMenuButton<String>(
                     icon: Stack(
                       children: [
-                        
                         const Icon(Icons.filter_list,
-                            size: 20, color: Colors.grey),
+                            size: 15, color: Colors.grey),
                         if (selectedModule.isNotEmpty)
                           Positioned(
                             right: 0,
@@ -106,7 +105,7 @@ class SearchBarCustom extends StatelessWidget {
                     onSelected: onModuleSelected,
                   ),
                   IconButton(
-                    iconSize: 20.0,
+                    iconSize: 15.0,
                     icon: const Icon(Icons.search, color: Colors.grey),
                     onPressed: onSearch,
                   ),

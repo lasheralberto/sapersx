@@ -35,6 +35,9 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   bool _isRefreshing = false;
   bool _hasScrolledDown = false;
 
+  int _loadMoreMessages = 25;
+  int _incrementLoad = 25;
+
   @override
   void initState() {
     super.initState();
@@ -42,40 +45,54 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     _updateFutures();
   }
 
-  // Método para manejar la acción de refrescar al hacer pull
-  Future<void> _handleRefresh() async {
+  void _updateFutures() {
+    setState(() {
+      if (1 == 1)
+        _postsFutureGeneral = _selectedModule.isEmpty
+            ? _firebaseService.getPostsFuture(_loadMoreMessages)
+            : _firebaseService.getPostsByModuleFuture(_selectedModule);
+      _postsFutureFollowing =
+          _firebaseService.getPostsFollowingFuture(_loadMoreMessages);
+    });
+  }
+
+  Future<void> _showRefresh() async {
     if (!_isRefreshing) {
       setState(() {
         _isRefreshing = true;
       });
-
-      await Future.delayed(
-          const Duration(seconds: 2)); // Simulación de refresco
+      await Future.delayed(const Duration(seconds: 2));
       setState(() {
-        _updateFutures();
         _isRefreshing = false;
       });
     }
-  }
-
-  void _updateFutures() {
-    setState(() {
-      _postsFutureGeneral = _selectedModule.isEmpty
-          ? _firebaseService.getPostsFuture()
-          : _firebaseService.getPostsByModuleFuture(_selectedModule);
-      _postsFutureFollowing = _firebaseService.getPostsFollowingFuture();
-    });
   }
 
   void _performSearch() {
     final searchText = _searchController.text.trim();
     setState(() {
       _postsFutureGeneral = searchText.isEmpty
-          ? _firebaseService.getPostsFuture()
+          ? _firebaseService.getPostsFuture(_loadMoreMessages)
           : _firebaseService.getPostsByKeyword(searchText);
 
       if (searchText.isEmpty) {
         _selectedModule = '';
+      }
+    });
+  }
+
+  // Función para cargar más mensajes
+  void _loadMoreMessagesFunc() {
+    setState(() {
+      _loadMoreMessages += _incrementLoad;
+      if (_tabController.index == 1) {
+        debugPrint('Fetching ' + _loadMoreMessages.toString());
+        _postsFutureGeneral =
+            _firebaseService.getPostsFuture(_loadMoreMessages);
+      } else if (_tabController.index == 2) {
+        debugPrint('Fetching ' + _loadMoreMessages.toString());
+        _postsFutureFollowing =
+            _firebaseService.getPostsFollowingFuture(_loadMoreMessages);
       }
     });
   }
@@ -94,91 +111,103 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
       if (result != null) {
         await _firebaseService.createPost(result);
-        _updateFutures(); // Actualiza los streams después de crear un post
+        _updateFutures();
       }
     }
   }
 
   Widget _buildPostsList(Future<List<SAPPost>> future) {
-    return FutureBuilder<List<SAPPost>>(
-      future: future,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(
-            child: SelectableText('Error: ${snapshot.error}'),
-          );
-        }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return FutureBuilder<List<SAPPost>>(
+          future: future,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(
+                child: SelectableText('Error: ${snapshot.error}'),
+              );
+            }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-        final posts = snapshot.data ?? [];
-        if (posts.isEmpty) {
-          return Center(
-              child: Text(Texts.translate('noposts', globalLanguage)));
-        }
+            final posts = snapshot.data ?? [];
+            if (posts.isEmpty) {
+              return Center(
+                  child: Text(Texts.translate('noposts', globalLanguage)));
+            }
 
-        return NotificationListener<ScrollNotification>(
-          onNotification: (ScrollNotification scrollInfo) {
-            // Detectamos cuando el usuario está en el inicio
-            if (!_isRefreshing &&
-                scrollInfo.metrics.pixels <=
+            return NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification scrollInfo) {
+                final isAtTop = scrollInfo.metrics.pixels <=
+                    scrollInfo.metrics.minScrollExtent;
+                final isAtBottom = scrollInfo.metrics.pixels ==
+                    scrollInfo.metrics.maxScrollExtent;
+
+                // Manejar el refresco
+                if (!_isRefreshing && isAtTop && _hasScrolledDown) {
+                  _showRefresh();
+                }
+
+                // Manejar el desplazamiento hacia abajo y cargar más mensajes
+                if (scrollInfo.metrics.pixels >
                     scrollInfo.metrics.minScrollExtent) {
-              // Solo refrescamos si el usuario ha desplazado la lista hacia abajo previamente
-              if (_hasScrolledDown) {
-                _handleRefresh(); // Llamamos a refrescar
-              }
-            }
+                  setState(() {
+                    _hasScrolledDown = true;
+                  });
 
-            // Detectamos si el usuario ha hecho scroll hacia abajo (en cualquier dirección)
-            if (scrollInfo.metrics.pixels >
-                scrollInfo.metrics.minScrollExtent) {
-              setState(() {
-                _hasScrolledDown =
-                    true; // Marcamos que se ha hecho scroll hacia abajo
-              });
-            }
+                  if (isAtBottom) {
+                    _loadMoreMessagesFunc();
+                  }
+                }
 
-            return false; // Deja que el scroll siga funcionando normalmente
-          },
-          child: CustomScrollView(
-            slivers: [
-              // const SliverAppBar(
-              //   expandedHeight: 0.0, // Evita que el AppBar se expanda
-              //   floating: true,
-              //   pinned: true,
-              //   snap: true,
-              //   flexibleSpace: SizedBox(),
-              // ),
-              // Si estamos en web, mostramos el icono de refresco
-              if (_isRefreshing)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    child:
-                        Center(child: Icon(Icons.refresh, color: Colors.grey)),
-                  ),
-                ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(vertical: 8.0),
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: AppStyles().getCardColor(context),
-                        borderRadius:
-                            BorderRadius.circular(AppStyles.borderRadiusValue),
+                return false;
+              },
+              child: CustomScrollView(
+                slivers: [
+                  if (_isRefreshing)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: InkWell(
+                          onTap: _updateFutures,
+                          child: const Center(
+                            child: Icon(Icons.refresh, color: Colors.grey),
+                          ),
+                        ),
                       ),
-                      child: PostCard(post: posts[index]),
-                    );
-                  },
-                  childCount: posts.length,
-                ),
+                    ),
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: constraints.maxWidth * 0.05,
+                            vertical: 8.0,
+                          ),
+                          child: Container(
+                            constraints: BoxConstraints(
+                              maxWidth: 800, // Maximum width for large screens
+                            ),
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            padding: const EdgeInsets.all(16.0),
+                            decoration: BoxDecoration(
+                              color: AppStyles().getCardColor(context),
+                              borderRadius: BorderRadius.circular(
+                                  AppStyles.borderRadiusValue),
+                            ),
+                            child: PostCard(post: posts[index]),
+                          ),
+                        );
+                      },
+                      childCount: posts.length,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -186,85 +215,116 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        title: Image.asset(
-          'assets/images/logo.png', // Ruta de tu logo
-          width: 100.0, // Ajusta el tamaño del logo según sea necesario
-          height: 100.0, // Ajusta el tamaño del logo según sea necesario
-        ),
-        actions: [
-          // IconButton(
-          //   icon: Icon(
-          //       themeNotifier.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-          //   onPressed: () => themeNotifier.toggleTheme(),
-          // ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: UserAvatar(
-              user: widget.user,
+    return SafeArea(
+      child: Scaffold(
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: SafeArea(
+            child: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              centerTitle: true,
+              title: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Image.asset(
+                    'assets/images/logo.png',
+                    width: constraints.maxWidth * 0.1,
+                    height: constraints.maxHeight * 0.1,
+                    fit: BoxFit.contain,
+                  );
+                },
+              ),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: UserAvatar(user: widget.user),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints:
-              BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
-          child: Column(
-            children: [
-              SearchBarCustom(
-                controller: _searchController,
-                onSearch: _performSearch,
-                onModuleSelected: (module) {
-                  setState(() {
-                    _selectedModule = module;
-                    _updateFutures();
-                  });
-                },
-                modules: _modules,
-                selectedModule: _selectedModule,
-              ),
-              TabBar(
-                indicatorPadding: const EdgeInsets.all(10.0),
-                indicatorSize: TabBarIndicatorSize.tab,
-                controller: _tabController,
-                indicator: const BoxDecoration(
-                  image: DecorationImage(
-                    alignment: Alignment.center,
-                    opacity: 0.8,
-                    scale: 0.5,
-                    image: AssetImage('assets/images/tabmarker.png'),
-                    fit: BoxFit.scaleDown,
-                  ),
-                ),
-                labelColor: AppStyles.colorAvatarBorder,
-                indicatorColor: AppStyles.colorAvatarBorder,
-                dividerColor: Colors.transparent,
-                tabs: [
-                  Tab(text: Texts.translate('feedGeneralTab', globalLanguage)),
-                  Tab(text: Texts.translate('FollowingTab', globalLanguage)),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
+        ),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            // Calculate the optimal width for the content
+            final contentWidth = constraints.maxWidth > 1200
+                ? 800.0
+                : constraints.maxWidth * 0.9;
+
+            return Center(
+              child: SizedBox(
+                width: contentWidth,
+                child: Column(
                   children: [
-                    _buildPostsList(_postsFutureGeneral!),
-                    _buildPostsList(_postsFutureFollowing!),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: SearchBarCustom(
+                        controller: _searchController,
+                        onSearch: _performSearch,
+                        onModuleSelected: (module) {
+                          setState(() {
+                            _selectedModule = module;
+                            _updateFutures();
+                          });
+                        },
+                        modules: _modules,
+                        selectedModule: _selectedModule,
+                      ),
+                    ),
+                    Theme(
+                      data: Theme.of(context).copyWith(
+                        tabBarTheme: TabBarTheme(
+                          labelStyle: TextStyle(
+                            fontSize: constraints.maxWidth < 600 ? 12 : 14,
+                          ),
+                        ),
+                      ),
+                      child: TabBar(
+                        indicatorPadding: const EdgeInsets.all(10.0),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        controller: _tabController,
+                        indicator: const BoxDecoration(
+                          image: DecorationImage(
+                            alignment: Alignment.center,
+                            opacity: 0.8,
+                            scale: 0.5,
+                            image: AssetImage('assets/images/tabmarker.png'),
+                            fit: BoxFit.scaleDown,
+                          ),
+                        ),
+                        labelColor: AppStyles.colorAvatarBorder,
+                        indicatorColor: AppStyles.colorAvatarBorder,
+                        dividerColor: Colors.transparent,
+                        tabs: [
+                          Tab(
+                            text: Texts.translate(
+                                'feedGeneralTab', globalLanguage),
+                          ),
+                          Tab(
+                            text:
+                                Texts.translate('FollowingTab', globalLanguage),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildPostsList(_postsFutureGeneral!),
+                          _buildPostsList(_postsFutureFollowing!),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showCreatePostDialog,
-        child: const Icon(Icons.add),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showCreatePostDialog,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
