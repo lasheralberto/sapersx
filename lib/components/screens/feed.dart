@@ -187,9 +187,9 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                             vertical: 8.0,
                           ),
                           child: Container(
-                            constraints: BoxConstraints(
-                              maxWidth: 800, // Maximum width for large screens
-                            ),
+                            //constraints: BoxConstraints(
+                            //maxWidth: 800, // Maximum width for large screens
+                            //),
                             margin: const EdgeInsets.symmetric(vertical: 8.0),
                             padding: const EdgeInsets.all(16.0),
                             decoration: BoxDecoration(
@@ -248,7 +248,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
             // Calculate the optimal width for the content
             final contentWidth = constraints.maxWidth > 1200
                 ? 800.0
-                : constraints.maxWidth * 0.9;
+                : constraints.maxWidth * 0.99;
 
             return Center(
               child: SizedBox(
