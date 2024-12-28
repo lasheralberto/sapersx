@@ -168,7 +168,7 @@ class _PostCardState extends State<PostCard> {
 
   Widget _buildPostFooter(BoxConstraints constraints) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         CommentButton(
           replyCount: widget.post.replyCount,
