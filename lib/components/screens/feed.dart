@@ -183,7 +183,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                       (context, index) {
                         return Padding(
                           padding: EdgeInsets.symmetric(
-                            horizontal: constraints.maxWidth * 0.05,
+                            horizontal: constraints.maxWidth * 0.001,
                             vertical: 8.0,
                           ),
                           child: Container(
