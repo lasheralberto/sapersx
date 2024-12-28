@@ -188,7 +188,7 @@ class AppStyles {
     double screenWidth = MediaQuery.of(context).size.width;
 
     if (screenWidth < 600) {
-      return screenWidth * 0.95;
+      return screenWidth * 0.99;
     } else if (screenWidth < 1024) {
       return screenWidth * 0.65;
     } else {
