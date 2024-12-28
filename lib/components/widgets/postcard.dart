@@ -209,11 +209,12 @@ class _PostCardState extends State<PostCard> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ProfileAvatar(
-            seed: FirebaseAuth.instance.currentUser?.email ?? '',
-            showBorder: true,
-            size: 32,
-          ),
+          //ProfileAvatar(
+          //seed: FirebaseAuth.instance.currentUser?.email ?? '',
+          //showBorder: true,
+          //size: 32,
+          //)
+          _buildAuthorAvatar(),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
