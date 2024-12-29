@@ -6,7 +6,6 @@ import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 
-import 'package:sapers/main.dart';
 class LoginDialog extends StatefulWidget {
   const LoginDialog({super.key});
 
