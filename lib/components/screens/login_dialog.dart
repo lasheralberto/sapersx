@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:sapers/components/screens/details_user_profile_signup.dart';
-import 'package:sapers/main.dart';
-import 'package:sapers/models/firebase_service.dart';
-import 'package:sapers/models/styles.dart';
-import 'package:sapers/models/texts.dart';
+import 'package:sapers/components/screens/details_user_profile_signup.dart' as details_screen;
+import 'package:sapers/main.dart' as app_main;
+import 'package:sapers/models/firebase_service.dart' as firebase_service;
+import 'package:sapers/models/styles.dart' as styles;
+import 'package:sapers/models/texts.dart' as texts;
 
 class LoginDialog extends StatefulWidget {
   const LoginDialog({super.key});
@@ -18,8 +18,8 @@ class _LoginDialogState extends State<LoginDialog> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _authService = AuthService();
-  final _styles = AppStyles();
+  final _authService = firebase_service.AuthService();
+  final _styles = styles.AppStyles();
   String? _errorMessage;
   bool _isLoading = false;
   bool _isSignUp = false;
@@ -41,27 +41,13 @@ class _LoginDialogState extends State<LoginDialog> {
 
       try {
         if (_isSignUp) {
-          // Primero crear el usuario
           await _authService.signUp(email, pass);
-
-          // Esperar a que el estado de autenticación cambie
           await FirebaseAuth.instance.authStateChanges().first;
-
-          // Mostrar el popup de perfil y esperar a que se complete
-          await UserProfilePopup.show(context);
-
-          // Si todo fue exitoso, retornar true
+          await details_screen.UserProfilePopup.show(context);
           return true;
         } else {
           final user = await _authService.signIn(email, pass);
-          if (user != null) {
-            // Aquí puedes realizar alguna acción una vez que el usuario esté logueado, por ejemplo:
-            // Actualizar el estado global del usuario o realizar alguna acción adicional.
-       
-            return true;
-          } else {
-            return false;
-          }
+          return user != null;
         }
       } on FirebaseAuthException catch (e) {
         setState(() {
@@ -91,7 +77,7 @@ class _LoginDialogState extends State<LoginDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+        borderRadius: BorderRadius.circular(styles.AppStyles.borderRadiusValue),
       ),
       elevation: 0,
       backgroundColor: Colors.white,
@@ -107,9 +93,9 @@ class _LoginDialogState extends State<LoginDialog> {
               children: [
                 Text(
                   _isSignUp
-                      ? Texts.translate('crearCuenta', globalLanguage)
-                      : Texts.translate('iniciarSesion', globalLanguage),
-                  style: AppStyles().getTextStyle(context,
+                      ? texts.Texts.translate('crearCuenta', app_main.globalLanguage)
+                      : texts.Texts.translate('iniciarSesion', app_main.globalLanguage),
+                  style: _styles.getTextStyle(context,
                       fontSize: 18, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
@@ -117,16 +103,16 @@ class _LoginDialogState extends State<LoginDialog> {
                 TextFormField(
                   controller: _emailController,
                   decoration: _styles.getInputDecoration(
-                      Texts.translate('emailField', globalLanguage),
+                      texts.Texts.translate('emailField', app_main.globalLanguage),
                       null,
                       context),
                   style: const TextStyle(fontSize: 16),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return Texts.translate('emailValidate', globalLanguage);
+                      return texts.Texts.translate('emailValidate', app_main.globalLanguage);
                     }
                     if (!value.contains('@')) {
-                      return Texts.translate('emailWrong', globalLanguage);
+                      return texts.Texts.translate('emailWrong', app_main.globalLanguage);
                     }
                     return null;
                   },
@@ -135,17 +121,17 @@ class _LoginDialogState extends State<LoginDialog> {
                 TextFormField(
                   controller: _passwordController,
                   decoration: _styles.getInputDecoration(
-                      Texts.translate('Password', globalLanguage),
+                      texts.Texts.translate('Password', app_main.globalLanguage),
                       null,
                       context),
                   style: const TextStyle(fontSize: 16),
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return Texts.translate('passError', globalLanguage);
+                      return texts.Texts.translate('passError', app_main.globalLanguage);
                     }
                     if (_isSignUp && value.length < 6) {
-                      return Texts.translate('passErrorLen', globalLanguage);
+                      return texts.Texts.translate('passErrorLen', app_main.globalLanguage);
                     }
                     return null;
                   },
@@ -155,19 +141,19 @@ class _LoginDialogState extends State<LoginDialog> {
                   TextFormField(
                     controller: _confirmPasswordController,
                     decoration: _styles.getInputDecoration(
-                        Texts.translate('confirmarContraseña', globalLanguage),
+                        texts.Texts.translate('confirmarContraseña', app_main.globalLanguage),
                         null,
                         context),
                     style: const TextStyle(fontSize: 16),
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return Texts.translate(
-                            'porFavorConfirmaTuContraseña', globalLanguage);
+                        return texts.Texts.translate(
+                            'porFavorConfirmaTuContraseña', app_main.globalLanguage);
                       }
                       if (value != _passwordController.text) {
-                        return Texts.translate(
-                            'lasContraseñasNoCoinciden', globalLanguage);
+                        return texts.Texts.translate(
+                            'lasContraseñasNoCoinciden', app_main.globalLanguage);
                       }
                       return null;
                     },
@@ -182,8 +168,7 @@ class _LoginDialogState extends State<LoginDialog> {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.red[50],
-                      borderRadius:
-                          BorderRadius.circular(AppStyles.borderRadiusValue),
+                      borderRadius: BorderRadius.circular(styles.AppStyles.borderRadiusValue),
                     ),
                     child: Text(
                       _errorMessage!,
@@ -198,35 +183,31 @@ class _LoginDialogState extends State<LoginDialog> {
                 const SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: () async {
-                    if (_isLoading == false) {
+                    if (!_isLoading) {
                       var isLogued = await _submitForm(
                         _emailController.text,
                         _passwordController.text,
                       );
-
                       if (isLogued == true) {
-                        // Navega a la pantalla de feed y reemplaza la actual
                         Navigator.pop(context, true);
                       }
                     }
                   },
-                  style: AppStyles().getButtonStyle(context),
+                  style: _styles.getButtonStyle(context),
                   child: _isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
                       : Text(
                           _isSignUp
-                              ? Texts.translate('crearCuenta', globalLanguage)
-                              : Texts.translate(
-                                  'iniciarSesion', globalLanguage),
-                          style: AppStyles().getTextStyle(context,
+                              ? texts.Texts.translate('crearCuenta', app_main.globalLanguage)
+                              : texts.Texts.translate('iniciarSesion', app_main.globalLanguage),
+                          style: _styles.getTextStyle(context,
                               fontSize: 18,
                               fontWeight: FontWeight.normal,
                               color: Colors.white),
@@ -236,13 +217,13 @@ class _LoginDialogState extends State<LoginDialog> {
                 TextButton(
                   onPressed: _isLoading ? null : _toggleMode,
                   style: TextButton.styleFrom(
-                    foregroundColor: AppStyles.colorAvatarBorder,
+                    foregroundColor: styles.AppStyles.colorAvatarBorder,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: Text(
                     _isSignUp
-                        ? Texts.translate('iniciarSesion', globalLanguage)
-                        : Texts.translate('crearCuenta', globalLanguage),
+                        ? texts.Texts.translate('iniciarSesion', app_main.globalLanguage)
+                        : texts.Texts.translate('crearCuenta', app_main.globalLanguage),
                     style: const TextStyle(fontSize: 14),
                   ),
                 ),
