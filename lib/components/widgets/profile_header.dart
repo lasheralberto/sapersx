@@ -129,12 +129,6 @@ class _ProfileHeaderState extends State<ProfileHeader> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.profile.username,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        Text(
           '@${widget.profile.username}',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: TwitterColors.secondary,
