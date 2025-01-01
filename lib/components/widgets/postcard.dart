@@ -126,7 +126,7 @@ Widget _buildFixedReplyField() {
                   constraints: const BoxConstraints(maxHeight: 100),
                   child: TextEditorWithCode(
                     textController: _replyController,
-                    maxLines: 4,
+                  
                   ),
                 ),
               ),
