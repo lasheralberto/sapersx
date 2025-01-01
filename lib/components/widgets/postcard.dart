@@ -126,7 +126,6 @@ Widget _buildFixedReplyField() {
                   constraints: const BoxConstraints(maxHeight: 100),
                   child: TextEditorWithCode(
                     textController: _replyController,
-                    minLines: 1,
                     maxLines: 4,
                   ),
                 ),
@@ -167,7 +166,7 @@ Widget _buildFixedReplyField() {
                         UtilsSapers().getReplyId(context),
                       ),
                       width: 80,
-                      height: 32,
+                     
                       customColor: AppStyles().getButtonColor(context),
                     ),
                 ],
