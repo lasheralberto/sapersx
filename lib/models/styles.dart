@@ -17,7 +17,7 @@ class AppStyles {
   static const scaffoldBackgroundColorDar = _darkGray;
 
   // Colores de las tarjetas
-  static const postCardColorSelected = Color(0xFFFFECCC); // Naranja muy claro
+  static const postCardColorSelected = _lightGray; // Naranja muy claro
   static const postCardColor = Colors.transparent;
   static const postCardReplyColor = _pureWhite;
   static const Color colorAvatarBorder = _amazonOrange;
