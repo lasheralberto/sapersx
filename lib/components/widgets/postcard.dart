@@ -74,10 +74,10 @@ class _PostCardState extends State<PostCard> {
               ),
             ),
             if (isExpanded) ...[
-              const Divider(height: 1, thickness: 0.5),
+              const Divider(height: 1, thickness: 0.5, color: Colors.orange),
               _buildReplySection(constraints),
             ],
-            const Divider(height: 1, thickness: 0.5, color: Colors.grey),
+            const Divider(height: 0.5, thickness: 0.5, color: Colors.grey),
           ],
         );
       },
