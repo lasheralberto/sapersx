@@ -57,30 +57,121 @@ class _PostCardState extends State<PostCard> {
     super.dispose();
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Column(
+    return Stack(
+      children: [
+        Column(
           children: [
             InkWell(
               onTap: () => setState(() => isExpanded = !isExpanded),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: constraints.maxWidth * 0.03,
-                  vertical: 12,
-                ),
-                child: _buildPostContent(constraints),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: constraints.maxWidth * 0.03,
+                      vertical: 12,
+                    ),
+                    child: _buildPostContent(constraints),
+                  );
+                },
               ),
             ),
             if (isExpanded) ...[
               const Divider(height: 1, thickness: 0.5, color: Colors.orange),
-              _buildReplySection(constraints),
+              _buildRepliesList(),
+              // Add bottom padding to account for the fixed reply field
+              SizedBox(height: 80),
             ],
             const Divider(height: 0.5, thickness: 0.5, color: Colors.grey),
           ],
-        );
-      },
+        ),
+        if (isExpanded) _buildFixedReplyField(),
+      ],
+    );
+  }
+
+Widget _buildFixedReplyField() {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                ProfileAvatar(
+                  seed: FirebaseAuth.instance.currentUser?.email ?? '',
+                  showBorder: true,
+                  size: 32,
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    constraints: BoxConstraints(maxHeight: 100),
+                    child: TextEditorWithCode(
+                      textController: _replyController,
+                      minLines: 1,
+                      maxLines: 4,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.attach_file, size: 20),
+                      onPressed: () async {
+                        final files = await UtilsSapers().pickFiles(selectedFiles, context);
+                        if (files != null) {
+                          setState(() => selectedFiles = files);
+                        }
+                      },
+                      tooltip: Texts.translate('addAttachment', globalLanguage),
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    if (isUploading)
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      CustomButton(
+                        text: Texts.translate('responder', globalLanguage),
+                        onPressed: () => _handleReply(
+                          widget.post.id,
+                          UtilsSapers().getReplyId(context),
+                        ),
+                        width: 80,
+                        height: 32,
+                        customColor: AppStyles().getButtonColor(context),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
