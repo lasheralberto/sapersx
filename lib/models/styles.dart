@@ -13,7 +13,7 @@ class AppStyles {
   static const Color _darkerGray = Color(0xFF191C1F);
 
   // Colores del Scaffold
-  static const scaffoldBackgroundColorBright = _warmWhite;
+  static const scaffoldBackgroundColorBright = _pureWhite;
   static const scaffoldBackgroundColorDar = _darkGray;
 
   // Colores de las tarjetas
