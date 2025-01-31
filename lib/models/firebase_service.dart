@@ -82,7 +82,7 @@ class FirebaseService {
   final BehaviorSubject<List<SAPPost>> _postsSubject =
       BehaviorSubject<List<SAPPost>>.seeded([]);
 
-  Future<List<SAPPost>> getPostsFollowingFuture(int morePosts) async {
+  Future<List<SAPPost>> getPostsFollowingFuture() async {
     final currentUser = _auth.currentUser;
 
     if (currentUser == null) {
@@ -115,7 +115,7 @@ class FirebaseService {
           .collection('posts') // Asegúrate de usar la colección correcta
           .where('author', whereIn: chunk)
           .orderBy('timestamp', descending: true)
-          .limit(morePosts)
+         // .limit(morePosts)
           .get();
 
       final posts = snapshot.docs.map((doc) {
@@ -159,10 +159,10 @@ class FirebaseService {
   }
 
 // Método para obtener todos los posts una sola vez
-  Future<List<SAPPost>> getPostsFuture(int morePosts) async {
+  Future<List<SAPPost>> getPostsFuture() async {
     final snapshot = await postsCollection
         .orderBy('timestamp', descending: true)
-        .limit(morePosts)
+        //.limit(morePosts)
         .get();
 
     return snapshot.docs.map((doc) {

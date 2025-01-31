@@ -1,6 +1,3 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -45,62 +42,37 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   bool isExpanded = false;
-  final TextEditingController _replyController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  final FocusNode _replyFocusNode = FocusNode();
-  final FirebaseService _firebaseService = FirebaseService();
 
-  String _imageUrl = ''; // Para guardar la URL de la imagen pegada
-
-  List<PlatformFile> selectedFiles = [];
-  bool isUploading = false;
   int counter = 0;
-
-  // Función para detectar imágenes en el portapapeles
-  Future<void> _handlePaste() async {
-    final ClipboardData? clipboardData = await Clipboard.getData('text/plain');
-
-    if (clipboardData != null && clipboardData.text != null) {
-      final text = clipboardData.text!;
-      if (text.contains('data:image')) {
-        // Si el portapapeles contiene una imagen en formato base64
-        setState(() {
-          _imageUrl = text; // Asignamos la URL base64 a la variable
-        });
-      }
-    }
-  }
-
-  // Función para insertar imágenes en el texto del TextField
-  void _insertImage() {
-    if (_imageUrl.isNotEmpty) {
-      _replyController.text = '${_replyController.text} $_imageUrl';
-    }
-  }
 
   @override
   void dispose() {
     super.dispose();
   }
 
+// Dentro de _PostCardState en PostCard
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Card(
-          //  margin: const EdgeInsets.symmetric(vertical: 8.0),
           color: AppStyles().getCardColor(context),
           elevation: 0,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildPostHeader(constraints.maxWidth, widget.post.id),
+              if (isExpanded) // Muestra replies solo cuando está expandido
+                ReplySection(
+                  maxWidth: constraints.maxWidth,
+                  postId: widget.post.id,
+                  replyId: '', // O usa widget.post.id si es necesario
+                  replyCount: widget.post.replyCount,
+                  firebaseService:
+                      FirebaseService(), // Asegúrate de inyectar el servicio
+                  globalLanguage: 'es', // O obtén el lenguaje del contexto
+                ),
               const SizedBox(height: 4),
-              if (isExpanded) ...[
-                const Divider(height: 1),
-                _buildReplySection(constraints.maxWidth, widget.post.id,
-                    UtilsSapers().getReplyId(context)),
-              ],
             ],
           ),
         );
@@ -108,160 +80,12 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Future<void> _handleReply(String postId, String replyId) async {
-    if (_replyController.text.isEmpty && selectedFiles.isEmpty) return;
-
-    bool isLoguedIn = AuthService().isUserLoggedIn(context);
-
-    if (isLoguedIn) {
-      try {
-        setState(() {
-          isUploading = true;
-        });
-
-        List<Map<String, dynamic>> attachmentsList = [];
-        if (selectedFiles.isNotEmpty) {
-          attachmentsList = await _firebaseService.addAttachments(
-              postId, replyId, selectedFiles);
-        }
-
-        await _firebaseService.createReply(
-            widget.post.id, _replyController.text, widget.post.replyCount + 1,
-            attachments: attachmentsList);
-
-        setState(() {
-          isUploading = false;
-          selectedFiles.clear();
-        });
-        _replyController.clear();
-
-        if (!mounted) return;
-        await Future.delayed(const Duration(milliseconds: 100));
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(Texts.translate('passError', globalLanguage))),
-        );
-        setState(() {
-          isUploading = false;
-          selectedFiles.clear();
-        });
-      }
-    }
-  }
-
-  Widget _buildAttachmentUploadedReply() {
-    if (selectedFiles.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('(${selectedFiles.length})',
-              style: AppStyles().getTextStyle(context)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: selectedFiles
-                .map((file) => _buildAttachmentChip(file))
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAttachmentChip(PlatformFile file) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 200),
-      child: Chip(
-        label: Text(
-          file.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppStyles().getTextStyle(context),
-        ),
-        side: BorderSide.none,
-        deleteIcon: const Icon(Icons.close, size: 16),
-        onDeleted: () {
-          setState(() {
-            selectedFiles.remove(file);
-          });
-        },
-      ),
-    );
-  }
-
-  // Update the reply input section
-  Widget _buildReplyInput(String postId, String replyId) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextEditorWithCode(textController: _replyController),
-          const SizedBox(height: 12),
-          _buildAttachmentUploadedReply(),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.attach_file),
-                  onPressed: () async {
-                    await UtilsSapers()
-                        .pickFiles(selectedFiles, context)
-                        .then((value) {
-                      if (value != null) {
-                        setState(() {
-                          selectedFiles = value;
-                        });
-                      }
-                    });
-                  },
-                  tooltip: Texts.translate('addAttachment', globalLanguage),
-                ),
-                const SizedBox(width: 8),
-                if (isUploading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  CustomButton(
-                    text: Texts.translate('responder', globalLanguage),
-                    onPressed: () => _handleReply(postId, replyId),
-                    width: 120,
-                    customColor: AppStyles().getButtonColor(context),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPostHeader(double maxWidth, String postId) {
     return InkWell(
-      onTap: () => setState(() => isExpanded = !isExpanded),
+      onTap: () {
+        setState(() => isExpanded = !isExpanded);
+        widget.onExpandChanged(isExpanded);
+      },
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -275,7 +99,7 @@ class _PostCardState extends State<PostCard> {
                 children: [
                   _buildAuthorInfo(),
                   const SizedBox(height: 2),
-                  _buildTimestamp(widget.post), // Agrega la fecha aquí
+                  _buildTimestamp(widget.post),
                   const SizedBox(height: 8),
                   _buildPostContent(),
                   const SizedBox(height: 12),
@@ -286,11 +110,11 @@ class _PostCardState extends State<PostCard> {
                       SAPAttachmentsViewerHeader(
                         reply: widget.post,
                         onAttachmentOpen: (attachment) {
-                          // Manejar la apertura del archivo
                           if (attachment['url'] != null) {
-                            final Uri uri = Uri.parse(attachment['url']);
-                            launchUrl(uri,
-                                mode: LaunchMode.externalApplication);
+                            launchUrl(
+                              Uri.parse(attachment['url']),
+                              mode: LaunchMode.externalApplication,
+                            );
                           }
                         },
                       ),
@@ -305,143 +129,31 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _buildHeaderInfo() {
+  Widget _buildAuthorAvatar() {
+    return UserProfileCardHover(
+      post: widget.post,
+      onProfileOpen: () {
+        // Opcional: Añade aquí lógica adicional cuando se abre el perfil
+      },
+    );
+  }
+
+  Widget _buildAuthorInfo() {
     return Row(
       children: [
-        Text(
-          widget.post.author,
-          style: AppStyles().getTextStyle(context).copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
+        Text(widget.post.author, style: AppStyles().getTextStyle(context)),
         const SizedBox(width: 8),
-        Text(
-          widget.post.module,
-          style: AppStyles().getTextStyle(context).copyWith(
-                color: Colors.grey,
-                fontSize: 14,
-              ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          '·',
-          style: AppStyles().getTextStyle(context).copyWith(
-                color: Colors.grey,
-              ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          UtilsSapers().formatTimestamp(widget.post.timestamp),
-          style: AppStyles().getTextStyle(context).copyWith(
-                color: Colors.grey,
-                fontSize: 14,
-              ),
-        ),
+        Text(widget.post.module, style: AppStyles().getTextStyle(context)),
       ],
     );
   }
 
   Widget _buildPostContent() {
-    Widget content = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.post.content,
-          style: AppStyles().getTextStyle(context),
-          maxLines: isExpanded ? null : 4,
-        ),
-      ],
-    );
-
-    if (!isExpanded) {
-      return ShaderMask(
-        shaderCallback: (Rect bounds) {
-          return const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.black, Colors.white, Colors.transparent],
-            stops: [0.0, 0.8, 1.0],
-          ).createShader(bounds);
-        },
-        blendMode: BlendMode.dstIn,
-        child: content,
-      );
-    }
-
-    return content;
-  }
-
-  Widget _buildReplySection(double maxWidth, postid, replyId) {
-    return Container(
-      constraints: BoxConstraints(maxWidth: maxWidth),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildReplyInput(postid, replyId),
-          _buildRepliesList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRepliesList() {
-    return StreamBuilder<List<SAPReply>>(
-      stream: _firebaseService.getRepliesForPost(widget.post.id),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return _buildErrorMessage(snapshot.error.toString());
-        }
-
-        if (!snapshot.hasData) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-
-        final replies = snapshot.data!;
-        if (replies.isEmpty) {
-          return _buildEmptyRepliesMessage();
-        }
-
-        return ListView.separated(
-          padding: const EdgeInsets.all(10),
-          physics: const NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          itemCount: replies.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (_, index) => _buildReplyCard(replies[index]),
-        );
-      },
-    );
-  }
-
-  Widget _buildErrorMessage(String error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Text(
-          Texts.translate('passError', globalLanguage),
-          style: AppStyles().getTextStyle(context),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyRepliesMessage() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Text(
-          Texts.translate('serElPrimeroEnResponder', globalLanguage),
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 16,
-          ),
-        ),
-      ),
+    return Text(
+      widget.post.content,
+      style: AppStyles().getTextStyle(context),
+      maxLines: isExpanded ? null : 4,
+      overflow: isExpanded ? TextOverflow.visible : TextOverflow.fade,
     );
   }
 
@@ -463,232 +175,122 @@ class _PostCardState extends State<PostCard> {
       ),
     );
   }
+}
 
-  Widget _buildReplyCard(SAPReply reply) {
-    return Card(
-      color: AppStyles().getCardColor(context),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildReplyHeader(reply),
-            const SizedBox(height: 12),
-            _buildCodeContent(reply.content),
-            if (reply.attachments != null && reply.attachments!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              AttachmentsViewer(
-                reply: reply,
-                onAttachmentOpen: (attachment) {
-                  if (attachment['url'] != null) {
-                    final Uri uri = Uri.parse(attachment['url']);
-                    launchUrl(uri, mode: LaunchMode.externalApplication);
-                  }
-                },
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
+class ReplyBottomSheet extends StatefulWidget {
+  final Function(String) onSubmitted;
+  final String? hintText;
+
+  const ReplyBottomSheet({
+    super.key,
+    required this.onSubmitted,
+    this.hintText,
+  });
+
+  @override
+  State<ReplyBottomSheet> createState() => _ReplyBottomSheetState();
+}
+
+class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
+  final TextEditingController _controller = TextEditingController();
+  bool _isComposing = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
-  Widget _buildReplyHeader(SAPReply reply) {
-    return Row(
-      children: [
-        ProfileAvatar(
-            seed: reply.author,
-            showBorder: true,
-            size: AppStyles.avatarSize - 10),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                  reply
-                      .author, // Changed from widget.post.author to reply.author
-                  style: AppStyles().getTextStyle(context)),
-              Text(UtilsSapers().formatTimestamp(reply.timestamp),
-                  style: AppStyles().getTextStyle(context)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAttachmentChip(PlatformFile file) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 200),
-      child: Chip(
-        label: Text(
-          file.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppStyles().getTextStyle(context),
-        ),
-        deleteIcon: const Icon(Icons.close, size: 16),
-        onDeleted: () => setState(() => selectedFiles.remove(file)),
-      ),
-    );
-  }
-
-  Future<void> _handleReply(String postId, String replyId) async {
-    if (_replyController.text.isEmpty && selectedFiles.isEmpty) return;
-
-    if (AuthService().isUserLoggedIn(context)) {
-      try {
-        setState(() => isUploading = true);
-
-        List<Map<String, dynamic>> attachmentsList = [];
-        if (selectedFiles.isNotEmpty) {
-          attachmentsList = await _firebaseService.addAttachments(
-            postId,
-            replyId,
-            selectedFiles,
-          );
-        }
-
-        await _firebaseService.createReply(
-          widget.post.id,
-          _replyController.text,
-          widget.post.replyCount + 1,
-          attachments: attachmentsList,
-        );
-
-        setState(() {
-          isUploading = false;
-          selectedFiles.clear();
-        });
-        _replyController.clear();
-
-        if (mounted && _scrollController.hasClients) {
-          await Future.delayed(const Duration(milliseconds: 100));
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(Texts.translate('passError', globalLanguage)),
-          ),
-        );
-        setState(() {
-          isUploading = false;
-          selectedFiles.clear();
-        });
-      }
+  void _handleSubmitted(String text) {
+    if (text.trim().isNotEmpty) {
+      widget.onSubmitted(text);
+      _controller.clear();
+      setState(() {
+        _isComposing = false;
+      });
+      Navigator.pop(context); // Cierra el bottom sheet después de enviar
     }
   }
 
-  Widget _buildCodeContent(String content) {
-    if (content.isEmpty || !content.contains('```')) {
-      return Text(content, style: const TextStyle(fontSize: 15));
-    }
-
-    final parts = content.split('```');
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: parts.asMap().entries.map((entry) {
-        final index = entry.key;
-        final part = entry.value.trim();
-
-        if (index % 2 == 0 && part.isNotEmpty) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(part, style: const TextStyle(fontSize: 15)),
-          );
-        } else if (index % 2 == 1) {
-          return _buildCodeBlock(part);
-        }
-
-        return const SizedBox.shrink();
-      }).toList(),
-    );
-  }
-
-  Widget _buildCodeBlock(String code) {
-    final codeLines = code.split('\n');
-    final language = codeLines.isNotEmpty ? codeLines[0].trim() : '';
-    final codeContent =
-        language.isNotEmpty ? codeLines.sublist(1).join('\n') : code;
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (language.isNotEmpty) _buildCodeHeader(language, codeContent),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: HighlightView(
-              codeContent,
-              languageId: 'abap',
-              theme: githubTheme,
-              padding: const EdgeInsets.all(16),
-              textStyle: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 14,
-              ),
-            ),
+        color: theme.scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCodeHeader(String language, String code) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-            ),
-            child: Text(
-              language.toUpperCase(),
-              style: AppStyles().getTextStyle(context),
-            ),
+      child: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            iconSize: 20,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 32,
-              minHeight: 32,
-            ),
-            icon: const Icon(Icons.copy, size: 20),
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: code.trim()));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                      Texts.translate('copiarAlPortapapeles', globalLanguage)),
-                  duration: const Duration(seconds: 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Container(
+                  constraints: const BoxConstraints(maxHeight: 120),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: theme.dividerColor.withOpacity(0.2),
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _controller,
+                    maxLines: null,
+                    textCapitalization: TextCapitalization.sentences,
+                    style: theme.textTheme.bodyLarge,
+                    decoration: InputDecoration(
+                      hintText: widget.hintText ?? 'Escribe tu respuesta...',
+                      hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.hintColor,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    onChanged: (text) {
+                      setState(() {
+                        _isComposing = text.trim().isNotEmpty;
+                      });
+                    },
+                    onSubmitted: _handleSubmitted,
+                  ),
                 ),
-              );
-            },
-            tooltip: Texts.translate('copiarAlPortapapeles', globalLanguage),
+              ),
+              const SizedBox(width: 8),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                child: IconButton(
+                  onPressed: _isComposing
+                      ? () => _handleSubmitted(_controller.text)
+                      : null,
+                  icon: Icon(
+                    Icons.send_rounded,
+                    color: _isComposing
+                        ? theme.colorScheme.primary
+                        : theme.disabledColor,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
