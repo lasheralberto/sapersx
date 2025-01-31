@@ -188,11 +188,23 @@ class AppStyles {
     double screenWidth = MediaQuery.of(context).size.width;
 
     if (screenWidth < 600) {
-      return screenWidth * 0.95;
+      return screenWidth * 0.99;
     } else if (screenWidth < 1024) {
-      return screenWidth * 0.65;
-    } else {
       return screenWidth * 0.75;
+    } else {
+      return screenWidth * 0.85;
+    }
+  }
+
+  double getFeedWith(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    if (screenWidth < 600) {
+      return screenWidth * 0.99;
+    } else if (screenWidth < 1024) {
+      return screenWidth * 0.75;
+    } else {
+      return screenWidth * 0.85;
     }
   }
 
