@@ -36,28 +36,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   Future<List<SAPPost>>? _postsFutureGeneral;
   Future<List<SAPPost>>? _postsFutureFollowing;
   bool _isRefreshing = false;
-  bool isPostExpanded = false;
-
-  // Estilo Mesomórfico para el feed
-  static const _mesoShadow = [
-    BoxShadow(
-      color: Color(0x22000000),
-      blurRadius: 5,
-      spreadRadius: 1,
-      offset: Offset(1, 8),
-    ),
-    BoxShadow(
-      color: Color(0x44FFFFFF),
-      blurRadius: 5,
-      spreadRadius: 1,
-      offset: Offset(-1, -8),
-    ),
-  ];
-
-  static const _mesoBorder = BorderSide(
-    color: Color(0x44FFFFFF),
-    width: 2,
-  );
+  bool _hasScrolledDown = false;
 
   @override
   void initState() {
@@ -66,23 +45,28 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     _updateFutures();
   }
 
+  // Método para manejar la acción de refrescar al hacer pull
   Future<void> _handleRefresh() async {
     if (!_isRefreshing) {
-      setState(() => _isRefreshing = true);
-      await _updateFutures();
-      setState(() => _isRefreshing = false);
+      setState(() {
+        _isRefreshing = true;
+      });
+
+      await Future.delayed(
+          const Duration(seconds: 2)); // Simulación de refresco
+      setState(() {
+        _updateFutures();
+        _isRefreshing = false;
+      });
     }
   }
 
-  Future<void> _updateFutures() async {
-    final generalPosts = _selectedModule.isEmpty
-        ? _firebaseService.getPostsFuture()
-        : _firebaseService.getPostsByModuleFuture(_selectedModule);
-    final followingPosts = _firebaseService.getPostsFollowingFuture();
-
+  void _updateFutures() {
     setState(() {
-      _postsFutureGeneral = generalPosts;
-      _postsFutureFollowing = followingPosts;
+      _postsFutureGeneral = _selectedModule.isEmpty
+          ? _firebaseService.getPostsFuture()
+          : _firebaseService.getPostsByModuleFuture(_selectedModule);
+      _postsFutureFollowing = _firebaseService.getPostsFollowingFuture();
     });
   }
 
@@ -90,9 +74,25 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     final searchText = _searchController.text.trim();
     setState(() {
       _postsFutureGeneral = searchText.isEmpty
-          ? _firebaseService.getPostsFuture()
+          ? _firebaseService.getPostsFuture(_loadMoreMessages)
           : _firebaseService.getPostsByKeyword(searchText);
       _selectedModule = searchText.isEmpty ? _selectedModule : '';
+    });
+  }
+
+  // Función para cargar más mensajes
+  void _loadMoreMessagesFunc() {
+    setState(() {
+      _loadMoreMessages += _incrementLoad;
+      if (_tabController.index == 1) {
+        debugPrint('Fetching ' + _loadMoreMessages.toString());
+        _postsFutureGeneral =
+            _firebaseService.getPostsFuture(_loadMoreMessages);
+      } else if (_tabController.index == 2) {
+        debugPrint('Fetching ' + _loadMoreMessages.toString());
+        _postsFutureFollowing =
+            _firebaseService.getPostsFollowingFuture(_loadMoreMessages);
+      }
     });
   }
 
@@ -117,64 +117,77 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       future: future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: SelectableText('Error: ${snapshot.error}'));
-        }
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final posts = snapshot.data ?? [];
-        if (posts.isEmpty) {
           return Center(
-              child: Text(Texts.translate('noposts', globalLanguage)));
+            child: SelectableText('Error: ${snapshot.error}'),
+          );
         }
 
-        return RefreshIndicator(
-          onRefresh: _handleRefresh,
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final posts = snapshot.data ?? [];
+            if (posts.isEmpty) {
+              return Center(
+                  child: Text(Texts.translate('noposts', globalLanguage)));
+            }
+
+        return NotificationListener<ScrollNotification>(
+          onNotification: (ScrollNotification scrollInfo) {
+            // Detectamos cuando el usuario está en el inicio
+            if (!_isRefreshing &&
+                scrollInfo.metrics.pixels <=
+                    scrollInfo.metrics.minScrollExtent) {
+              // Solo refrescamos si el usuario ha desplazado la lista hacia abajo previamente
+              if (_hasScrolledDown) {
+                _handleRefresh(); // Llamamos a refrescar
+              }
+            }
+
+            // Detectamos si el usuario ha hecho scroll hacia abajo (en cualquier dirección)
+            if (scrollInfo.metrics.pixels >
+                scrollInfo.metrics.minScrollExtent) {
+              setState(() {
+                _hasScrolledDown =
+                    true; // Marcamos que se ha hecho scroll hacia abajo
+              });
+            }
+
+            return false; // Deja que el scroll siga funcionando normalmente
+          },
           child: CustomScrollView(
             slivers: [
+              // const SliverAppBar(
+              //   expandedHeight: 0.0, // Evita que el AppBar se expanda
+              //   floating: true,
+              //   pinned: true,
+              //   snap: true,
+              //   flexibleSpace: SizedBox(),
+              // ),
+              // Si estamos en web, mostramos el icono de refresco
               if (_isRefreshing)
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 8.0),
-                    child: Center(child: CircularProgressIndicator()),
+                    child:
+                        Center(child: Icon(Icons.refresh, color: Colors.grey)),
                   ),
                 ),
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: Theme.of(context).colorScheme.surface,
-                          boxShadow: _mesoShadow,
-                          border: Border.all(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .outline
-                                .withOpacity(0.1),
-                            width: 1,
-                          ),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: PostCard(
-                              onExpandChanged: (p0) =>
-                                  setState(() => isPostExpanded = p0),
-                              post: posts[index],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                    childCount: posts.length,
-                  ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      padding: const EdgeInsets.all(16.0),
+                      decoration: BoxDecoration(
+                        color: AppStyles().getCardColor(context),
+                        borderRadius:
+                            BorderRadius.circular(AppStyles.borderRadiusValue),
+                      ),
+                      child: PostCard(post: posts[index]),
+                    );
+                  },
+                  childCount: posts.length,
                 ),
               ),
             ],
@@ -192,11 +205,16 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         elevation: 0,
         centerTitle: true,
         title: Image.asset(
-          'assets/images/logo.png',
-          width: 100.0,
-          height: 100.0,
+          'assets/images/logo.png', // Ruta de tu logo
+          width: 100.0, // Ajusta el tamaño del logo según sea necesario
+          height: 100.0, // Ajusta el tamaño del logo según sea necesario
         ),
         actions: [
+          // IconButton(
+          //   icon: Icon(
+          //       themeNotifier.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+          //   onPressed: () => themeNotifier.toggleTheme(),
+          // ),
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: UserAvatar(
@@ -208,7 +226,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       body: Center(
         child: ConstrainedBox(
           constraints:
-              BoxConstraints(maxWidth: AppStyles().getFeedWith(context)),
+              BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
           child: Column(
             children: [
               SearchBarCustom(

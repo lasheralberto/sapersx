@@ -13,11 +13,11 @@ class AppStyles {
   static const Color _darkerGray = Color(0xFF191C1F);
 
   // Colores del Scaffold
-  static const scaffoldBackgroundColorBright = _warmWhite;
+  static const scaffoldBackgroundColorBright = _pureWhite;
   static const scaffoldBackgroundColorDar = _darkGray;
 
   // Colores de las tarjetas
-  static const postCardColorSelected = Color(0xFFFFECCC); // Naranja muy claro
+  static const postCardColorSelected = _lightGray; // Naranja muy claro
   static const postCardColor = Colors.transparent;
   static const postCardReplyColor = _pureWhite;
   static const Color colorAvatarBorder = _amazonOrange;
@@ -30,7 +30,7 @@ class AppStyles {
   static const double borderRadiusValue = 8;
 
   //Tamaño de los avatars de perfil
-  static const double avatarSize = 35.0;
+  static const double avatarSize = 33.0;
 
   //Progress indicator button
   Widget progressIndicatorButton() {
@@ -125,7 +125,7 @@ class AppStyles {
   TextStyle getButtontTextStyle(context) {
     return TextStyle(
         fontWeight: FontWeight.w300,
-        fontSize: 12,
+        fontSize: 11,
         fontStyle: FontStyle.normal,
         color: Theme.of(context).brightness == Brightness.dark
             ? _darkGray
@@ -141,7 +141,7 @@ class AppStyles {
     // Valores predeterminados
 
     const FontWeight defaultWeight = FontWeight.normal;
-    const double defaultSize = 12;
+    const double defaultSize = 11;
 
     return TextStyle(
       fontWeight: fontWeight ?? defaultWeight,
@@ -188,9 +188,9 @@ class AppStyles {
     double screenWidth = MediaQuery.of(context).size.width;
 
     if (screenWidth < 600) {
-      return screenWidth * 0.99;
+      return screenWidth * 0.95;
     } else if (screenWidth < 1024) {
-      return screenWidth * 0.75;
+      return screenWidth * 0.65;
     } else {
       return screenWidth * 0.85;
     }
@@ -210,7 +210,7 @@ class AppStyles {
 
   double getSearchBarHeight(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
-    return screenHeight < 700 ? 40 : 45;
+    return screenHeight < 700 ? 35 : 45;
   }
 }
 

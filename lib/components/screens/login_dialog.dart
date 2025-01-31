@@ -111,8 +111,7 @@ class _LoginDialogState extends State<LoginDialog> {
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           boxShadow: _mesoShadow,
-          border:
-              Border.all(color: _mesoBorder.color, width: _mesoBorder.width),
+          border: Border.all(color: _mesoBorder.color, width: _mesoBorder.width),
         ),
         child: SingleChildScrollView(
           child: Container(
@@ -131,7 +130,7 @@ class _LoginDialogState extends State<LoginDialog> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: AppStyles().getButtonColor(context),
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -168,8 +167,7 @@ class _LoginDialogState extends State<LoginDialog> {
                     const SizedBox(height: 16),
                     _buildTextField(
                       controller: _confirmPasswordController,
-                      label: Texts.translate(
-                          'confirmarContraseña', globalLanguage),
+                      label: Texts.translate('confirmarContraseña', globalLanguage),
                       obscureText: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -220,7 +218,7 @@ class _LoginDialogState extends State<LoginDialog> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppStyles().getButtonColor(context),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -234,15 +232,13 @@ class _LoginDialogState extends State<LoginDialog> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : Text(
                             _isSignUp
                                 ? Texts.translate('crearCuenta', globalLanguage)
-                                : Texts.translate(
-                                    'iniciarSesion', globalLanguage),
+                                : Texts.translate('iniciarSesion', globalLanguage),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -295,8 +291,7 @@ class _LoginDialogState extends State<LoginDialog> {
           ),
           filled: true,
           fillColor: Theme.of(context).colorScheme.surface,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
         style: TextStyle(
           fontSize: 16,
