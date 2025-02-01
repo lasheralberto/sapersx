@@ -38,7 +38,9 @@ class SearchBarCustom extends StatelessWidget {
               contentPadding:
                   const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
               hintText: Texts.translate('buscar', globalLanguage),
-              hintStyle: TextStyle(color: Colors.grey[600]), // Hints más suaves
+              hintStyle: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: AppStyles.fontSize), // Hints más suaves
               border: OutlineInputBorder(
                   borderRadius:
                       BorderRadius.circular(AppStyles.borderRadiusValue),
@@ -96,7 +98,7 @@ class SearchBarCustom extends StatelessWidget {
                                   Icon(
                                     Icons.check,
                                     color: Theme.of(context).primaryColor,
-                                    size: 18,
+                                    size: AppStyles.fontSize,
                                   ),
                               ],
                             ),

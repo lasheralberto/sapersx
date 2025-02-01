@@ -41,23 +41,18 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   // Estilo Mesomórfico para el feed
   static const _mesoShadow = [
     BoxShadow(
-      color: Color(0x22000000),
-      blurRadius: 5,
+      color: Color.fromARGB(33, 208, 116, 116),
+      blurRadius: 10,
       spreadRadius: 1,
-      offset: Offset(1, 8),
+      offset: Offset(1, 1),
     ),
     BoxShadow(
       color: Color(0x44FFFFFF),
-      blurRadius: 5,
+      blurRadius: 10,
       spreadRadius: 1,
-      offset: Offset(-1, -8),
+      offset: Offset(-1, -1),
     ),
   ];
-
-  static const _mesoBorder = BorderSide(
-    color: Color(0x44FFFFFF),
-    width: 2,
-  );
 
   @override
   void initState() {
@@ -157,7 +152,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                           right: isMobile ? 2.0 : 8.0,
                         ),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(isMobile ? 12 : 20),
+                          borderRadius:
+                              BorderRadius.circular(isMobile ? 12 : 20),
                           color: Theme.of(context).colorScheme.surface,
                           boxShadow: isMobile ? null : _mesoShadow,
                           border: Border.all(
@@ -169,14 +165,14 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                           ),
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(isMobile ? 12 : 20),
+                          borderRadius:
+                              BorderRadius.circular(isMobile ? 12 : 20),
                           child: Material(
                             color: Colors.transparent,
                             child: PostCard(
                               onExpandChanged: (p0) =>
                                   setState(() => isPostExpanded = p0),
                               post: posts[index],
-                              
                             ),
                           ),
                         ),
@@ -204,7 +200,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         elevation: 0,
         centerTitle: true,
         title: Image.asset(
-          'assets/images/logo.png',
+          AppStyles.logoImage,
           width: isMobile ? 80.0 : 100.0,
           height: isMobile ? 80.0 : 100.0,
         ),
@@ -226,17 +222,24 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   horizontal: isMobile ? 8.0 : 16.0,
                   vertical: 8.0,
                 ),
-                child: SearchBarCustom(
-                  controller: _searchController,
-                  onSearch: _performSearch,
-                  onModuleSelected: (module) {
-                    setState(() {
-                      _selectedModule = module;
-                      _updateFutures();
-                    });
-                  },
-                  modules: _modules,
-                  selectedModule: _selectedModule,
+                child: Center(
+                  child: SizedBox(
+                    width: constraints.maxWidth >= 600
+                        ? constraints.maxWidth / 2
+                        : constraints.maxWidth * 0.9,
+                    child: SearchBarCustom(
+                      controller: _searchController,
+                      onSearch: _performSearch,
+                      onModuleSelected: (module) {
+                        setState(() {
+                          _selectedModule = module;
+                          _updateFutures();
+                        });
+                      },
+                      modules: _modules,
+                      selectedModule: _selectedModule,
+                    ),
+                  ),
                 ),
               ),
               TabBar(
@@ -248,7 +251,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                     alignment: Alignment.center,
                     opacity: 0.8,
                     scale: 0.5,
-                    image: AssetImage('assets/images/tabmarker.png'),
+                    image: AssetImage(AppStyles.tabMarkerImage),
                     fit: BoxFit.scaleDown,
                   ),
                 ),
@@ -259,16 +262,16 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   Tab(
                     child: Text(
                       Texts.translate('feedGeneralTab', globalLanguage),
-                      style: TextStyle(
-                        fontSize: isMobile ? 14 : 16,
+                      style: const TextStyle(
+                        fontSize: AppStyles.fontSize,
                       ),
                     ),
                   ),
                   Tab(
                     child: Text(
                       Texts.translate('FollowingTab', globalLanguage),
-                      style: TextStyle(
-                        fontSize: isMobile ? 14 : 16,
+                      style: const TextStyle(
+                        fontSize: AppStyles.fontSize,
                       ),
                     ),
                   ),

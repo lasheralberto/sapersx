@@ -32,6 +32,14 @@ class AppStyles {
   //Tamaño de los avatars de perfil
   static const double avatarSize = 33.0;
 
+  //Font size 
+  static const double fontSize = 12.0;
+
+  //Tab marker
+  static const String tabMarkerImage = 'assets/images/tabmarker.png';
+  //logo iamge
+  static const String logoImage = 'assets/images/logo.png';
+
   //Progress indicator button
   Widget progressIndicatorButton() {
     return const CircularProgressIndicator(
