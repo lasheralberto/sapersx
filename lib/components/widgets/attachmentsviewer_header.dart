@@ -33,13 +33,16 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
   void initState() {
     super.initState();
 
-    //remove attachments that does not fit with the current user in widget.post.author
-    if (widget.reply.attachments!.isNotEmpty) {
-      widget.reply.attachments
-          ?.removeWhere((element) => element['author'] != widget.reply.author);
+// Comprobar si attachments no es nulo y no está vacío
+    if (widget.reply.attachments?.isNotEmpty ?? false) {
+      // Eliminar aquellos attachments que no pertenecen al autor actual
+      widget.reply.attachments?.removeWhere(
+        (element) => element['author'] != widget.reply.author,
+      );
     }
 
-    if (widget.reply.attachments!.isNotEmpty) {
+// Actualizar _userHasAttachments dependiendo de si existen attachments o no
+    if (widget.reply.attachments?.isNotEmpty ?? false) {
       _userHasAttachments = false;
     } else {
       _userHasAttachments = true;
