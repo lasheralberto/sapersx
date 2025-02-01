@@ -26,6 +26,9 @@ class SAPExpertProfile extends StatelessWidget {
             _buildExperienceSection(context),
             const SizedBox(height: 16),
             _buildReviewsSection(context),
+            const SizedBox(
+                height: 16), // Espacio entre la sección de reseñas y mensajes
+           
           ],
         ),
       ),
@@ -64,23 +67,6 @@ class SAPExpertProfile extends StatelessWidget {
     );
   }
 
-  void _showAddReviewDialog(BuildContext context, String username) async {
-    final result = await showDialog(
-      context: context,
-      builder: (context) => AddReviewDialog(username: username),
-    );
-
-    if (result == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reseña añadida con éxito')),
-      );
-    } else if (result == false) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al añadir la reseña')),
-      );
-    }
-  }
-
   Widget _buildReviewsSection(BuildContext context) {
     return Card(
       color: AppStyles().getCardColor(context),
@@ -110,8 +96,7 @@ class SAPExpertProfile extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             StreamBuilder<QuerySnapshot>(
-              stream: FirebaseService().getReviews(profile
-                  .username), // Aquí estamos usando el stream directo de Firestore
+              stream: FirebaseService().getReviews(profile.username),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -173,5 +158,23 @@ class SAPExpertProfile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+
+  void _showAddReviewDialog(BuildContext context, String username) async {
+    final result = await showDialog(
+      context: context,
+      builder: (context) => AddReviewDialog(username: username),
+    );
+
+    if (result == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reseña añadida con éxito')),
+      );
+    } else if (result == false) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al añadir la reseña')),
+      );
+    }
   }
 }

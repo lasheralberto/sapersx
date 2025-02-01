@@ -41,17 +41,17 @@ class Texts {
       'stars': 'Estrellas',
       'givestar': 'Reconocer',
       'attachments': 'Adjuntos',
-      'conectar':'xConecta',
-      'seguir':'Seguir',
-      'unfollow':'Dejar de seguir',
-      'experiencia':'Experiencia',
-      'reviews':'Reseñas',
-      'feedGeneralTab':'General',
-      'FollowingTab':'Siguiendo',
-      'noposts':'No hay publicaciones disponibles',
+      'conectar': 'xConecta',
+      'seguir': 'Seguir',
+      'unfollow': 'Dejar de seguir',
+      'experiencia': 'Experiencia',
+      'reviews': 'Reseñas',
+      'feedGeneralTab': 'General',
+      'FollowingTab': 'Siguiendo',
+      'noposts': 'No hay publicaciones disponibles',
+      'mensajes': 'Mensajes',
     },
     'en': {
-
       'addAttachment': 'Add attachment',
       'attachments': 'Attachments',
       'givestar': 'Recognize',
@@ -90,14 +90,15 @@ class Texts {
       'confirmarContraseña': 'Confirm Password',
       'porFavorConfirmaTuContraseña': 'Please confirm your password',
       'lasContraseñasNoCoinciden': 'Passwords do not match',
-      'conectar':'xConnect',
-      'seguir':'Follow',
-      'unfollow':'Unfollow',
-      'experiencia':'Experience',
-      'reviews':'Reviews',
-      'feedGeneralTab':'General',
-      'FollowingTab':'Following',
-      'noposts':'No posts available',
+      'conectar': 'xConnect',
+      'seguir': 'Follow',
+      'unfollow': 'Unfollow',
+      'experiencia': 'Experience',
+      'reviews': 'Reviews',
+      'feedGeneralTab': 'General',
+      'FollowingTab': 'Following',
+      'noposts': 'No posts available',
+      'mensajes': 'Messages',
     },
   };
 
@@ -106,8 +107,8 @@ class Texts {
   }
 }
 
-class Modules{
-    static final List<String> modules = [
+class Modules {
+  static final List<String> modules = [
     'FI',
     'CO',
     'MM',

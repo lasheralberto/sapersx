@@ -36,6 +36,36 @@ class FirebaseService {
   // Cache para información de usuarios
   final Map<String, UserInfoPopUp> _userCache = {};
 
+  // Método para enviar mensaje
+  Future<bool> sendMessage({
+    required String to,
+    required String message,
+    required String from,
+  }) async {
+    try {
+      await _firestore.collection('messages').add({
+        'to': to,
+        'from': from,
+        'message': message,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      return true;
+    } catch (e) {
+      print('Error al enviar mensaje: $e');
+      return false;
+    }
+  }
+
+  
+  Stream<QuerySnapshot> getMessages(String username) {
+  return FirebaseFirestore.instance
+      .collection('messages')
+      .where('to', isEqualTo: username) // Filtra los mensajes dirigidos al usuario
+      .orderBy('timestamp', descending: true)
+      .snapshots();
+}
+
+
   //check existence of user in followers in firestore
   Future<bool> checkIfUserExistsInFollowers(String uid, String username) async {
     try {
