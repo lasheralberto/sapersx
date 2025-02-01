@@ -155,7 +155,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                           borderRadius:
                               BorderRadius.circular(isMobile ? 12 : 20),
                           color: Theme.of(context).colorScheme.surface,
-                          boxShadow: isMobile ? null : _mesoShadow,
+                          boxShadow: null,
                           border: Border.all(
                             color: Theme.of(context)
                                 .colorScheme
