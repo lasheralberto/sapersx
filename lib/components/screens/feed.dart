@@ -160,7 +160,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                             color: Theme.of(context)
                                 .colorScheme
                                 .outline
-                                .withOpacity(0.1),
+                                .withOpacity(0.15),
                             width: 0.5,
                           ),
                         ),
