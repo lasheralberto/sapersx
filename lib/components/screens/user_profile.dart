@@ -275,52 +275,52 @@ class ResponsiveProfileLayout extends StatelessWidget {
                     final String formattedDate =
                         DateFormat('dd-MM-yyyy HH:mm').format(dateTime);
 
-                    return Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 12),
-                            margin: const EdgeInsets.symmetric(
-                                vertical: 4, horizontal: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Remitente
-                                Text(
-                                  message['from'],
-                                  style: AppStyles().getTextStyle(
-                                    context,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                // Mensaje
-                                Text(
-                                  message['message'],
-                                  style: AppStyles()
-                                      .getTextStyle(context, fontSize: 16),
-                                ),
-                                const SizedBox(height: 4),
-                                // Timestamp formateado
-                                Text(
-                                  formattedDate,
-                                  style: AppStyles().getTextStyle(context,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w300),
-                                ),
-                              ],
-                            ),
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 12),
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 4, horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          Divider()
-                        ],
-                      ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Remitente
+                              Text(
+                                message['from'],
+                                style: AppStyles().getTextStyle(
+                                  context,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              // Mensaje
+                              Text(
+                                message['message'],
+                                style: AppStyles()
+                                    .getTextStyle(context, fontSize: 16),
+                              ),
+                              const SizedBox(height: 4),
+                              // Timestamp formateado
+                              Text(
+                                formattedDate,
+                                style: AppStyles().getTextStyle(
+                                  context,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider()
+                      ],
                     );
                   },
                 );
