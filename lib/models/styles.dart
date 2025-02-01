@@ -40,6 +40,12 @@ class AppStyles {
   //logo iamge
   static const String logoImage = 'assets/images/logo.png';
 
+    Widget progressIndicatorCreatePostButton() {
+    return const CircularProgressIndicator(
+      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+    );
+  }
+
   //Progress indicator button
   Widget progressIndicatorButton() {
     return const CircularProgressIndicator(

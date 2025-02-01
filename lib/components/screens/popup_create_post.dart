@@ -251,7 +251,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                       Navigator.pop(context, newPost);
                     },
                     child: isLoadingPost == true
-                        ? AppStyles().progressIndicatorButton()
+                        ? AppStyles().progressIndicatorCreatePostButton()
                         : Text(Texts.translate('publicar', globalLanguage)),
                   ),
                   IconButton(

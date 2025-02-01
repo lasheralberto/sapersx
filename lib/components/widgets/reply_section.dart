@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_highlighting/flutter_highlighting.dart';
@@ -8,11 +9,14 @@ import 'package:sapers/components/widgets/attachmentsviewer.dart';
 import 'package:sapers/components/widgets/custombutton.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/text_editor.dart';
+import 'package:sapers/components/widgets/user_hover_card.dart';
+import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
+import 'package:sapers/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ReplySection extends StatefulWidget {
@@ -59,7 +63,8 @@ class _ReplySectionState extends State<ReplySection> {
     super.dispose();
   }
 
-  Future<void> _handleReply(String postId, String replyId, String author) async {
+  Future<void> _handleReply(
+      String postId, String replyId, String author) async {
     if (_replyController.text.isEmpty && selectedFiles.isEmpty) return;
 
     bool isLoguedIn = AuthService().isUserLoggedIn(context);
@@ -71,11 +76,11 @@ class _ReplySectionState extends State<ReplySection> {
         List<Map<String, dynamic>> attachmentsList = [];
         if (selectedFiles.isNotEmpty) {
           attachmentsList = await _firebaseService.addAttachments(
-              postId, replyId,author, selectedFiles);
+              postId, replyId, author, selectedFiles);
         }
 
         await _firebaseService.createReply(
-            widget.postId, _replyController.text, widget.replyCount + 1,
+            author, widget.postId, _replyController.text, widget.replyCount + 1,
             attachments: attachmentsList);
 
         setState(() {
@@ -306,7 +311,7 @@ class _ReplySectionState extends State<ReplySection> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
                     ),
-                    onPressed: () => _handleReply(postId, replyId , author),
+                    onPressed: () => _handleReply(postId, replyId, author),
                     child: Text(
                       Texts.translate('responder', globalLanguage),
                       style: const TextStyle(

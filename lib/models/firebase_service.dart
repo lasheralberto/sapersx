@@ -406,8 +406,8 @@ class FirebaseService {
     });
   }
 
-  Future<List<Map<String, dynamic>>> addAttachments(
-      String postId, String replyId, String author, List<PlatformFile> selectedFiles) async {
+  Future<List<Map<String, dynamic>>> addAttachments(String postId,
+      String replyId, String author, List<PlatformFile> selectedFiles) async {
     var storage = FirebaseStorage.instance;
     List<Map<String, dynamic>> attachmentsList = [];
 
@@ -563,6 +563,7 @@ class FirebaseService {
   }
 
   Future<void> createReply(
+    String username,
     String postId,
     String content,
     int replyCount, {
@@ -573,7 +574,7 @@ class FirebaseService {
       if (user == null) throw Exception('User not authenticated');
 
       final reply = {
-        'author': user.email ?? 'Anonymous',
+        'author': username ?? 'Anonymous',
         'content': content,
         'timestamp': FieldValue.serverTimestamp(),
         'attachments': attachments ?? [],
@@ -692,7 +693,6 @@ class AuthService {
 }
 
 class UtilsSapers {
-
   ///Usada para el clipboard de imágenes
   Future<Uint8List> readImages() async {
     final imageBytes = await Pasteboard.image;

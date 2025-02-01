@@ -98,7 +98,7 @@ class _PostCardState extends State<PostCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildAuthorInfo(),
+                  _buildHeaderPostInfo(),
                   const SizedBox(height: 2),
                   _buildTimestamp(widget.post),
                   const SizedBox(height: 8),
@@ -139,12 +139,30 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _buildAuthorInfo() {
+  Widget _buildHeaderPostInfo() {
     return Row(
       children: [
         Text(widget.post.author, style: AppStyles().getTextStyle(context)),
         const SizedBox(width: 8),
-        Text(widget.post.module, style: AppStyles().getTextStyle(context)),
+
+        // Módulo dentro de una burbuja redondeada
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.grey[200], // Color de fondo de la burbuja
+            borderRadius: BorderRadius.circular(8), // Bordes redondeados
+          ),
+          child: Text(
+            widget.post.module,
+            style: AppStyles().getTextStyle(context).copyWith(
+                  fontSize: 12, // Tamaño más pequeño
+                  fontWeight: FontWeight.bold, // Resaltado
+                ),
+          ),
+        ),
+
+        const SizedBox(width: 8),
+        Text(widget.post.title, style: AppStyles().getTextStyle(context)),
       ],
     );
   }
