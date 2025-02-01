@@ -67,7 +67,7 @@ class _PostCardState extends State<PostCard> {
                   post: widget.post,
                   maxWidth: constraints.maxWidth,
                   postId: widget.post.id,
-                  
+
                   replyId: '', // O usa widget.post.id si es necesario
                   postAuthor: widget.post.author,
                   replyCount: widget.post.replyCount,
@@ -102,7 +102,6 @@ class _PostCardState extends State<PostCard> {
                 children: [
                   _buildHeaderPostInfo(),
                   const SizedBox(height: 2),
-                  _buildTimestamp(widget.post),
                   const SizedBox(height: 8),
                   _buildPostContent(),
                   const SizedBox(height: 12),
@@ -142,29 +141,50 @@ class _PostCardState extends State<PostCard> {
   }
 
   Widget _buildHeaderPostInfo() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.post.author, style: AppStyles().getTextStyle(context)),
-        const SizedBox(width: 8),
+        Row(
+          children: [
+            const SizedBox(width: 6),
 
-        // Módulo dentro de una burbuja redondeada
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.grey[200], // Color de fondo de la burbuja
-            borderRadius: BorderRadius.circular(8), // Bordes redondeados
-          ),
-          child: Text(
-            widget.post.module,
-            style: AppStyles().getTextStyle(context).copyWith(
-                  fontSize: 12, // Tamaño más pequeño
-                  fontWeight: FontWeight.bold, // Resaltado
-                ),
-          ),
+            // Módulo dentro de una burbuja redondeada
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey[200], // Color de fondo de la burbuja
+                borderRadius: BorderRadius.circular(8), // Bordes redondeados
+              ),
+              child: Text(
+                widget.post.module,
+                style: AppStyles().getTextStyle(context).copyWith(
+                      fontSize: 12, // Tamaño más pequeño
+                      fontWeight: FontWeight.bold, // Resaltado
+                    ),
+              ),
+            ),
+
+            const SizedBox(width: 10),
+            Text(widget.post.title,
+                style: AppStyles().getTextStyle(context,
+                    fontSize: AppStyles.fontSizeMedium,
+                    fontWeight: FontWeight.bold)),
+          ],
         ),
-
-        const SizedBox(width: 8),
-        Text(widget.post.title, style: AppStyles().getTextStyle(context)),
+        SizedBox(height: 5),
+        Row(
+          children: [
+            SizedBox(width: 10),
+            Text(widget.post.author,
+                style: AppStyles().getTextStyle(context,
+                    fontSize: AppStyles.fontSize, fontWeight: FontWeight.w100)),
+            SizedBox(width: 10),
+            _buildTimestamp(widget.post),
+          ],
+        ),
+        Divider(
+          thickness: 0.0,
+        )
       ],
     );
   }

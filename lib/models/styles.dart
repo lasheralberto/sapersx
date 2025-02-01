@@ -34,6 +34,7 @@ class AppStyles {
 
   //Font size 
   static const double fontSize = 12.0;
+  static const double fontSizeMedium = 14.0;
 
   //Tab marker
   static const String tabMarkerImage = 'assets/images/tabmarker.png';
