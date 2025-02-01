@@ -103,14 +103,14 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
 
       final userInfo = UserInfoPopUp(
         uid: UtilsSapers().userUniqueUid(currentUser.email!),
-        username: _nameController.text.trim().toLowerCase(),
+        username: _nameController.text.trim().toLowerCase().replaceAll(' ', ''),
         bio: _bioController.text.trim(),
         location: _locationController.text.trim(),
-        website: _websiteController.text.trim().toLowerCase(),
+        website: _websiteController.text.trim().toLowerCase().replaceAll(' ', ''),
         isExpert: _isExpertMode,
         specialty: _specialtyController.text.trim(),
-        hourlyRate: double.tryParse(_rateController.text.trim()) ?? 0.0,
-        email: currentUser.email!.trim().toLowerCase(),
+        hourlyRate: double.tryParse(_rateController.text.trim().replaceAll(' ', '')) ?? 0.0,
+        email: currentUser.email!.trim().toLowerCase().replaceAll(' ', ''),
         experience: _experienceController.text.trim(),
       );
 
