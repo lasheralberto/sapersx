@@ -46,6 +46,10 @@ class AppStyles {
     );
   }
 
+  double getFontSize(BuildContext context, {double? fontSize}) {
+    return fontSize != null ? fontSize.toDouble() : 12;
+  }
+
   //Progress indicator button
   Widget progressIndicatorButton() {
     return const CircularProgressIndicator(

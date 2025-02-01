@@ -48,7 +48,8 @@ class SAPExpertProfile extends StatelessWidget {
             Row(
               children: [
                 Text(Texts.translate('experiencia', globalLanguage),
-                    style: AppStyles().getTextStyle(context)),
+                    style: AppStyles().getTextStyle(context,
+                        fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 16),
@@ -159,13 +160,9 @@ class SAPExpertProfile extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          review['review'],
-                          style: const TextStyle(
-                            fontSize: 14,
-                            height: 1.5,
-                          ),
-                        ),
+                        Text(review['review'],
+                            style: AppStyles().getTextStyle(context,
+                                fontSize: 16, fontWeight: FontWeight.bold)),
                       ],
                     );
                   },

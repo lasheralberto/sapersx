@@ -289,25 +289,21 @@ class _LoginDialogState extends State<LoginDialog> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: _mesoShadow,
+        boxShadow: null,
       ),
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none),
           filled: true,
           fillColor: Theme.of(context).colorScheme.surface,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
-        style: TextStyle(
-          fontSize: 16,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
+        style: AppStyles().getTextStyle(context, fontWeight: FontWeight.bold),
         obscureText: obscureText,
         validator: validator,
       ),
