@@ -319,7 +319,6 @@ class ResponsiveProfileLayout extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const Divider()
                       ],
                     );
                   },

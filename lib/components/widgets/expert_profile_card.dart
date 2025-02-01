@@ -17,20 +17,19 @@ class SAPExpertProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildExperienceSection(context),
-            const SizedBox(height: 16),
-            _buildReviewsSection(context),
-            const SizedBox(
-                height: 16), // Espacio entre la sección de reseñas y mensajes
-           
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _buildExperienceSection(context),
+          const SizedBox(
+              height: 20), // Espacio entre la sección de experiencia y reseñas
+          _buildReviewsSection(context),
+          const SizedBox(
+              height: 16), // Espacio entre la sección de reseñas y mensajes
+        ],
       ),
     );
   }
@@ -159,7 +158,6 @@ class SAPExpertProfile extends StatelessWidget {
       ),
     );
   }
-
 
   void _showAddReviewDialog(BuildContext context, String username) async {
     final result = await showDialog(
