@@ -64,8 +64,10 @@ class _PostCardState extends State<PostCard> {
               _buildPostHeader(constraints.maxWidth, widget.post.id),
               if (isExpanded) // Muestra replies solo cuando está expandido
                 ReplySection(
+                  post: widget.post,
                   maxWidth: constraints.maxWidth,
                   postId: widget.post.id,
+                  
                   replyId: '', // O usa widget.post.id si es necesario
                   postAuthor: widget.post.author,
                   replyCount: widget.post.replyCount,

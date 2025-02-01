@@ -20,16 +20,19 @@ import 'package:sapers/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ReplySection extends StatefulWidget {
+  final SAPPost post;
   final double maxWidth;
   final String postId;
   final int replyCount;
   final String replyId;
+
   final String postAuthor;
   final FirebaseService firebaseService;
   final String globalLanguage;
 
   const ReplySection({
     Key? key,
+    required this.post,
     required this.maxWidth,
     required this.postId,
     required this.replyId,
@@ -63,8 +66,7 @@ class _ReplySectionState extends State<ReplySection> {
     super.dispose();
   }
 
-  Future<void> _handleReply(
-      String postId, String replyId, String author) async {
+  Future<void> _handleReply(String postId, String replyId) async {
     if (_replyController.text.isEmpty && selectedFiles.isEmpty) return;
 
     bool isLoguedIn = AuthService().isUserLoggedIn(context);
@@ -74,13 +76,15 @@ class _ReplySectionState extends State<ReplySection> {
         setState(() => isUploading = true);
 
         List<Map<String, dynamic>> attachmentsList = [];
+        UserInfoPopUp? userInfo = await FirebaseService()
+            .getUserInfoByEmail(FirebaseAuth.instance.currentUser!.email!);
         if (selectedFiles.isNotEmpty) {
           attachmentsList = await _firebaseService.addAttachments(
-              postId, replyId, author, selectedFiles);
+              postId, replyId, userInfo!.username, selectedFiles);
         }
 
-        await _firebaseService.createReply(
-            author, widget.postId, _replyController.text, widget.replyCount + 1,
+        await _firebaseService.createReply(userInfo!.username, widget.postId,
+            _replyController.text, widget.replyCount + 1,
             attachments: attachmentsList);
 
         setState(() {
@@ -142,6 +146,15 @@ class _ReplySectionState extends State<ReplySection> {
     );
   }
 
+  Widget _buildAuthorAvatar(reply) {
+    return UserProfileCardHover(
+      post: reply,
+      onProfileOpen: () {
+        // Opcional: Añade aquí lógica adicional cuando se abre el perfil
+      },
+    );
+  }
+
   Widget _buildAttachmentChip(PlatformFile file) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 200),
@@ -179,7 +192,7 @@ class _ReplySectionState extends State<ReplySection> {
       ),
       child: Column(
         children: [
-          _buildReplyInput(widget.postId, widget.replyId, widget.postAuthor),
+          _buildReplyInput(widget.postId, widget.replyId),
           Divider(
             height: 30,
             thickness: 1,
@@ -193,7 +206,7 @@ class _ReplySectionState extends State<ReplySection> {
     );
   }
 
-  Widget _buildReplyInput(String postId, String replyId, String author) {
+  Widget _buildReplyInput(String postId, String replyId) {
     return Shortcuts(
       shortcuts: <LogicalKeySet, Intent>{
         // Define la combinación Ctrl+V (o Command+V en Mac) para disparar PasteIntent
@@ -253,7 +266,7 @@ class _ReplySectionState extends State<ReplySection> {
                   child: TextEditorWithCode(textController: _replyController),
                 ),
                 _buildAttachmentUploadedReply(),
-                _buildReplyControls(postId, replyId, author),
+                _buildReplyControls(postId, replyId),
               ],
             ),
           ),
@@ -262,7 +275,7 @@ class _ReplySectionState extends State<ReplySection> {
     );
   }
 
-  Widget _buildReplyControls(String postId, String replyId, String author) {
+  Widget _buildReplyControls(String postId, String replyId) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -311,7 +324,7 @@ class _ReplySectionState extends State<ReplySection> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
                     ),
-                    onPressed: () => _handleReply(postId, replyId, author),
+                    onPressed: () => _handleReply(postId, replyId),
                     child: Text(
                       Texts.translate('responder', globalLanguage),
                       style: const TextStyle(
@@ -406,11 +419,12 @@ class _ReplySectionState extends State<ReplySection> {
   Widget _buildReplyHeader(SAPReply reply) {
     return Row(
       children: [
-        ProfileAvatar(
-          seed: reply.author,
-          showBorder: true,
-          size: AppStyles.avatarSize - 10,
-        ),
+        _buildAuthorAvatar(reply),
+        // ProfileAvatar(
+        //   seed: reply.author,
+        //   showBorder: true,
+        //   size: AppStyles.avatarSize - 10,
+        // ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
