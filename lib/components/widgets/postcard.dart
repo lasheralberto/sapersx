@@ -67,6 +67,7 @@ class _PostCardState extends State<PostCard> {
                   maxWidth: constraints.maxWidth,
                   postId: widget.post.id,
                   replyId: '', // O usa widget.post.id si es necesario
+                  postAuthor: widget.post.author,
                   replyCount: widget.post.replyCount,
                   firebaseService:
                       FirebaseService(), // Asegúrate de inyectar el servicio

@@ -27,9 +27,23 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
   late AnimationController _animationController;
   late Animation<Offset> _offsetAnimation;
 
+  bool _userHasAttachments = false;
+
   @override
   void initState() {
     super.initState();
+
+    //remove attachments that does not fit with the current user in widget.post.author
+    if (widget.reply.attachments!.isNotEmpty) {
+      widget.reply.attachments
+          ?.removeWhere((element) => element['author'] != widget.reply.author);
+    }
+
+    if (widget.reply.attachments!.isNotEmpty) {
+      _userHasAttachments = false;
+    } else {
+      _userHasAttachments = true;
+    }
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -47,6 +61,7 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
 
   void _showAttachmentsList() {
     _overlayEntry = _createOverlayEntry();
+
     Overlay.of(context).insert(_overlayEntry!);
     _animationController
         .forward(); // Inicia la animación cuando aparece el overlay
@@ -187,13 +202,6 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
   }
 
   @override
-  void dispose() {
-    _hideAttachmentsList();
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return CompositedTransformTarget(
       link: _layerLink,
@@ -209,23 +217,32 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.attach_file,
-                size: 18,
-                color: Colors.black87,
-              ),
+              _userHasAttachments == false
+                  ? const Icon(
+                      Icons.attach_file,
+                      size: 18,
+                      color: Colors.black87,
+                    )
+                  : SizedBox.shrink(),
               SizedBox(width: 4),
             ],
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _hideAttachmentsList();
+    _animationController.dispose();
+    super.dispose();
   }
 }
 

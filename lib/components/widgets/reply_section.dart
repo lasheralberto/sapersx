@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_highlighting/flutter_highlighting.dart';
 import 'package:flutter_highlighting/themes/github.dart';
+import 'package:pasteboard/pasteboard.dart';
 import 'package:sapers/components/widgets/attachmentsviewer.dart';
 import 'package:sapers/components/widgets/custombutton.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
@@ -19,6 +20,7 @@ class ReplySection extends StatefulWidget {
   final String postId;
   final int replyCount;
   final String replyId;
+  final String postAuthor;
   final FirebaseService firebaseService;
   final String globalLanguage;
 
@@ -28,6 +30,7 @@ class ReplySection extends StatefulWidget {
     required this.postId,
     required this.replyId,
     required this.replyCount,
+    required this.postAuthor,
     required this.firebaseService,
     required this.globalLanguage,
   }) : super(key: key);
@@ -42,6 +45,7 @@ class _ReplySectionState extends State<ReplySection> {
   final FirebaseService _firebaseService = FirebaseService();
   List<PlatformFile> selectedFiles = [];
   bool isUploading = false;
+  Image? _pastedImage;
 
   // Colores personalizados
   static const _sectionBackground = Color(0xFFF3F3F3);
@@ -55,7 +59,7 @@ class _ReplySectionState extends State<ReplySection> {
     super.dispose();
   }
 
-  Future<void> _handleReply(String postId, String replyId) async {
+  Future<void> _handleReply(String postId, String replyId, String author) async {
     if (_replyController.text.isEmpty && selectedFiles.isEmpty) return;
 
     bool isLoguedIn = AuthService().isUserLoggedIn(context);
@@ -67,7 +71,7 @@ class _ReplySectionState extends State<ReplySection> {
         List<Map<String, dynamic>> attachmentsList = [];
         if (selectedFiles.isNotEmpty) {
           attachmentsList = await _firebaseService.addAttachments(
-              postId, replyId, selectedFiles);
+              postId, replyId,author, selectedFiles);
         }
 
         await _firebaseService.createReply(
@@ -117,7 +121,7 @@ class _ReplySectionState extends State<ReplySection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Archivos adjuntos (${selectedFiles.length})',
-              style: TextStyle(
+              style: const TextStyle(
                 color: _accentOrange,
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
@@ -170,7 +174,7 @@ class _ReplySectionState extends State<ReplySection> {
       ),
       child: Column(
         children: [
-          _buildReplyInput(widget.postId, widget.replyId),
+          _buildReplyInput(widget.postId, widget.replyId, widget.postAuthor),
           Divider(
             height: 30,
             thickness: 1,
@@ -184,36 +188,76 @@ class _ReplySectionState extends State<ReplySection> {
     );
   }
 
-  Widget _buildReplyInput(String postId, String replyId) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: _accentOrange.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+  Widget _buildReplyInput(String postId, String replyId, String author) {
+    return Shortcuts(
+      shortcuts: <LogicalKeySet, Intent>{
+        // Define la combinación Ctrl+V (o Command+V en Mac) para disparar PasteIntent
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyV):
+            const PasteIntent(),
+        LogicalKeySet(LogicalKeyboardKey.meta, LogicalKeyboardKey.keyV):
+            const PasteIntent(),
+      },
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          PasteIntent: CallbackAction<PasteIntent>(
+            onInvoke: (PasteIntent intent) async {
+              // Lee la imagen del portapapeles usando Pasteboard.image
+              final imageBytes = await Pasteboard.image;
+              if (imageBytes != null) {
+                // Crea un PlatformFile a partir de los bytes obtenidos
+                final file = PlatformFile(
+                  name: 'pasted_image.png',
+                  size: imageBytes.length,
+                  bytes: imageBytes,
+                );
+                // Actualiza el estado para agregar el archivo a la lista de adjuntos
+                // Asegúrate de que 'selectedFiles' es accesible desde el State
+                setState(() {
+                  selectedFiles.add(file);
+                });
+              } else {
+                // Muestra un mensaje si no hay imagen en el portapapeles
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content:
+                          Text('No se encontró imagen en el portapapeles')),
+                );
+              }
+              return null;
+            },
+          ),
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: _accentOrange.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: TextEditorWithCode(textController: _replyController),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: TextEditorWithCode(textController: _replyController),
+                ),
+                _buildAttachmentUploadedReply(),
+                _buildReplyControls(postId, replyId, author),
+              ],
             ),
-            _buildAttachmentUploadedReply(),
-            _buildReplyControls(postId, replyId),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildReplyControls(String postId, String replyId) {
+  Widget _buildReplyControls(String postId, String replyId, String author) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -262,10 +306,10 @@ class _ReplySectionState extends State<ReplySection> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
                     ),
-                    onPressed: () => _handleReply(postId, replyId),
+                    onPressed: () => _handleReply(postId, replyId , author),
                     child: Text(
                       Texts.translate('responder', globalLanguage),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -519,4 +563,9 @@ class _ReplySectionState extends State<ReplySection> {
       ),
     );
   }
+}
+
+// Define un Intent personalizado para el paste
+class PasteIntent extends Intent {
+  const PasteIntent();
 }

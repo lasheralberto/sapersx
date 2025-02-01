@@ -213,6 +213,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                             await FirebaseService().addAttachments(
                           postId,
                           replyId,
+                          user!.username,
                           selectedFiles,
                         );
 

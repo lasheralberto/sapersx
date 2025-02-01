@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
@@ -16,6 +17,7 @@ import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
 import 'package:sapers/models/user_reviews.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:pasteboard/pasteboard.dart';
 
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -115,7 +117,7 @@ class FirebaseService {
           .collection('posts') // Asegúrate de usar la colección correcta
           .where('author', whereIn: chunk)
           .orderBy('timestamp', descending: true)
-         // .limit(morePosts)
+          // .limit(morePosts)
           .get();
 
       final posts = snapshot.docs.map((doc) {
@@ -405,7 +407,7 @@ class FirebaseService {
   }
 
   Future<List<Map<String, dynamic>>> addAttachments(
-      String postId, String replyId, List<PlatformFile> selectedFiles) async {
+      String postId, String replyId, String author, List<PlatformFile> selectedFiles) async {
     var storage = FirebaseStorage.instance;
     List<Map<String, dynamic>> attachmentsList = [];
 
@@ -446,6 +448,7 @@ class FirebaseService {
             'fileName': fileName,
             'uploadDate': DateTime.now(),
             'replyId': replyId,
+            'author': author
           };
           attachmentsList.add(attachment);
 
@@ -689,6 +692,17 @@ class AuthService {
 }
 
 class UtilsSapers {
+
+  ///Usada para el clipboard de imágenes
+  Future<Uint8List> readImages() async {
+    final imageBytes = await Pasteboard.image;
+    if (imageBytes != null) {
+      return imageBytes;
+    } else {
+      return Uint8List(0);
+    }
+  }
+
   List<Map<String, dynamic>> convertPlatformFilesToAttachments(
       List<PlatformFile> files) {
     return files
