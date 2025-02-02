@@ -144,25 +144,31 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   }
 
   Widget _buildUserMetadata(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            _buildMetadataItem(
-              context,
-              Icons.location_on_outlined,
-              widget.profile.location.toString(),
-            ),
-            const SizedBox(width: TwitterDimensions.spacing),
-            _buildMetadataItem(
-              context,
-              Icons.calendar_today_outlined,
-              'Se unió en ${UtilsSapers().formatDateString(widget.profile.joinDate.toString())}',
-            ),
-          ],
-        ),
-        const SizedBox(height: TwitterDimensions.spacing),
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _buildMetadataItem(
+                context,
+                Icons.location_on_outlined,
+                widget.profile.location.toString(),
+              ),
+              const SizedBox(width: TwitterDimensions.spacing),
+              _buildMetadataItem(
+                context,
+                Icons.calendar_today_outlined,
+                'Se unió en ${UtilsSapers().formatDateString(widget.profile.joinDate.toString())}',
+              ),
+            ],
+          ),
+          const SizedBox(height: TwitterDimensions.spacing),
+          _buildMetadataItem(context, Icons.monetization_on_rounded,
+              'Tarifa ${widget.profile.hourlyRate.toString()} €/h'),
+          const SizedBox(height: TwitterDimensions.spacing),
+        ],
+      ),
     );
   }
 
