@@ -84,7 +84,8 @@ class SAPExpertProfile extends StatelessWidget {
               children: [
                 Text(
                   Texts.translate('reviews', globalLanguage),
-                  style: AppStyles().getTextStyle(context),
+                  style: AppStyles().getTextStyle(context,
+                      fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                     onPressed: () {
@@ -146,7 +147,8 @@ class SAPExpertProfile extends StatelessWidget {
                         const SizedBox(height: 8),
                         Text(review['review'],
                             style: AppStyles().getTextStyle(context,
-                                fontSize: 16, fontWeight: FontWeight.bold)),
+                                fontSize: AppStyles.fontSize,
+                                fontWeight: FontWeight.normal)),
                       ],
                     );
                   },

@@ -54,10 +54,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
             backgroundColor: AppStyles().getBackgroundColor(context),
             elevation: 0,
             pinned: true,
-            title: Text(
-              widget.userinfo!.username,
-              style: AppStyles().getTextStyle(context),
-            ),
+            // title: Text(
+            //   widget.userinfo!.username,
+            //   style: AppStyles().getTextStyle(context),
+            //),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               color: TwitterColors.darkGray,
@@ -303,8 +303,9 @@ class ResponsiveProfileLayout extends StatelessWidget {
                               // Mensaje
                               Text(
                                 message['message'],
-                                style: AppStyles()
-                                    .getTextStyle(context, fontSize: 16),
+                                style: AppStyles().getTextStyle(context,
+                                    fontSize: AppStyles.fontSize,
+                                    fontWeight: FontWeight.normal),
                               ),
                               const SizedBox(height: 4),
                               // Timestamp formateado
