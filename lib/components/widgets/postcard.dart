@@ -165,24 +165,30 @@ class _PostCardState extends State<PostCard> {
             ),
 
             const SizedBox(width: 10),
-            Text(widget.post.title,
+            Expanded(
+              child: Text(
+                widget.post.title,
                 style: AppStyles().getTextStyle(context,
                     fontSize: AppStyles.fontSizeMedium,
-                    fontWeight: FontWeight.bold)),
+                    fontWeight: FontWeight.bold),
+                overflow: TextOverflow
+                    .ellipsis, // Muestra "..." si el texto es muy largo
+              ),
+            ),
           ],
         ),
-        SizedBox(height: 5),
+        const SizedBox(height: 5),
         Row(
           children: [
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Text(widget.post.author,
                 style: AppStyles().getTextStyle(context,
                     fontSize: AppStyles.fontSize, fontWeight: FontWeight.w100)),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             _buildTimestamp(widget.post),
           ],
         ),
-        Divider(
+        const Divider(
           thickness: 0.0,
         )
       ],
