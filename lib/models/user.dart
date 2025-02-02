@@ -1,4 +1,6 @@
 // Clase para la información del usuario
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserInfoPopUp {
   String uid;
   String username;
@@ -9,7 +11,7 @@ class UserInfoPopUp {
   bool? isExpert;
   String? specialty;
   double? hourlyRate;
-  String? joinDate;
+  Timestamp? joinDate;
   bool? isAvailable;
   String? experience;
   List<Map<String,dynamic>>? reviews;

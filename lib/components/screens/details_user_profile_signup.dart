@@ -110,7 +110,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
         website:
             _websiteController.text.trim().toLowerCase().replaceAll(' ', ''),
         isExpert: _isExpertMode,
-        joinDate: Timestamp.fromDate(DateTime.now()).toString(),
+        joinDate: Timestamp.fromDate(DateTime.now()) ,
         specialty: _specialtyController.text.trim(),
         hourlyRate:
             double.tryParse(_rateController.text.trim().replaceAll(' ', '')) ??

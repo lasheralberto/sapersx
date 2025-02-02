@@ -298,7 +298,7 @@ class FirebaseService {
           isAvailable: data['isAvailable'] as bool? ?? false,
           isExpert: data['isExpert'] as bool? ?? false,
           hourlyRate: (data['hourlyRate'] ?? 0.0).toDouble(),
-          joinDate: data['joinDate']?.toString() ?? DateTime.now().toString(),
+          joinDate: Timestamp.fromDate(DateTime.now()),
           experience: data['experience']?.toString() ?? '',
           reviews: List<Map<String, dynamic>>.from(data['reviews'] ?? []),
           specialty: data['specialty']?.toString() ?? '');
