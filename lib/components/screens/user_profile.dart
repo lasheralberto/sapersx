@@ -199,20 +199,20 @@ class ResponsiveProfileLayout extends StatelessWidget {
     );
   }
 
-  // Nueva sección de mensajes
   Widget _buildMessagesSection(BuildContext context, profile) {
     return Card(
       color: AppStyles().getCardColor(context),
-      elevation: 0,
+      elevation: AppStyles().getCardElevation(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         side: BorderSide.none,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Encabezado de mensajes
             Row(
               children: [
                 InkWell(
@@ -237,94 +237,94 @@ class ResponsiveProfileLayout extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseService().getMessages(profile.username),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            // Contenedor de altura fija para que la lista tenga scroll interno
+            SizedBox(
+              height: 300, // Ajusta esta altura según tus necesidades
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseService().getMessages(profile.username),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
 
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No messages yet',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  );
-                }
-
-                final messages = snapshot.data?.docs;
-
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: messages!.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-
-                    // Convertir y formatear el timestamp
-                    final Timestamp firestoreTimestamp = message['timestamp'];
-                    final DateTime dateTime = firestoreTimestamp.toDate();
-                    final String formattedDate =
-                        DateFormat('dd-MM-yyyy HH:mm').format(dateTime);
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 12),
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 4, horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Remitente
-                              Text(
-                                message['from'],
-                                style: AppStyles().getTextStyle(
-                                  context,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              // Mensaje
-                              Text(
-                                message['message'],
-                                style: AppStyles().getTextStyle(context,
-                                    fontSize: AppStyles.fontSize,
-                                    fontWeight: FontWeight.normal),
-                              ),
-                              const SizedBox(height: 4),
-                              // Timestamp formateado
-                              Text(
-                                formattedDate,
-                                style: AppStyles().getTextStyle(
-                                  context,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                              ),
-                            ],
-                          ),
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No messages yet',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
                         ),
-                      ],
+                      ),
                     );
-                  },
-                );
-              },
+                  }
+
+                  final messages = snapshot.data!.docs;
+
+                  return ListView.builder(
+                    // Con ListView sin shrinkWrap ni NeverScrollableScrollPhysics, se permite el scroll
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final message = messages[index];
+
+                      // Convertir y formatear el timestamp
+                      final Timestamp firestoreTimestamp = message['timestamp'];
+                      final DateTime dateTime = firestoreTimestamp.toDate();
+                      final String formattedDate =
+                          DateFormat('dd-MM-yyyy HH:mm').format(dateTime);
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 12),
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 4, horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Remitente
+                            Text(
+                              message['from'],
+                              style: AppStyles().getTextStyle(
+                                context,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            // Mensaje
+                            Text(
+                              message['message'],
+                              style: AppStyles().getTextStyle(
+                                context,
+                                fontSize: AppStyles.fontSize,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            // Timestamp formateado
+                            Text(
+                              formattedDate,
+                              style: AppStyles().getTextStyle(
+                                context,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w300,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
