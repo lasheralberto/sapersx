@@ -1,4 +1,5 @@
 // constants.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
@@ -80,10 +81,6 @@ class _ProfileHeaderState extends State<ProfileHeader> {
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              // _buildButton(context, 'conectar', () {
-              //   Navigator.pushNamed(context, '/conectar');
-              // }),
-              // const SizedBox(width: TwitterDimensions.spacing),
               _buildButton(context, isFollowing == true ? 'unfollow' : 'seguir',
                   () async {
                 //follow action
@@ -159,7 +156,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
               _buildMetadataItem(
                 context,
                 Icons.calendar_today_outlined,
-                'Se unió en ${UtilsSapers().formatDateString(widget.profile.joinDate.toString())}',
+                'Se unió en ${UtilsSapers().formatTimestampJoinDate(widget.profile.joinDate.toString())}',
               ),
             ],
           ),

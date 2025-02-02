@@ -56,7 +56,6 @@ class AuthProvider with ChangeNotifier {
             await FirebaseService().getUserInfoByEmail(_user!.email!);
         setUserInfo(userInfo);
       } catch (e) {
-        print('Error refreshing user info: $e');
       } finally {
         setLoading(false);
       }
@@ -67,9 +66,7 @@ class AuthProvider with ChangeNotifier {
     try {
       await FirebaseAuth.instance.signOut();
       setUser(null);
-    } catch (e) {
-      print('Error signing outt: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> loadUserInfo(User user) async {

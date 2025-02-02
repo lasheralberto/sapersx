@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -106,10 +107,14 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
         username: _nameController.text.trim().toLowerCase().replaceAll(' ', ''),
         bio: _bioController.text.trim(),
         location: _locationController.text.trim(),
-        website: _websiteController.text.trim().toLowerCase().replaceAll(' ', ''),
+        website:
+            _websiteController.text.trim().toLowerCase().replaceAll(' ', ''),
         isExpert: _isExpertMode,
+        joinDate: Timestamp.fromDate(DateTime.now()).toString(),
         specialty: _specialtyController.text.trim(),
-        hourlyRate: double.tryParse(_rateController.text.trim().replaceAll(' ', '')) ?? 0.0,
+        hourlyRate:
+            double.tryParse(_rateController.text.trim().replaceAll(' ', '')) ??
+                0.0,
         email: currentUser.email!.trim().toLowerCase().replaceAll(' ', ''),
         experience: _experienceController.text.trim(),
       );

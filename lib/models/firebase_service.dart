@@ -51,20 +51,18 @@ class FirebaseService {
       });
       return true;
     } catch (e) {
-      print('Error al enviar mensaje: $e');
       return false;
     }
   }
 
-  
   Stream<QuerySnapshot> getMessages(String username) {
-  return FirebaseFirestore.instance
-      .collection('messages')
-      .where('to', isEqualTo: username) // Filtra los mensajes dirigidos al usuario
-      .orderBy('timestamp', descending: true)
-      .snapshots();
-}
-
+    return FirebaseFirestore.instance
+        .collection('messages')
+        .where('to',
+            isEqualTo: username) // Filtra los mensajes dirigidos al usuario
+        .orderBy('timestamp', descending: true)
+        .snapshots();
+  }
 
   //check existence of user in followers in firestore
   Future<bool> checkIfUserExistsInFollowers(String uid, String username) async {
@@ -84,7 +82,6 @@ class FirebaseService {
       }
       return false;
     } catch (e) {
-      print('Error al seguir al usuario: $e');
       rethrow;
     }
   }
@@ -105,7 +102,6 @@ class FirebaseService {
         return true; // Follow
       }
     } catch (e) {
-      print('Error al seguir al usuario: $e');
       rethrow;
     }
   }
@@ -243,7 +239,6 @@ class FirebaseService {
       }
       return null;
     } catch (e) {
-      print('Error al obtener información del usuario: $e');
       rethrow;
     }
   }
@@ -253,21 +248,14 @@ class FirebaseService {
       final userCollection = FirebaseFirestore.instance.collection('userinfo');
       final cleanedEmail = mail.trim().toLowerCase();
 
-      print('DEBUG: Iniciando búsqueda para email: $cleanedEmail');
-
       // Primera búsqueda: exacta y case-sensitive
       var querySnapshot = await userCollection
           .where('email', isEqualTo: cleanedEmail)
           .limit(1) // Optimización: solo necesitamos uno
           .get();
 
-      print(
-          'DEBUG: Resultado búsqueda exacta: ${querySnapshot.docs.length} documentos');
-
       // Si no hay resultados, intentar búsqueda case-insensitive
       if (querySnapshot.docs.isEmpty) {
-        print('DEBUG: Intentando búsqueda case-insensitive');
-
         // Obtener todos los documentos que podrían coincidir
         querySnapshot = await userCollection
             .orderBy('email')
@@ -276,38 +264,28 @@ class FirebaseService {
             .limit(10) // Limitamos para evitar cargar demasiados docs
             .get();
 
-        print('DEBUG: Resultados encontrados: ${querySnapshot.docs.length}');
-
         // Buscar coincidencia exacta ignorando mayúsculas/minúsculas
         for (var doc in querySnapshot.docs) {
           String docEmail = doc['email']?.toString().toLowerCase() ?? '';
-          print('DEBUG: Comparando con documento email: $docEmail');
 
           if (docEmail == cleanedEmail) {
-            print('DEBUG: ¡Coincidencia encontrada!');
             return _createUserInfoFromDoc(doc.data());
           }
         }
       } else {
         // Si encontramos directamente, crear el objeto
-        print('DEBUG: Usando resultado de búsqueda exacta');
+
         return _createUserInfoFromDoc(querySnapshot.docs.first.data());
       }
 
-      print(
-          'DEBUG: No se encontró ninguna coincidencia para el email: $cleanedEmail');
       return null;
     } catch (e) {
-      print('ERROR: Excepción al buscar usuario: $e');
-      print('ERROR: Stack trace: ${StackTrace.current}');
       rethrow;
     }
   }
 
 // Método separado para crear el objeto UserInfoPopUp
   UserInfoPopUp _createUserInfoFromDoc(Map<String, dynamic> data) {
-    print('DEBUG: Creando UserInfoPopUp con datos: $data');
-
     try {
       return UserInfoPopUp(
           uid: data['uid']?.toString() ?? '',
@@ -325,8 +303,6 @@ class FirebaseService {
           reviews: List<Map<String, dynamic>>.from(data['reviews'] ?? []),
           specialty: data['specialty']?.toString() ?? '');
     } catch (e) {
-      print('ERROR: Error al crear UserInfoPopUp: $e');
-      print('ERROR: Datos problemáticos: $data');
       rethrow;
     }
   }
@@ -339,10 +315,7 @@ class FirebaseService {
 
       // Usar el uid del usuario como el ID del documento
       await userCollection.doc(userInfo.uid).set(userInfo.toMap());
-
-      print('Información del usuario guardada correctamente');
     } catch (e) {
-      print('Error al guardar la información del usuario: $e');
       rethrow;
     }
   }
@@ -445,7 +418,6 @@ class FirebaseService {
       for (PlatformFile file in selectedFiles) {
         final bytes = file.bytes;
         if (bytes == null) {
-          print('Error: No se pudieron obtener los bytes del archivo');
           continue;
         }
 
@@ -499,15 +471,9 @@ class FirebaseService {
             //   'createdAt': DateTime.now(),
             // });
           }
-
-          print('Archivo subido exitosamente: $fileName');
-        } catch (e) {
-          print('Error al subir el archivo $fileName: $e');
-        }
+        } catch (e) {}
       }
-    } catch (e) {
-      print('Error general: $e');
-    }
+    } catch (e) {}
 
     return attachmentsList;
   }
@@ -539,7 +505,6 @@ class FirebaseService {
         'reviews': FieldValue.arrayUnion([reviewMap]),
       });
     } catch (e) {
-      print('Error al añadir la reseña: $e');
       rethrow; // Opcional: para propagar el error al código llamante
     }
   }
@@ -573,7 +538,6 @@ class FirebaseService {
                   data['attachments'] = attachments;
                   return SAPReply.fromMap(data);
                 } catch (e) {
-                  print('Error processing document ${doc.id}: $e');
                   // Retornar un objeto válido con valores por defecto
                   return SAPReply(
                     id: doc.id,
@@ -586,7 +550,6 @@ class FirebaseService {
                 }
               }).toList());
     } catch (e) {
-      print('Error in getRepliesForPost: $e');
       // Retornar un stream vacío en caso de error
       return Stream.value([]);
     }
@@ -627,7 +590,6 @@ class FirebaseService {
         });
       });
     } catch (e) {
-      print('Error creating reply: $e');
       rethrow; // Relanzar el error para manejarlo en la UI
     }
   }
@@ -667,27 +629,18 @@ class AuthService {
       // Manejo específico de errores de Firebase Authentication
       switch (e.code) {
         case 'invalid-email':
-          print('El formato del email es inválido.');
           break;
         case 'user-not-found':
-          print('No existe un usuario con este email.');
           break;
         case 'wrong-password':
-          print('La contraseña ingresada es incorrecta.');
           break;
         case 'user-disabled':
-          print('Esta cuenta ha sido deshabilitada.');
           break;
         case 'too-many-requests':
-          print('Demasiados intentos. Inténtalo de nuevo más tarde.');
           break;
         case 'operation-not-allowed':
-          print(
-              'El inicio de sesión con email y contraseña no está habilitado.');
           break;
         default:
-          print('Error desconocido: ${e.code}');
-
           return null;
       }
 
@@ -695,23 +648,21 @@ class AuthService {
       throw Exception('Error al iniciar sesión: ${e.message}');
     } catch (e) {
       // Capturar otros errores no específicos de Firebase
-      print('Error inesperado: $e');
+
       rethrow;
     }
   }
 
   Future<bool> signUp(String email, String pass) async {
     try {
-      print('Intentando signup con email: $email');
       var emailCleaned = email.trim().toLowerCase();
       final userCredential = await _auth.createUserWithEmailAndPassword(
           email: emailCleaned, password: pass);
-      print('Signup exitoso. Usuario: ${userCredential.user?.uid}');
+
       // Añadir delay
       await Future.delayed(const Duration(seconds: 3));
       return userCredential.user != null;
     } on FirebaseAuthException catch (e) {
-      print('Error en signup: ${e.code} - ${e.message}');
       rethrow;
     }
   }
@@ -782,12 +733,28 @@ class UtilsSapers {
   }
 
   /// Método para formatear fecha
-  String formatDateString(String dateTimeString) {
+  String formatTimestampJoinDate(String timestampString) {
     try {
-      final dateTime = DateTime.parse(dateTimeString);
+      // Ejemplo de string: "Timestamp(seconds=1738442893, nanoseconds=742822000)"
+      final secondsPattern = RegExp(r'seconds=(\d+)');
+      final nanosecondsPattern = RegExp(r'nanoseconds=(\d+)');
+
+      final secondsMatch = secondsPattern.firstMatch(timestampString);
+      final nanosecondsMatch = nanosecondsPattern.firstMatch(timestampString);
+
+      if (secondsMatch == null || nanosecondsMatch == null) {
+        return '';
+      }
+
+      final seconds = int.parse(secondsMatch.group(1)!);
+      final nanoseconds = int.parse(nanosecondsMatch.group(1)!);
+
+      final timestamp = Timestamp(seconds, nanoseconds);
+      final DateTime dateTime = timestamp.toDate();
+
       return DateFormat('dd/MM/yyyy').format(dateTime);
     } catch (e) {
-      return 'Invalid Date'; // En caso de error
+      return '';
     }
   }
 
@@ -797,7 +764,7 @@ class UtilsSapers {
       final dateTime = DateTime.parse(dateTimeString);
       return DateFormat('dd/MM/yyyy hh:mm').format(dateTime);
     } catch (e) {
-      return 'Invalid Date'; // En caso de error
+      return ''; // En caso de error
     }
   }
 
