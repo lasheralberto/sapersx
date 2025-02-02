@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sapers/components/widgets/expert_profile_card.dart';
+import 'package:sapers/components/widgets/invitation_item.dart';
 import 'package:sapers/components/widgets/profile_header.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
@@ -129,7 +130,7 @@ class ResponsiveProfileLayout extends StatelessWidget {
         child: isMessageSending == true
             ? AppStyles().progressIndicatorButton()
             : Text(
-                'Enviar mensaje',
+                Texts.translate('send_project_invitation', globalLanguage),
                 style: AppStyles().getTextStyle(
                   context,
                   fontSize: 20,
@@ -141,20 +142,17 @@ class ResponsiveProfileLayout extends StatelessWidget {
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            // Sombra inferior/derecha para efecto "sombra"
-          ],
         ),
         padding: const EdgeInsets.all(12),
         child: TextField(
           controller: messageController,
           decoration: InputDecoration(
-            hintText: 'Escribe tu mensaje aquí...',
+            hintText: Texts.translate('writeYourMessage', globalLanguage),
             hintStyle: AppStyles().getTextStyle(context,
                 fontSize: 14, fontWeight: FontWeight.w300),
             border: InputBorder.none,
           ),
-          maxLines: 3,
+          maxLines: 10,
           style: AppStyles().getTextStyle(context, fontSize: 16),
         ),
       ),
@@ -174,12 +172,15 @@ class ResponsiveProfileLayout extends StatelessWidget {
               if (success) {
                 isMessageSending = false;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Mensaje enviado correctamente')),
+                  SnackBar(
+                      content:
+                          Text(Texts.translate('messageSent', globalLanguage))),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Error al enviar el mensaje')),
+                  SnackBar(
+                      content:
+                          Text(Texts.translate('passError', globalLanguage))),
                 );
               }
             }
@@ -187,7 +188,7 @@ class ResponsiveProfileLayout extends StatelessWidget {
           },
           style: AppStyles().getButtonStyle(context),
           child: Text(
-            'Enviar',
+            Texts.translate('send', globalLanguage),
             style: AppStyles().getTextStyle(
               context,
               fontSize: 14,
@@ -200,6 +201,7 @@ class ResponsiveProfileLayout extends StatelessWidget {
   }
 
   Widget _buildMessagesSection(BuildContext context, profile) {
+    bool? isToggled = false;
     return Card(
       color: AppStyles().getCardColor(context),
       elevation: AppStyles().getCardElevation(context),
@@ -223,11 +225,11 @@ class ResponsiveProfileLayout extends StatelessWidget {
                           _buildSendMessageDialog(context, profile.username),
                     );
                   },
-                  child: Icon(Icons.add),
+                  child: const Icon(Icons.add),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  Texts.translate('mensajes', globalLanguage),
+                  Texts.translate('projects', globalLanguage),
                   style: AppStyles().getTextStyle(
                     context,
                     fontSize: 16,
@@ -266,7 +268,6 @@ class ResponsiveProfileLayout extends StatelessWidget {
                   final messages = snapshot.data!.docs;
 
                   return ListView.builder(
-                    // Con ListView sin shrinkWrap ni NeverScrollableScrollPhysics, se permite el scroll
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final message = messages[index];
@@ -277,49 +278,9 @@ class ResponsiveProfileLayout extends StatelessWidget {
                       final String formattedDate =
                           DateFormat('dd-MM-yyyy HH:mm').format(dateTime);
 
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 12),
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 4, horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Remitente
-                            Text(
-                              message['from'],
-                              style: AppStyles().getTextStyle(
-                                context,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            // Mensaje
-                            Text(
-                              message['message'],
-                              style: AppStyles().getTextStyle(
-                                context,
-                                fontSize: AppStyles.fontSize,
-                                fontWeight: FontWeight.normal,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            // Timestamp formateado
-                            Text(
-                              formattedDate,
-                              style: AppStyles().getTextStyle(
-                                context,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w300,
-                              ),
-                            ),
-                          ],
-                        ),
+                      return MessageItem(
+                        message: message,
+                        formattedDate: formattedDate,
                       );
                     },
                   );

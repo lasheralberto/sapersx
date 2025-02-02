@@ -1,6 +1,7 @@
 // firebase_service.dart
 
 import 'dart:async';
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
@@ -36,6 +37,37 @@ class FirebaseService {
   // Cache para información de usuarios
   final Map<String, UserInfoPopUp> _userCache = {};
 
+  //Método para aceptar o rechazar una invitación a un proyecto
+  Future<bool> acceptPendingInvitation(
+      String uid, bool value) async {
+
+
+    try {
+      // Realiza la consulta para obtener los mensajes que cumplen con los criterios:
+      // 'from' igual a fromUser y 'accepted' igual a false.
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('messages')
+          .where('invitationUid', isEqualTo: uid)
+          .get();
+
+      // Si no se encuentran documentos, puedes decidir retornar false o true según tu lógica.
+      if (querySnapshot.docs.isEmpty) {
+        return false;
+      }
+
+      // Actualiza el campo 'accepted' a true para cada documento encontrado.
+      for (var doc in querySnapshot.docs) {
+        await doc.reference.update({'accepted': value});
+      }
+
+      return true;
+    } catch (e) {
+      // Manejo del error, por ejemplo, imprimir el error en consola.
+      print('Error al aceptar invitaciones: $e');
+      return false;
+    }
+  }
+
   // Método para enviar mensaje
   Future<bool> sendMessage({
     required String to,
@@ -43,11 +75,19 @@ class FirebaseService {
     required String from,
   }) async {
     try {
+      // Crea una instancia del generador de UUID.
+      var uuid = UtilsSapers().generateSimpleUID();
+
+      // Genera un UUID versión 4 (aleatorio).
+      String uniqueId = uuid;
+
       await _firestore.collection('messages').add({
         'to': to,
         'from': from,
         'message': message,
+        'accepted': false,
         'timestamp': FieldValue.serverTimestamp(),
+        'invitationUid': uniqueId
       });
       return true;
     } catch (e) {
@@ -674,6 +714,13 @@ class AuthService {
 }
 
 class UtilsSapers {
+  String generateSimpleUID() {
+    final random = Random();
+    final timestamp = DateTime.now().microsecondsSinceEpoch;
+    final randomNumber = random.nextInt(100000);
+    return '$timestamp-$randomNumber';
+  }
+
   ///Usada para el clipboard de imágenes
   Future<Uint8List> readImages() async {
     final imageBytes = await Pasteboard.image;

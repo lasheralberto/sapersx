@@ -243,6 +243,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                 ),
               ),
               TabBar(
+                tabAlignment: TabAlignment.center,
                 indicatorPadding: EdgeInsets.all(isMobile ? 5.0 : 10.0),
                 indicatorSize: TabBarIndicatorSize.tab,
                 controller: _tabController,

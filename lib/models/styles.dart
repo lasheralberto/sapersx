@@ -21,6 +21,7 @@ class AppStyles {
   static const postCardColor = Colors.transparent;
   static const postCardReplyColor = _pureWhite;
   static const Color colorAvatarBorder = _amazonOrange;
+  static const Color colorAvatarBorderLighter = _amazonLightOrange;
 
   // Colores de los botones
   static const sendButtonColor = _amazonDarkOrange;
