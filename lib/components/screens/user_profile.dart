@@ -368,6 +368,7 @@ class ResponsiveProfileLayout extends StatelessWidget {
           return Column(
             children: [
               ProfileHeader(profile: data),
+              _buildMessagesSection(context, data),
               const SizedBox(height: 16),
               if (data.isExpert == true)
                 SAPExpertProfile(
