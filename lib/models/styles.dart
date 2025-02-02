@@ -21,7 +21,8 @@ class AppStyles {
   static const postCardColor = Colors.transparent;
   static const postCardReplyColor = _pureWhite;
   static const Color colorAvatarBorder = _amazonOrange;
-  static const Color colorAvatarBorderLighter = _amazonLightOrange;
+  static const Color colorAvatarBorderLighter =
+      Color.fromARGB(255, 237, 199, 150);
 
   // Colores de los botones
   static const sendButtonColor = _amazonDarkOrange;
@@ -33,7 +34,7 @@ class AppStyles {
   //Tamaño de los avatars de perfil
   static const double avatarSize = 33.0;
 
-  //Font size 
+  //Font size
   static const double fontSize = 12.0;
   static const double fontSizeMedium = 14.0;
 
@@ -42,7 +43,7 @@ class AppStyles {
   //logo iamge
   static const String logoImage = 'assets/images/logo.png';
 
-    Widget progressIndicatorCreatePostButton() {
+  Widget progressIndicatorCreatePostButton() {
     return const CircularProgressIndicator(
       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
     );

@@ -167,7 +167,7 @@ class ResponsiveProfileLayout extends StatelessWidget {
                       FirebaseAuth.instance.currentUser!.email!);
               // Envía el mensaje a Firebase
               isMessageSending = true;
-              final success = await FirebaseService().sendMessage(
+              final success = await FirebaseService().sendProjectInvitation(
                   to: username, message: message, from: fromUser!.username);
               if (success) {
                 isMessageSending = false;

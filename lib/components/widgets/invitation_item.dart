@@ -70,52 +70,57 @@ class _MessageItemState extends State<MessageItem> {
             ),
           ),
           const SizedBox(width: 8),
-          InkWell(
-            onTap: () {
-              showDialog(
-                  context: context,
-                  builder: (context) => MesomorphicPopup(
-                        text: widget.message['message'],
-                        onClose: () => Navigator.pop(context),
-                      ));
-            },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Remitente
-                Text(
-                  widget.message['from'],
-                  style: AppStyles().getTextStyle(
-                    context,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                showDialog(
+                    context: context,
+                    builder: (context) => MesomorphicPopup(
+                          text: widget.message['message'],
+                          onClose: () => Navigator.pop(context),
+                        ));
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Remitente
+                  Text(
+                    widget.message['from'],
+                    style: AppStyles().getTextStyle(
+                      context,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                // Mensaje
+                  const SizedBox(height: 4),
+                  // Mensaje
 
-                Text(
-                  widget.message['message'],
-                  style: AppStyles().getTextStyle(
-                    context,
-                    fontSize: AppStyles.fontSize,
-                    fontWeight: FontWeight.normal,
+                  Text(
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    softWrap: true,
+                    widget.message['message'],
+                    style: AppStyles().getTextStyle(
+                      context,
+                      fontSize: AppStyles.fontSize,
+                      fontWeight: FontWeight.normal,
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 4),
-                // Timestamp formateado
-                Text(
-                  widget.formattedDate,
-                  style: AppStyles().getTextStyle(
-                    context,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w300,
+                  const SizedBox(height: 4),
+                  // Timestamp formateado
+                  Text(
+                    widget.formattedDate,
+                    style: AppStyles().getTextStyle(
+                      context,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w300,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                // Toggle Button
-              ],
+                  const SizedBox(height: 8),
+                  // Toggle Button
+                ],
+              ),
             ),
           ),
         ],

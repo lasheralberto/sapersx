@@ -38,10 +38,7 @@ class FirebaseService {
   final Map<String, UserInfoPopUp> _userCache = {};
 
   //Método para aceptar o rechazar una invitación a un proyecto
-  Future<bool> acceptPendingInvitation(
-      String uid, bool value) async {
-
-
+  Future<bool> acceptPendingInvitation(String uid, bool value) async {
     try {
       // Realiza la consulta para obtener los mensajes que cumplen con los criterios:
       // 'from' igual a fromUser y 'accepted' igual a false.
@@ -69,7 +66,7 @@ class FirebaseService {
   }
 
   // Método para enviar mensaje
-  Future<bool> sendMessage({
+  Future<bool> sendProjectInvitation({
     required String to,
     required String message,
     required String from,
@@ -94,6 +91,25 @@ class FirebaseService {
       return false;
     }
   }
+  // //Metodo para crear un proyecto
+  // Future<bool> createProject({
+  //   required String to,
+  //   required String message,
+  //   required String from
+  // }) async {
+  //   try {
+  //     // Crea una instancia del generador de UUID.
+
+  //     await _firestore.collection('messages').add({
+  //       'timestamp': FieldValue.serverTimestamp(),
+  //       'invitationUid': uuid,
+  //       'invitees': []
+  //     });
+  //     return true;
+  //   } catch (e) {
+  //     return false;
+  //   }
+  // }
 
   Stream<QuerySnapshot> getMessages(String username) {
     return FirebaseFirestore.instance
