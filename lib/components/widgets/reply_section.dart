@@ -444,7 +444,9 @@ class _ReplySectionState extends State<ReplySection> {
 
   Widget _buildCodeContent(String content) {
     if (content.isEmpty || !content.contains('```')) {
-      return Text(content, style: const TextStyle(fontSize: 15));
+      return Text(content,
+          style:
+              AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize));
     }
 
     final parts = content.split('```');
@@ -457,7 +459,9 @@ class _ReplySectionState extends State<ReplySection> {
         if (index % 2 == 0 && part.isNotEmpty) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Text(part, style: const TextStyle(fontSize: 15)),
+            child: Text(part,
+                style: AppStyles()
+                    .getTextStyle(context, fontSize: AppStyles.fontSize)),
           );
         } else if (index % 2 == 1) {
           return _buildCodeBlock(part);
