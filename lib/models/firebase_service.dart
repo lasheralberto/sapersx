@@ -1,8 +1,9 @@
 // firebase_service.dart
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
-
+import 'package:crypto/crypto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -781,7 +782,17 @@ class UtilsSapers {
   }
 
   String userUniqueUid(String email) {
-    return FirebaseAuth.instance.currentUser!.uid;
+    // Normaliza el email (elimina espacios y convierte a minúsculas)
+    final normalizedEmail = email.trim().toLowerCase();
+
+    // Convierte el email en bytes
+    final bytes = utf8.encode(normalizedEmail);
+
+    // Genera un hash SHA-256 (puedes usar SHA-1 si prefieres)
+    final hash = sha256.convert(bytes);
+
+    // Convierte el hash en una cadena hexadecimal
+    return hash.toString();
   }
 
   //Función para obtener un id unico para las replies de los posts basado en el usuario loguado y la fecha

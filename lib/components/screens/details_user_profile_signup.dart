@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:random_avatar/random_avatar.dart';
 import 'package:provider/provider.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/main.dart' as main;
@@ -11,7 +10,6 @@ import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
 
-// Widget principal del popup de perfil de usuario
 class UserProfilePopup extends StatefulWidget {
   final String email;
   const UserProfilePopup({super.key, required this.email});
@@ -95,17 +93,14 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
     }
   }
 
-  Future<void> _saveProfile() async {
+  Future<void> _saveProfile(email) async {
     if (!_formKey.currentState!.validate()) return;
 
     try {
       setState(() => _isSaving = true);
 
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) throw Exception('No user found');
-
       final userInfo = UserInfoPopUp(
-        uid: UtilsSapers().userUniqueUid(currentUser.email!),
+        uid: UtilsSapers().userUniqueUid(email),
         username: _nameController.text.trim().toLowerCase().replaceAll(' ', ''),
         bio: _bioController.text.trim(),
         location: _locationController.text.trim(),
@@ -117,7 +112,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
         hourlyRate:
             double.tryParse(_rateController.text.trim().replaceAll(' ', '')) ??
                 0.0,
-        email: currentUser.email!.trim().toLowerCase().replaceAll(' ', ''),
+        email: email.trim().toLowerCase().replaceAll(' ', ''),
         experience: _experienceController.text.trim(),
       );
 
@@ -179,7 +174,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
                 _experienceController.text.isNotEmpty));
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(email) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -191,7 +186,6 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
             icon: const Icon(Icons.close, color: Colors.black87),
@@ -201,59 +195,63 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
               }
             },
           ),
-          Text(
-            Texts.translate('editarPerfil', main.globalLanguage),
-            style: AppStyles().getTextStyle(context),
-          ),
-          TextButton(
-            onPressed: _isSaving ? null : _saveProfile,
-            style: TextButton.styleFrom(
-              backgroundColor: AppStyles().getButtonColor(context),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(AppStyles.borderRadiusValue),
+          Expanded(
+            child: Center(
+              child: Text(
+                Texts.translate('editarPerfil', main.globalLanguage),
+                style: AppStyles().getTextStyle(context,
+                    fontSize: AppStyles.fontSizeLarge,
+                    fontWeight: FontWeight.bold),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
-            child: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+          SizedBox(
+            width: 100,
+            child: TextButton(
+              onPressed: () async {
+                _isSaving ? null : await _saveProfile(email);
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: AppStyles().getButtonColor(context),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(AppStyles.borderRadiusValue),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(
+                      Texts.translate('guardar', main.globalLanguage),
+                      style: AppStyles()
+                          .getTextStyle(context)
+                          .copyWith(fontSize: 14),
                     ),
-                  )
-                : Text(
-                    Texts.translate('guardar', main.globalLanguage),
-                    style: AppStyles().getTextStyle(context),
-                  ),
+            ),
           ),
         ],
       ),
     );
-    
   }
 
   Widget _buildProfilePicture(isExpert, email) {
-    return Positioned(
-      left: 16,
-      bottom: -40,
-      child: Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.white,
-              width: 4,
-            ),
-          ),
-          child: ProfileAvatar(
-              seed: email ?? 'U',
-              size: AppStyles.avatarSize,
-              showBorder: isExpert)),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: ProfileAvatar(
+            seed: email ?? 'U',
+            size: AppStyles.avatarSize + 20,
+            showBorder: isExpert),
+      ),
     );
   }
 
@@ -278,8 +276,9 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
             Icon(
               Icons.workspace_premium,
               color: _isExpertMode ? Colors.blue : Colors.grey,
+              size: 28,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,11 +287,13 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
                     'Modo Experto SAP',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 14,
                       color: _isExpertMode ? Colors.blue : Colors.grey[700],
                     ),
                   ),
+                  const SizedBox(height: 4),
                   Text(
-                    'Activa esta opción si quieres ofrecer servicios de consultoría SAP',
+                    'Activa para ofrecer servicios de consultoría SAP',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -305,6 +306,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
               value: _isExpertMode,
               onChanged: (value) => setState(() => _isExpertMode = value),
               activeColor: Colors.blue,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ],
         ),
@@ -328,7 +330,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildTextField(
             controller: _bioController,
             label: Texts.translate('bioField', main.globalLanguage),
@@ -341,7 +343,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildTextField(
             controller: _locationController,
             label: Texts.translate('locationField', main.globalLanguage),
@@ -353,7 +355,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildTextField(
             controller: _websiteController,
             label: Texts.translate('websiteField', main.globalLanguage),
@@ -366,7 +368,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
             },
           ),
           if (_isExpertMode) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             _buildTextField(
               controller: _specialtyController,
               label: 'Especialidad SAP',
@@ -379,7 +381,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
                 return null;
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             _buildTextField(
               controller: _experienceController,
               label: 'Experiencia/Proyectos realizados',
@@ -393,7 +395,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
                 return null;
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             _buildTextField(
               controller: _rateController,
               label: 'Tarifa por hora',
@@ -434,53 +436,63 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
     Widget? suffix,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
-      controller: controller,
-      maxLength: maxLength,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
-        suffix: suffix,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-          borderSide: BorderSide(
-            color: Colors.grey.withOpacity(0.3),
-          ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minWidth: 200, // Ancho mínimo para pantallas pequeñas
+          maxWidth: 500, // Ancho máximo para pantallas grandes
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-          borderSide: BorderSide(
-            color: Colors.grey.withOpacity(0.3),
+        child: TextFormField(
+          controller: controller,
+          maxLength: maxLength,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
+          validator: validator,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: hint,
+            isDense: true,
+            prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+            suffix: suffix,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+              borderSide: BorderSide(
+                color: Colors.grey.withOpacity(0.3),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+              borderSide: BorderSide(
+                color: Colors.grey.withOpacity(0.3),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+              borderSide: const BorderSide(
+                color: Colors.blue,
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+              borderSide: BorderSide(
+                color: Colors.red.withOpacity(0.5),
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-          borderSide: const BorderSide(
-            color: Colors.blue,
-            width: 2,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-          borderSide: BorderSide(
-            color: Colors.red.withOpacity(0.5),
-          ),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-          borderSide: const BorderSide(
-            color: Colors.red,
-            width: 2,
-          ),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
         ),
       ),
     );
@@ -491,25 +503,48 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
     return WillPopScope(
       onWillPop: _confirmExit,
       child: Dialog(
+        insetPadding: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         ),
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          constraints: const BoxConstraints(maxWidth: 800),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildHeader(),
-                  _buildProfilePicture(_isExpertMode, widget.email),
-                  const SizedBox(height: 50),
-                  _buildExpertModeToggle(),
-                  _buildFormFields(),
-                ],
-              ),
+        child: Form(
+          // MOVER EL FORM AQUÍ
+          key: _formKey,
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.9,
+              maxWidth: 600,
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _buildHeader(widget.email),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 60),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                      left: 16,
+                      right: 16,
+                    ),
+                    child: Column(
+                      // QUITAR EL FORM DE AQUÍ
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildProfilePicture(_isExpertMode, widget.email),
+                        const SizedBox(height: 20),
+                        _buildExpertModeToggle(),
+                        _buildFormFields(),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
