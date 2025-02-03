@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:random_avatar/random_avatar.dart';
 import 'package:provider/provider.dart';
+import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/main.dart' as main;
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/styles.dart';
@@ -12,13 +13,14 @@ import 'package:sapers/models/user.dart';
 
 // Widget principal del popup de perfil de usuario
 class UserProfilePopup extends StatefulWidget {
-  const UserProfilePopup({super.key});
+  final String email;
+  const UserProfilePopup({super.key, required this.email});
 
-  static Future<bool?> show(BuildContext context) async {
+  static Future<bool?> show(BuildContext context, email) async {
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const UserProfilePopup(),
+      builder: (context) => UserProfilePopup(email: email),
     );
   }
 
@@ -110,7 +112,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
         website:
             _websiteController.text.trim().toLowerCase().replaceAll(' ', ''),
         isExpert: _isExpertMode,
-        joinDate: Timestamp.fromDate(DateTime.now()) ,
+        joinDate: Timestamp.fromDate(DateTime.now()),
         specialty: _specialtyController.text.trim(),
         hourlyRate:
             double.tryParse(_rateController.text.trim().replaceAll(' ', '')) ??
@@ -233,37 +235,24 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
     );
   }
 
-  Widget _buildProfilePicture() {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          height: 120,
-          color: Colors.blue.shade200,
-        ),
-        Positioned(
-          left: 16,
-          bottom: -40,
-          child: Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white,
-                width: 4,
-              ),
-            ),
-            child: CircleAvatar(
-              backgroundColor: Colors.blue.shade100,
-              radius: 80,
-              child: RandomAvatar(
-                FirebaseAuth.instance.currentUser?.email ?? 'U',
-              ),
+  Widget _buildProfilePicture(isExpert, email) {
+    return Positioned(
+      left: 16,
+      bottom: -40,
+      child: Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white,
+              width: 4,
             ),
           ),
-        ),
-      ],
+          child: ProfileAvatar(
+              seed: email ?? 'U',
+              size: AppStyles.avatarSize,
+              showBorder: isExpert)),
     );
   }
 
@@ -514,7 +503,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildHeader(),
-                  _buildProfilePicture(),
+                  _buildProfilePicture(_isExpertMode, widget.email),
                   const SizedBox(height: 50),
                   _buildExpertModeToggle(),
                   _buildFormFields(),

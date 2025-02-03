@@ -67,7 +67,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
               ProfileAvatar(
                 seed: profile.email,
                 size: AppStyles.avatarSize + 10,
-                showBorder: true,
+                showBorder: profile.isExpert,
               ),
               const Spacer(),
               //   _buildEditProfileButton(context),

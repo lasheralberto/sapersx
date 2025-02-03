@@ -16,6 +16,9 @@ class AppStyles {
   static const scaffoldBackgroundColorBright = _pureWhite;
   static const scaffoldBackgroundColorDar = _darkGray;
 
+  //Decidir si mostrar avatares o no
+  static const bool showAvatars = false;
+
   // Colores de las tarjetas
   static const postCardColorSelected = _lightGray; // Naranja muy claro
   static const postCardColor = Colors.transparent;

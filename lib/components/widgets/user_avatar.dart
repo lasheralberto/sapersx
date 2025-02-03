@@ -48,7 +48,7 @@ class UserAvatar extends StatelessWidget {
             child: ProfileAvatar(
               size: AppStyles.avatarSize,
               seed: userAvatar,
-              showBorder: true,
+              showBorder: user.isExpert as bool,
             ),
             itemBuilder: (context) => [
               PopupMenuItem(

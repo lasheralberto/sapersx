@@ -62,10 +62,16 @@ class _LoginDialogState extends State<LoginDialog> {
 
       try {
         if (_isSignUp) {
-          await _authService.signUp(email, pass);
-          await FirebaseAuth.instance.authStateChanges().first;
-          await UserProfilePopup.show(context);
-          return true;
+          // await _authService.signUp(email, pass);
+          // await FirebaseAuth.instance.authStateChanges().first;
+          bool? islogued = await UserProfilePopup.show(context, email);
+          if (islogued == true) {
+            await _authService.signUp(email, pass);
+            await FirebaseAuth.instance.authStateChanges().first;
+            return true;
+          } else {
+            return false;
+          }
         } else {
           final user = await _authService.signIn(email, pass);
           if (user != null) {

@@ -17,23 +17,35 @@ class ProfileAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: showBorder
-          ? BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppStyles.colorAvatarBorder,
-                width: 4,
-              ),
-            )
-          : null,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: showBorder == true
+              ? AppStyles.colorAvatarBorder
+              : AppStyles.colorAvatarBorderLighter,
+          width: 4,
+        ),
+      ),
       child: CircleAvatar(
         //backgroundColor: TwitterColors.primary.withOpacity(0.1),
         radius: size / 2,
-        child: RandomAvatar(
-          seed.isNotEmpty ? seed : 'U',
-          height: size,
-          width: size,
-        ),
+        child: AppStyles.showAvatars == true
+            ? RandomAvatar(
+                seed.isNotEmpty ? seed : 'U',
+                height: size,
+                width: size,
+              )
+            : Center(
+                child: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Text(seed.substring(0, 2).toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: AppStyles.fontSize,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      )),
+                ),
+              ),
       ),
     );
   }
