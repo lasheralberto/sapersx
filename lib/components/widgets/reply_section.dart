@@ -148,6 +148,7 @@ class _ReplySectionState extends State<ReplySection> {
 
   Widget _buildAuthorAvatar(reply) {
     return UserProfileCardHover(
+      isExpert: true,
       post: reply,
       onProfileOpen: () {
         // Opcional: Añade aquí lógica adicional cuando se abre el perfil
