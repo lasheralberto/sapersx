@@ -11,10 +11,12 @@ import 'package:sapers/components/widgets/profile_header.dart';
 class UserProfileCardHover extends StatefulWidget {
   final dynamic post;
   final VoidCallback onProfileOpen;
+  bool isExpert;
 
-  const UserProfileCardHover({
+    UserProfileCardHover({
     super.key,
     required this.post,
+    required this.isExpert,
     required this.onProfileOpen,
   });
 
@@ -147,7 +149,7 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
                   child: CircularProgressIndicator(),
                 )
               : ProfileAvatar(
-                  showBorder: true,
+                  showBorder: widget.isExpert,
                   seed: user!.email.toString(),
                   size: AppStyles.avatarSize - 5,
                 ),

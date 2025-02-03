@@ -133,6 +133,7 @@ class _PostCardState extends State<PostCard> {
 
   Widget _buildAuthorAvatar() {
     return UserProfileCardHover(
+      isExpert: true,
       post: widget.post,
       onProfileOpen: () {
         // Opcional: Añade aquí lógica adicional cuando se abre el perfil
