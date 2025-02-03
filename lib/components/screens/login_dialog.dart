@@ -53,6 +53,7 @@ class _LoginDialogState extends State<LoginDialog> {
     super.dispose();
   }
 
+
   Future<bool?> _submitForm(String email, String pass) async {
     if (_formKey.currentState!.validate()) {
       setState(() {

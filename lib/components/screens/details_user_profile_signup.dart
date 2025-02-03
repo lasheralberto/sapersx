@@ -233,6 +233,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
         ],
       ),
     );
+    
   }
 
   Widget _buildProfilePicture(isExpert, email) {
