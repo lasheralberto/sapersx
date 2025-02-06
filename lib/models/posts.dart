@@ -70,6 +70,8 @@ class SAPReply {
   final String content;
   final String author;
   final DateTime timestamp;
+  final int replyVotes;
+  final List<String> repliedBy;
   final List<Map<String, dynamic>>? attachments;
 
   SAPReply({
@@ -77,6 +79,8 @@ class SAPReply {
     required this.postId,
     required this.content,
     required this.author,
+    required this.repliedBy,
+    required this.replyVotes,
     required this.timestamp,
     this.attachments,
   });
@@ -87,7 +91,9 @@ class SAPReply {
       'postId': postId,
       'content': content,
       'author': author,
+      'replyVotes': replyVotes,
       'timestamp': timestamp.toIso8601String(),
+      'repliedBy': repliedBy
     };
   }
 
@@ -97,6 +103,8 @@ class SAPReply {
       postId: map['postId'],
       content: map['content'],
       author: map['author'],
+      replyVotes: map['replyVotes'] ?? 0,
+      repliedBy: List<String>.from(map['repliedBy'] ?? []),
       attachments: List<Map<String, dynamic>>.from(
           map['attachments'] ?? []), // Add this line
       // Convertir el Timestamp a DateTime, si es necesario

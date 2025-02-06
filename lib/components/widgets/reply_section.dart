@@ -8,6 +8,7 @@ import 'package:pasteboard/pasteboard.dart';
 import 'package:sapers/components/widgets/attachmentsviewer.dart';
 import 'package:sapers/components/widgets/custombutton.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
+import 'package:sapers/components/widgets/reply_card.dart';
 import 'package:sapers/components/widgets/text_editor.dart';
 import 'package:sapers/components/widgets/user_hover_card.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
@@ -53,6 +54,7 @@ class _ReplySectionState extends State<ReplySection> {
   List<PlatformFile> selectedFiles = [];
   bool isUploading = false;
   Image? _pastedImage;
+  bool _authorInReply = false;
 
   // Colores personalizados
   static const _sectionBackground = Color(0xFFF3F3F3);
@@ -146,10 +148,10 @@ class _ReplySectionState extends State<ReplySection> {
     );
   }
 
-  Widget _buildAuthorAvatar(reply) {
+  Widget _buildAuthorAvatar(SAPReply reply) {
     return UserProfileCardHover(
       isExpert: true,
-      post: reply,
+      post: widget.post,
       onProfileOpen: () {
         // Opcional: Añade aquí lógica adicional cuando se abre el perfil
       },
@@ -170,8 +172,8 @@ class _ReplySectionState extends State<ReplySection> {
           ),
         ),
         backgroundColor: Colors.white,
-        side: BorderSide(color: _borderColor, width: 1),
-        deleteIcon: Icon(Icons.close, size: 16, color: _accentOrange),
+        side: const BorderSide(color: _borderColor, width: 1),
+        deleteIcon: const Icon(Icons.close, size: 16, color: _accentOrange),
         onDeleted: () => setState(() => selectedFiles.remove(file)),
       ),
     );
@@ -283,7 +285,7 @@ class _ReplySectionState extends State<ReplySection> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: Icon(Icons.attach_file, color: _accentOrange),
+            icon: const Icon(Icons.attach_file, color: _accentOrange),
             onPressed: () async {
               await UtilsSapers()
                   .pickFiles(selectedFiles, context)
@@ -345,8 +347,9 @@ class _ReplySectionState extends State<ReplySection> {
     return StreamBuilder<List<SAPReply>>(
       stream: widget.firebaseService.getRepliesForPost(widget.postId),
       builder: (context, snapshot) {
-        if (snapshot.hasError)
+        if (snapshot.hasError) {
           return _buildErrorMessage(snapshot.error.toString());
+        }
         if (!snapshot.hasData) return _buildLoadingIndicator();
 
         final replies = snapshot.data!;
@@ -369,51 +372,103 @@ class _ReplySectionState extends State<ReplySection> {
   }
 
   Widget _buildReplyCard(SAPReply reply) {
-    return Container(
-      decoration: BoxDecoration(
-        color: _replyCardColor,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: _borderColor, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: _accentOrange.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: _replyCardColor,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: _borderColor, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: _accentOrange.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(15),
-        child: Material(
-          color: Colors.transparent,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildReplyHeader(reply),
-                const SizedBox(height: 16),
-                _buildCodeContent(reply.content),
-                if (reply.attachments != null &&
-                    reply.attachments!.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  AttachmentsViewer(
-                    reply: reply,
-                    onAttachmentOpen: (attachment) {
-                      if (attachment['url'] != null) {
-                        launchUrl(
-                          Uri.parse(attachment['url']),
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
-                    },
-                  ),
-                ],
-              ],
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Material(
+              color: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildReplyHeader(reply),
+                    const SizedBox(height: 16),
+                    _buildCodeContent(reply.content),
+                    if (reply.attachments != null &&
+                        reply.attachments!.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      AttachmentsViewer(
+                        reply: reply,
+                        onAttachmentOpen: (attachment) {
+                          if (attachment['url'] != null) {
+                            launchUrl(
+                              Uri.parse(attachment['url']),
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: () async {
+                        bool hasVoted = await FirebaseService().isAuthorInReply(
+                            widget.postId, reply.id, widget.postAuthor);
+
+                        if (hasVoted) {
+                          await FirebaseService().voteForReply(
+                              reply.postId, reply.id, reply.author, 1);
+                        } else {
+                          await FirebaseService().voteForReply(
+                              reply.postId, reply.id, reply.author, -1);
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(
+                          Icons.thumb_up_alt_outlined,
+                          size: 20,
+                          color: _authorInReply == true
+                              ? Colors.amber
+                              : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
-      ),
+        // Widget de votos (solo si existe la key)
+        if (reply.toMap().containsKey('replyVotes') &&
+            reply.replyVotes >
+                0) // Asegúrate de que 'reply' esté accesible en este contexto
+          Align(
+            alignment: Alignment.topLeft,
+            child: Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: Colors.red, // Color de fondo
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+              child: Text(
+                '${reply.replyVotes}', // Número de votos
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: AppStyles.fontSizeMedium,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -421,11 +476,6 @@ class _ReplySectionState extends State<ReplySection> {
     return Row(
       children: [
         _buildAuthorAvatar(reply),
-        // ProfileAvatar(
-        //   seed: reply.author,
-        //   showBorder: true,
-        //   size: AppStyles.avatarSize - 10,
-        // ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -519,7 +569,7 @@ class _ReplySectionState extends State<ReplySection> {
             ),
             child: Text(
               language.toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
                 fontSize: 12,

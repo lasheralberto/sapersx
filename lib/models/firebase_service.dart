@@ -579,7 +579,8 @@ class FirebaseService {
           .collection('posts')
           .doc(postId)
           .collection('replies')
-          .orderBy('timestamp', descending: true)
+          // .orderBy('timestamp', descending: true)
+          .orderBy('replyVotes', descending: true)
           .snapshots()
           .map((snapshot) => snapshot.docs.map((doc) {
                 try {
@@ -601,6 +602,8 @@ class FirebaseService {
                     author: 'Anonymous',
                     content: '',
                     timestamp: DateTime.now(),
+                    repliedBy: [],
+                    replyVotes: 0,
                     attachments: [],
                     postId: postId,
                   );
@@ -609,6 +612,78 @@ class FirebaseService {
     } catch (e) {
       // Retornar un stream vacío en caso de error
       return Stream.value([]);
+    }
+  }
+
+  Future<bool> isAuthorInReply(
+      String postId, String replyId, String author) async {
+    try {
+      // Obtener el documento de la reply
+      final replyDoc = await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(postId)
+          .collection('replies')
+          .doc(replyId)
+          .get();
+
+      // Verificar si el documento existe y si el autor está en el array
+      if (replyDoc.exists) {
+        final repliedByList =
+            replyDoc.data()?['repliedBy'] as List<dynamic>? ?? [];
+        return repliedByList.contains(author);
+      }
+
+      // Si el documento no existe, retornar false
+      return false;
+    } catch (e) {
+      // Manejar errores (puedes lanzar una excepción o simplemente retornar false)
+      print('Error al verificar el autor: $e');
+      return false;
+    }
+  }
+
+  //Vote for reply
+  Future<void> voteForReply(
+    String postId,
+    String replyId,
+    String repliedBy,
+    int increment,
+  ) async {
+    try {
+      final replyRef = FirebaseFirestore.instance
+          .collection('posts')
+          .doc(postId)
+          .collection('replies')
+          .doc(replyId);
+
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final replyDoc = await transaction.get(replyRef);
+
+        if (replyDoc.exists) {
+          final replyData = replyDoc.data() as Map<String, dynamic>;
+          // Obtener el array actual o crear uno vacío si no existe
+          final List<dynamic> currentRepliedBy =
+              replyData['repliedBy'] as List<dynamic>? ?? [];
+
+          debugPrint('currentRepliedBy: $currentRepliedBy');
+
+          if (currentRepliedBy.contains(repliedBy)) {
+            // El usuario ya votó: quitar su voto y eliminarlo del array
+            transaction.update(replyRef, {
+              'replyVotes': FieldValue.increment(-increment),
+              'repliedBy': FieldValue.arrayRemove([repliedBy]),
+            });
+          } else {
+            // El usuario no votó: añadir su voto y agregarlo al array
+            transaction.update(replyRef, {
+              'replyVotes': FieldValue.increment(increment),
+              'repliedBy': FieldValue.arrayUnion([repliedBy]),
+            });
+          }
+        }
+      });
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -628,6 +703,7 @@ class FirebaseService {
         'content': content,
         'timestamp': FieldValue.serverTimestamp(),
         'attachments': attachments ?? [],
+        'replyVotes': 0,
       };
 
       final postRef =
