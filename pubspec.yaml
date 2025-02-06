@@ -24,7 +24,6 @@ dependencies:
   rxdart: ^0.28.0
   pasteboard: ^0.3.0
   crypto: ^3.0.6
-  flutter_web_seo: ^0.0.2
   icons_plus: ^5.0.0
 
  

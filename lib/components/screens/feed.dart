@@ -15,7 +15,6 @@ import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/theme.dart';
-import 'package:flutter_web_seo/flutter_web_seo.dart';
 
 class Feed extends StatefulWidget {
   final User? user;
