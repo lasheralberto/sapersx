@@ -10,6 +10,7 @@ import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/theme.dart';
 import 'package:sapers/models/user.dart';
 import 'firebase_options.dart';
+import 'package:seo_renderer/seo_renderer.dart';
 
 // Variables globales
 String globalLanguage = 'es';
@@ -134,27 +135,30 @@ class _SAPSocialAppState extends State<SAPSocialApp> {
   Widget build(BuildContext context) {
     return Consumer2<ThemeNotifier, AuthProvider>(
       builder: (context, themeNotifier, authProvider, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            brightness: Brightness.light,
-            useMaterial3: true,
-            scaffoldBackgroundColor: AppStyles.scaffoldBackgroundColorBright,
+        return RobotDetector(
+          child: MaterialApp(
+            navigatorObservers: [seoRouteObserver],
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              primarySwatch: Colors.blue,
+              brightness: Brightness.light,
+              useMaterial3: true,
+              scaffoldBackgroundColor: AppStyles.scaffoldBackgroundColorBright,
+            ),
+            darkTheme: ThemeData(
+              primarySwatch: Colors.blue,
+              brightness: Brightness.dark,
+              useMaterial3: true,
+              scaffoldBackgroundColor: AppStyles.scaffoldBackgroundColorDar,
+            ),
+            themeMode:
+                themeNotifier.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            home: const AuthWrapper(),
+            routes: {
+              '/feed': (context) => Feed(user: authProvider.user),
+              '/login': (context) => const LoginDialog(),
+            },
           ),
-          darkTheme: ThemeData(
-            primarySwatch: Colors.blue,
-            brightness: Brightness.dark,
-            useMaterial3: true,
-            scaffoldBackgroundColor: AppStyles.scaffoldBackgroundColorDar,
-          ),
-          themeMode:
-              themeNotifier.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          home: const AuthWrapper(),
-          routes: {
-            '/feed': (context) => Feed(user: authProvider.user),
-            '/login': (context) => const LoginDialog(),
-          },
         );
       },
     );

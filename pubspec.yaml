@@ -24,6 +24,7 @@ dependencies:
   rxdart: ^0.28.0
   pasteboard: ^0.3.0
   crypto: ^3.0.6
+  seo_renderer: ^0.6.0
 
  
  

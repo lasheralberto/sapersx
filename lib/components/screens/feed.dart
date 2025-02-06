@@ -14,6 +14,7 @@ import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/theme.dart';
+import 'package:seo_renderer/seo_renderer.dart';
 
 class Feed extends StatefulWidget {
   final User? user;
@@ -261,18 +262,24 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                 dividerColor: Colors.transparent,
                 tabs: [
                   Tab(
-                    child: Text(
-                      Texts.translate('feedGeneralTab', globalLanguage),
-                      style: const TextStyle(
-                        fontSize: AppStyles.fontSize,
+                    child: TextRenderer(
+                      style: TextRendererStyle.header1,
+                      child: Text(
+                        Texts.translate('feedGeneralTab', globalLanguage),
+                        style: const TextStyle(
+                          fontSize: AppStyles.fontSize,
+                        ),
                       ),
                     ),
                   ),
                   Tab(
-                    child: Text(
-                      Texts.translate('FollowingTab', globalLanguage),
-                      style: const TextStyle(
-                        fontSize: AppStyles.fontSize,
+                    child: TextRenderer(
+                      style: TextRendererStyle.header1,
+                      child: Text(
+                        Texts.translate('FollowingTab', globalLanguage),
+                        style: const TextStyle(
+                          fontSize: AppStyles.fontSize,
+                        ),
                       ),
                     ),
                   ),
