@@ -200,10 +200,13 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Image.asset(
-          AppStyles.logoImage,
-          width: isMobile ? 80.0 : 100.0,
-          height: isMobile ? 80.0 : 100.0,
+        title: ImageRenderer(
+          alt: 'Logo Image',
+          child: Image.asset(
+            AppStyles.logoImage,
+            width: isMobile ? 80.0 : 100.0,
+            height: isMobile ? 80.0 : 100.0,
+          ),
         ),
         actions: [
           Padding(
