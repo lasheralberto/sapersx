@@ -55,6 +55,7 @@ class _ReplySectionState extends State<ReplySection> {
   bool isUploading = false;
   Image? _pastedImage;
   bool _authorInReply = false;
+  int voteIncrement = 0;
 
   // Colores personalizados
   static const _sectionBackground = Color(0xFFF3F3F3);
@@ -417,15 +418,24 @@ class _ReplySectionState extends State<ReplySection> {
                     const SizedBox(height: 16),
                     InkWell(
                       onTap: () async {
-                        bool hasVoted = await FirebaseService().isAuthorInReply(
-                            widget.postId, reply.id, widget.postAuthor);
+                        bool hasVoted = await FirebaseService()
+                            .isAuthorInReply(widget.postId, reply.id);
 
-                        if (hasVoted) {
+                        if (hasVoted == false) {
                           await FirebaseService().voteForReply(
                               reply.postId, reply.id, reply.author, 1);
                         } else {
-                          await FirebaseService().voteForReply(
-                              reply.postId, reply.id, reply.author, -1);
+                          if (reply.replyVotes == 0) {
+                            setState(() {
+                              voteIncrement = 0;
+                            });
+                          } else {
+                            setState(() {
+                              voteIncrement = -1;
+                            });
+                          }
+                          await FirebaseService().voteForReply(reply.postId,
+                              reply.id, reply.author, voteIncrement);
                         }
                       },
                       child: Padding(

@@ -615,8 +615,7 @@ class FirebaseService {
     }
   }
 
-  Future<bool> isAuthorInReply(
-      String postId, String replyId, String author) async {
+  Future<bool> isAuthorInReply(String postId, String replyId) async {
     try {
       // Obtener el documento de la reply
       final replyDoc = await FirebaseFirestore.instance
@@ -627,10 +626,20 @@ class FirebaseService {
           .get();
 
       // Verificar si el documento existe y si el autor está en el array
+      UserInfoPopUp? userInfo =
+          await getUserInfoByEmail(FirebaseAuth.instance.currentUser!.email!);
+
+      //Verificar que el usuario esta logueado antes
+      if (userInfo == null) {
+        return false;
+      }
+
       if (replyDoc.exists) {
         final repliedByList =
             replyDoc.data()?['repliedBy'] as List<dynamic>? ?? [];
-        return repliedByList.contains(author);
+        debugPrint('repliedByList: $repliedByList');
+        bool hasvoted = repliedByList.contains(userInfo?.username);
+        return hasvoted;
       }
 
       // Si el documento no existe, retornar false
