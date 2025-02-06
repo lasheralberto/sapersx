@@ -5,11 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_highlighting/flutter_highlighting.dart';
 import 'package:flutter_highlighting/themes/github.dart';
 import 'package:pasteboard/pasteboard.dart';
+import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/components/widgets/attachmentsviewer.dart';
 import 'package:sapers/components/widgets/custombutton.dart';
 import 'package:sapers/components/widgets/like_button.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
-import 'package:sapers/components/widgets/reply_card.dart';
 import 'package:sapers/components/widgets/text_editor.dart';
 import 'package:sapers/components/widgets/user_hover_card.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
@@ -68,6 +68,13 @@ class _ReplySectionState extends State<ReplySection> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _showLoginDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const LoginDialog(),
+    );
   }
 
   Future<void> _handleReply(String postId, String replyId) async {

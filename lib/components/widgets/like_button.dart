@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/styles.dart';
 
@@ -34,7 +36,7 @@ class _LikeButtonState extends State<LikeButton>
     _hasLikedFuture = _likeService.hasUserLiked(widget.postId, widget.replyId);
 
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 1),
       vsync: this,
     );
 
@@ -52,7 +54,19 @@ class _LikeButtonState extends State<LikeButton>
     ]).animate(_controller);
   }
 
+  void _showLoginDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const LoginDialog(),
+    );
+  }
+
   Future<void> _handleLikePress() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      _showLoginDialog(context);
+      return;
+    }
+
     if (_isLiking) return;
     setState(() => _isLiking = true);
 

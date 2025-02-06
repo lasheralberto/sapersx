@@ -10,7 +10,7 @@ import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/theme.dart';
 import 'package:sapers/models/user.dart';
 import 'firebase_options.dart';
-import 'package:seo_renderer/seo_renderer.dart';
+ 
 
 // Variables globales
 String globalLanguage = 'es';
@@ -135,9 +135,9 @@ class _SAPSocialAppState extends State<SAPSocialApp> {
   Widget build(BuildContext context) {
     return Consumer2<ThemeNotifier, AuthProvider>(
       builder: (context, themeNotifier, authProvider, child) {
-        return RobotDetector(
-          child: MaterialApp(
-            navigatorObservers: [seoRouteObserver],
+        return  
+            MaterialApp(
+          
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               primarySwatch: Colors.blue,
@@ -158,8 +158,8 @@ class _SAPSocialAppState extends State<SAPSocialApp> {
               '/feed': (context) => Feed(user: authProvider.user),
               '/login': (context) => const LoginDialog(),
             },
-          ),
-        );
+          );
+         
       },
     );
   }

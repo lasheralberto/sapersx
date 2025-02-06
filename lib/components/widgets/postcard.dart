@@ -24,7 +24,7 @@ import 'package:flutter_highlighting/themes/vs.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/components/widgets/text_editor.dart';
 import 'package:sapers/components/widgets/profile_header.dart';
-import 'package:seo_renderer/seo_renderer.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 class PostCard extends StatefulWidget {
@@ -157,30 +157,24 @@ class _PostCardState extends State<PostCard> {
                 color: Colors.grey[200], // Color de fondo de la burbuja
                 borderRadius: BorderRadius.circular(8), // Bordes redondeados
               ),
-              child: TextRenderer(
-                style: TextRendererStyle.header1,
-                child: Text(
-                  widget.post.module,
-                  style: AppStyles().getTextStyle(context).copyWith(
-                        fontSize: 12, // Tamaño más pequeño
-                        fontWeight: FontWeight.bold, // Resaltado
-                      ),
-                ),
+              child: Text(
+                widget.post.module,
+                style: AppStyles().getTextStyle(context).copyWith(
+                      fontSize: 12, // Tamaño más pequeño
+                      fontWeight: FontWeight.bold, // Resaltado
+                    ),
               ),
             ),
 
             const SizedBox(width: 10),
             Expanded(
-              child: TextRenderer(
-                style: TextRendererStyle.header1,
-                child: Text(
-                  widget.post.title,
-                  style: AppStyles().getTextStyle(context,
-                      fontSize: AppStyles.fontSizeMedium,
-                      fontWeight: FontWeight.bold),
-                  overflow: TextOverflow
-                      .ellipsis, // Muestra "..." si el texto es muy largo
-                ),
+              child: Text(
+                widget.post.title,
+                style: AppStyles().getTextStyle(context,
+                    fontSize: AppStyles.fontSizeMedium,
+                    fontWeight: FontWeight.bold),
+                overflow: TextOverflow
+                    .ellipsis, // Muestra "..." si el texto es muy largo
               ),
             ),
           ],
@@ -189,12 +183,9 @@ class _PostCardState extends State<PostCard> {
         Row(
           children: [
             const SizedBox(width: 10),
-            TextRenderer(
-              style: TextRendererStyle.header3,
-              child: Text(widget.post.author,
-                  style: AppStyles().getTextStyle(context,
-                      fontSize: AppStyles.fontSize, fontWeight: FontWeight.w100)),
-            ),
+            Text(widget.post.author,
+                style: AppStyles().getTextStyle(context,
+                    fontSize: AppStyles.fontSize, fontWeight: FontWeight.w100)),
             const SizedBox(width: 10),
             _buildTimestamp(widget.post),
           ],
@@ -207,14 +198,11 @@ class _PostCardState extends State<PostCard> {
   }
 
   Widget _buildPostContent() {
-    return TextRenderer(
-      style: TextRendererStyle.paragraph,
-      child: Text(
-        widget.post.content,
-        style: AppStyles().getTextStyle(context),
-        maxLines: isExpanded ? null : 4,
-        overflow: isExpanded ? TextOverflow.visible : TextOverflow.fade,
-      ),
+    return Text(
+      widget.post.content,
+      style: AppStyles().getTextStyle(context),
+      maxLines: isExpanded ? null : 4,
+      overflow: isExpanded ? TextOverflow.visible : TextOverflow.fade,
     );
   }
 

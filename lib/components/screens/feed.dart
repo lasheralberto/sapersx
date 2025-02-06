@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
@@ -14,7 +15,7 @@ import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/theme.dart';
-import 'package:seo_renderer/seo_renderer.dart';
+import 'package:flutter_web_seo/flutter_web_seo.dart';
 
 class Feed extends StatefulWidget {
   final User? user;
@@ -200,13 +201,10 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: ImageRenderer(
-          alt: 'Logo Image',
-          child: Image.asset(
-            AppStyles.logoImage,
-            width: isMobile ? 80.0 : 100.0,
-            height: isMobile ? 80.0 : 100.0,
-          ),
+        title: Image.asset(
+          AppStyles.logoImage,
+          width: isMobile ? 80.0 : 100.0,
+          height: isMobile ? 80.0 : 100.0,
         ),
         actions: [
           Padding(
@@ -265,24 +263,18 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                 dividerColor: Colors.transparent,
                 tabs: [
                   Tab(
-                    child: TextRenderer(
-                      style: TextRendererStyle.header1,
-                      child: Text(
-                        Texts.translate('feedGeneralTab', globalLanguage),
-                        style: const TextStyle(
-                          fontSize: AppStyles.fontSize,
-                        ),
+                    child: Text(
+                      Texts.translate('feedGeneralTab', globalLanguage),
+                      style: const TextStyle(
+                        fontSize: AppStyles.fontSize,
                       ),
                     ),
                   ),
                   Tab(
-                    child: TextRenderer(
-                      style: TextRendererStyle.header1,
-                      child: Text(
-                        Texts.translate('FollowingTab', globalLanguage),
-                        style: const TextStyle(
-                          fontSize: AppStyles.fontSize,
-                        ),
+                    child: Text(
+                      Texts.translate('FollowingTab', globalLanguage),
+                      style: const TextStyle(
+                        fontSize: AppStyles.fontSize,
                       ),
                     ),
                   ),
@@ -302,8 +294,15 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        foregroundColor: Colors.white,
+        backgroundColor: AppStyles.colorAvatarBorder,
+        enableFeedback: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(25.0)),
+        ),
+        mini: false,
         onPressed: _showCreatePostDialog,
-        child: const Icon(Icons.add),
+        child: const Icon(EvaIcons.plus_outline),
       ),
     );
   }
