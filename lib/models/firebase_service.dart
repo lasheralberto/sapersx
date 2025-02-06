@@ -13,6 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
+import 'package:sapers/components/widgets/like_button.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/texts.dart';
@@ -615,87 +616,76 @@ class FirebaseService {
     }
   }
 
-  Future<bool> isAuthorInReply(String postId, String replyId) async {
+ // Verifica si el usuario actual ha dado like
+  Future<bool> hasUserLiked(String postId, String replyId) async {
     try {
-      // Obtener el documento de la reply
-      final replyDoc = await FirebaseFirestore.instance
+      final userInfo = await getUserInfoByEmail(
+          FirebaseAuth.instance.currentUser?.email ?? '');
+      if (userInfo == null) return false;
+
+      final doc = await _firestore
           .collection('posts')
           .doc(postId)
           .collection('replies')
           .doc(replyId)
           .get();
 
-      // Verificar si el documento existe y si el autor está en el array
-      UserInfoPopUp? userInfo =
-          await getUserInfoByEmail(FirebaseAuth.instance.currentUser!.email!);
+      if (!doc.exists) return false;
 
-      //Verificar que el usuario esta logueado antes
-      if (userInfo == null) {
-        return false;
-      }
-
-      if (replyDoc.exists) {
-        final repliedByList =
-            replyDoc.data()?['repliedBy'] as List<dynamic>? ?? [];
-        debugPrint('repliedByList: $repliedByList');
-        bool hasvoted = repliedByList.contains(userInfo?.username);
-        return hasvoted;
-      }
-
-      // Si el documento no existe, retornar false
-      return false;
+      final likes = doc.data()?['likes'] as Map<String, dynamic>? ?? {};
+      return likes.containsKey(userInfo.username);
     } catch (e) {
-      // Manejar errores (puedes lanzar una excepción o simplemente retornar false)
-      print('Error al verificar el autor: $e');
+      print('Error checking like status: $e');
       return false;
     }
   }
 
-  //Vote for reply
-  Future<void> voteForReply(
-    String postId,
-    String replyId,
-    String repliedBy,
-    int increment,
-  ) async {
+  // Toggle like
+  Future<void> toggleLike(String postId, String replyId) async {
     try {
-      final replyRef = FirebaseFirestore.instance
+      final userInfo = await getUserInfoByEmail(
+          FirebaseAuth.instance.currentUser?.email ?? '');
+      if (userInfo == null) throw Exception('Usuario no autenticado');
+
+      final replyRef = _firestore
           .collection('posts')
           .doc(postId)
           .collection('replies')
           .doc(replyId);
 
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
-        final replyDoc = await transaction.get(replyRef);
+      return _firestore.runTransaction((transaction) async {
+        final doc = await transaction.get(replyRef);
+        if (!doc.exists) throw Exception('Reply no encontrada');
 
-        if (replyDoc.exists) {
-          final replyData = replyDoc.data() as Map<String, dynamic>;
-          // Obtener el array actual o crear uno vacío si no existe
-          final List<dynamic> currentRepliedBy =
-              replyData['repliedBy'] as List<dynamic>? ?? [];
+        final likes = Map<String, dynamic>.from(
+            doc.data()?['likes'] as Map<String, dynamic>? ?? {});
+        final currentLikeCount = doc.data()?['likeCount'] ?? 0;
 
-          debugPrint('currentRepliedBy: $currentRepliedBy');
-
-          if (currentRepliedBy.contains(repliedBy)) {
-            // El usuario ya votó: quitar su voto y eliminarlo del array
-            transaction.update(replyRef, {
-              'replyVotes': FieldValue.increment(-increment),
-              'repliedBy': FieldValue.arrayRemove([repliedBy]),
-            });
-          } else {
-            // El usuario no votó: añadir su voto y agregarlo al array
-            transaction.update(replyRef, {
-              'replyVotes': FieldValue.increment(increment),
-              'repliedBy': FieldValue.arrayUnion([repliedBy]),
-            });
-          }
+        if (likes.containsKey(userInfo.username)) {
+          // Quitar like
+          likes.remove(userInfo.username);
+          transaction.update(replyRef, {
+            'likes': likes,
+            'likeCount': currentLikeCount - 1,
+          });
+        } else {
+          // Añadir like
+          likes[userInfo.username] = ReplyLike(
+            userId: userInfo.username,
+            timestamp: DateTime.now(),
+          ).toMap();
+          
+          transaction.update(replyRef, {
+            'likes': likes,
+            'likeCount': currentLikeCount + 1,
+          });
         }
       });
     } catch (e) {
+      print('Error toggling like: $e');
       rethrow;
     }
   }
-
   Future<void> createReply(
     String username,
     String postId,

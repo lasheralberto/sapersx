@@ -7,6 +7,7 @@ import 'package:flutter_highlighting/themes/github.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:sapers/components/widgets/attachmentsviewer.dart';
 import 'package:sapers/components/widgets/custombutton.dart';
+import 'package:sapers/components/widgets/like_button.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/reply_card.dart';
 import 'package:sapers/components/widgets/text_editor.dart';
@@ -416,38 +417,10 @@ class _ReplySectionState extends State<ReplySection> {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    InkWell(
-                      onTap: () async {
-                        bool hasVoted = await FirebaseService()
-                            .isAuthorInReply(widget.postId, reply.id);
-
-                        if (hasVoted == false) {
-                          await FirebaseService().voteForReply(
-                              reply.postId, reply.id, reply.author, 1);
-                        } else {
-                          if (reply.replyVotes == 0) {
-                            setState(() {
-                              voteIncrement = 0;
-                            });
-                          } else {
-                            setState(() {
-                              voteIncrement = -1;
-                            });
-                          }
-                          await FirebaseService().voteForReply(reply.postId,
-                              reply.id, reply.author, voteIncrement);
-                        }
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(
-                          Icons.thumb_up_alt_outlined,
-                          size: 20,
-                          color: _authorInReply == true
-                              ? Colors.amber
-                              : Colors.grey,
-                        ),
-                      ),
+                    LikeButton(
+                      postId: widget.postId,
+                      replyId: reply.id,
+                      initialLikeCount: reply.replyVotes,
                     ),
                   ],
                 ),
@@ -455,29 +428,6 @@ class _ReplySectionState extends State<ReplySection> {
             ),
           ),
         ),
-        // Widget de votos (solo si existe la key)
-        if (reply.toMap().containsKey('replyVotes') &&
-            reply.replyVotes >
-                0) // Asegúrate de que 'reply' esté accesible en este contexto
-          Align(
-            alignment: Alignment.topLeft,
-            child: Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: Colors.red, // Color de fondo
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 1.5),
-              ),
-              child: Text(
-                '${reply.replyVotes}', // Número de votos
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: AppStyles.fontSizeMedium,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }
