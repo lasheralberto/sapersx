@@ -24,22 +24,6 @@ class _LoginDialogState extends State<LoginDialog> {
   bool _isLoading = false;
   bool _isSignUp = false;
 
-  // Estilo Mesomórfico
-  static const _mesoShadow = [
-    BoxShadow(
-      color: Color(0x22000000),
-      blurRadius: 20,
-      spreadRadius: 2,
-      offset: Offset(8, 8),
-    ),
-    BoxShadow(
-      color: Color(0x44FFFFFF),
-      blurRadius: 20,
-      spreadRadius: 2,
-      offset: Offset(-8, -8),
-    ),
-  ];
-
   static const _mesoBorder = BorderSide(
     color: Color(0x44FFFFFF),
     width: 2,
@@ -52,7 +36,6 @@ class _LoginDialogState extends State<LoginDialog> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
-
 
   Future<bool?> _submitForm(String email, String pass) async {
     if (_formKey.currentState!.validate()) {
@@ -109,14 +92,14 @@ class _LoginDialogState extends State<LoginDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
       ),
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
           boxShadow: null,
           border:
               Border.all(color: _mesoBorder.color, width: _mesoBorder.width),
@@ -124,7 +107,8 @@ class _LoginDialogState extends State<LoginDialog> {
         child: SingleChildScrollView(
           child: Container(
             padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-            constraints: const BoxConstraints(maxWidth: 360),
+            constraints: BoxConstraints(
+                maxWidth: AppStyles().getMaxWidthDialog(context)),
             child: Form(
               key: _formKey,
               child: Column(
@@ -236,7 +220,8 @@ class _LoginDialogState extends State<LoginDialog> {
                       backgroundColor: AppStyles().getButtonColor(context),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius:
+                            BorderRadius.circular(AppStyles.borderRadiusValue),
                       ),
                       elevation: 4,
                       shadowColor: Colors.black.withOpacity(0.2),
@@ -267,7 +252,7 @@ class _LoginDialogState extends State<LoginDialog> {
                   TextButton(
                     onPressed: _isLoading ? null : _toggleMode,
                     style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: Text(
@@ -295,7 +280,7 @@ class _LoginDialogState extends State<LoginDialog> {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         boxShadow: null,
       ),
       child: TextFormField(
@@ -303,14 +288,15 @@ class _LoginDialogState extends State<LoginDialog> {
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
               borderSide: BorderSide.none),
           filled: true,
           fillColor: Theme.of(context).colorScheme.surface,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
-        style: AppStyles().getTextStyle(context, fontWeight: FontWeight.bold),
+        style: AppStyles().getTextStyle(context,
+            fontSize: AppStyles.fontSizeMedium, fontWeight: FontWeight.w100),
         obscureText: obscureText,
         validator: validator,
       ),

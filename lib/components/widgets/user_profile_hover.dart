@@ -13,7 +13,7 @@ class UserProfileCardHover extends StatefulWidget {
   final VoidCallback onProfileOpen;
   bool isExpert;
 
-    UserProfileCardHover({
+  UserProfileCardHover({
     super.key,
     required this.post,
     required this.isExpert,
@@ -149,7 +149,7 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
                   child: CircularProgressIndicator(),
                 )
               : ProfileAvatar(
-                  showBorder: widget.isExpert,
+                  showBorder: user?.isExpert as bool,
                   seed: user!.email.toString(),
                   size: AppStyles.avatarSize - 5,
                 ),

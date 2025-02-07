@@ -179,6 +179,24 @@ class AppStyles {
     );
   }
 
+  double getMaxWidthDialog(context) {
+    var mediaQuery = MediaQuery.of(context).size;
+    // Calculate responsive width based on screen size
+    double dialogWidth;
+    if (mediaQuery.width < 600) {
+      // Mobile screens - full width with small padding
+      dialogWidth = mediaQuery.width;
+    } else if (mediaQuery.width < 900) {
+      // Tablet/smaller screens - 75% of screen width
+      dialogWidth = mediaQuery.width * 0.75;
+    } else {
+      // Larger screens - 66% of screen width (original 1.5 ratio)
+      dialogWidth = mediaQuery.width / 3;
+    }
+
+    return dialogWidth;
+  }
+
   InputDecoration getInputDecoration(
       String label, Widget? suffixIcon, context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -188,7 +206,8 @@ class AppStyles {
       labelText: label,
       labelStyle: getTextStyle(context),
       filled: true,
-      fillColor: isDarkMode ? _darkerGray : const Color.fromARGB(255, 255, 252, 252),
+      fillColor:
+          isDarkMode ? _darkerGray : const Color.fromARGB(255, 255, 252, 252),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,

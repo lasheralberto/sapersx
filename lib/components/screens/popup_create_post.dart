@@ -105,19 +105,8 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
 
   @override
   Widget build(BuildContext context) {
+    double dialogWidth = AppStyles().getMaxWidthDialog(context);
     var mediaQuery = MediaQuery.of(context).size;
-    // Calculate responsive width based on screen size
-    double dialogWidth;
-    if (mediaQuery.width < 600) {
-      // Mobile screens - full width with small padding
-      dialogWidth = mediaQuery.width ;
-    } else if (mediaQuery.width < 900) {
-      // Tablet/smaller screens - 75% of screen width
-      dialogWidth = mediaQuery.width * 0.75;
-    } else {
-      // Larger screens - 66% of screen width (original 1.5 ratio)
-      dialogWidth = mediaQuery.width / 1.5;
-    }
 
     return Dialog(
       child: Container(
@@ -202,76 +191,6 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 runSpacing:
                     8, // Espacio vertical cuando los botones saltan de línea
                 children: [
-                  TextButton(
-                    style: AppStyles().getButtonStyle(context),
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      Texts.translate('cancelar', globalLanguage),
-                      style: AppStyles().getButtontTextStyle(context),
-                    ),
-                  ),
-                  FilledButton(
-                    style: AppStyles().getButtonStyle(context),
-                    onPressed: () async {
-                      setState(() {
-                        isLoadingPost = true;
-                      });
-                      final UserInfoPopUp? user = await FirebaseService()
-                          .getUserInfoByEmail(FirebaseAuth
-                              .instance.currentUser!.email
-                              .toString());
-
-                      setState(() {
-                        postId = DateTime.now().toString();
-                        replyId = UtilsSapers().getReplyId(context);
-                      });
-
-                      if (selectedFiles.isNotEmpty) {
-                        var filesNewPost =
-                            await FirebaseService().addAttachments(
-                          postId,
-                          replyId,
-                          user!.username,
-                          selectedFiles,
-                        );
-
-                        setState(() {
-                          newPost = SAPPost(
-                              id: postId,
-                              title: _titleController.text,
-                              content: _descriptionController.text,
-                              author: user!.username.toString(),
-                              timestamp: DateTime.now(),
-                              module: _selectedModule,
-                              isQuestion: _isQuestion,
-                              tags: [],
-                              attachments: filesNewPost,
-                              replyCount: 0);
-                        });
-                      } else {
-                        setState(() {
-                          newPost = SAPPost(
-                              id: postId,
-                              title: _titleController.text,
-                              content: _descriptionController.text,
-                              author: user!.username.toString(),
-                              timestamp: DateTime.now(),
-                              module: _selectedModule,
-                              isQuestion: _isQuestion,
-                              tags: [],
-                              replyCount: 0);
-                        });
-                      }
-
-                      setState(() {
-                        isLoadingPost = false;
-                      });
-                      Navigator.pop(context, newPost);
-                    },
-                    child: isLoadingPost == true
-                        ? AppStyles().progressIndicatorCreatePostButton()
-                        : Text(Texts.translate('publicar', globalLanguage)),
-                  ),
                   IconButton(
                     icon: const Icon(Icons.attach_file),
                     onPressed: () async {
@@ -283,7 +202,78 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                     },
                     tooltip: Texts.translate('addAttachment', globalLanguage),
                   ),
-                  _buildAttachmentUploadedReply()
+                  _buildAttachmentUploadedReply(),
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: FilledButton(
+                      style: AppStyles().getButtonStyle(context),
+                      onPressed: () async {
+                        setState(() {
+                          isLoadingPost = true;
+                        });
+                        final UserInfoPopUp? user = await FirebaseService()
+                            .getUserInfoByEmail(FirebaseAuth
+                                .instance.currentUser!.email
+                                .toString());
+
+                        setState(() {
+                          //postId = DateTime.now().toString();
+                          postId = UtilsSapers().generateSimpleUID();
+                          replyId = UtilsSapers().getReplyId(context);
+                        });
+
+                        if (selectedFiles.isNotEmpty) {
+                          var filesNewPost =
+                              await FirebaseService().addAttachments(
+                            postId,
+                            replyId,
+                            user!.username,
+                            selectedFiles,
+                          );
+
+                          setState(() {
+                            newPost = SAPPost(
+                                id: postId,
+                                title: _titleController.text,
+                                content: _descriptionController.text,
+                                author: user!.username.toString(),
+                                timestamp: DateTime.now(),
+                                module: _selectedModule,
+                                isQuestion: _isQuestion,
+                                tags: [],
+                                isExpert: user.isExpert as bool,
+                                attachments: filesNewPost,
+                                replyCount: 0);
+                          });
+                        } else {
+                          setState(() {
+                            newPost = SAPPost(
+                                id: postId,
+                                title: _titleController.text,
+                                content: _descriptionController.text,
+                                author: user!.username.toString(),
+                                timestamp: DateTime.now(),
+                                module: _selectedModule,
+                                isExpert: user.isExpert as bool,
+                                isQuestion: _isQuestion,
+                                tags: [],
+                                replyCount: 0);
+                          });
+                        }
+
+                        setState(() {
+                          isLoadingPost = false;
+                        });
+                        Navigator.pop(context, newPost);
+                      },
+                      child: isLoadingPost == true
+                          ? AppStyles().progressIndicatorCreatePostButton()
+                          : Text(Texts.translate('publicar', globalLanguage)),
+                    ),
+                  ),
                 ],
               ),
             ],

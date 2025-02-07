@@ -30,7 +30,7 @@ class CommentButton extends StatelessWidget {
             Icon(
               Icons.mode_comment_outlined,
               size: iconSize,
-              weight: 300.0,
+              weight: 100.0,
               color: iconColor ?? Theme.of(context).iconTheme.color,
             ),
             const SizedBox(width: 5),

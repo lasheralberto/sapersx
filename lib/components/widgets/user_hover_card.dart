@@ -3,7 +3,6 @@ import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/user.dart';
 
-
 class UserHoverCard extends StatelessWidget {
   final UserInfoPopUp? profile;
 
@@ -53,6 +52,7 @@ class UserHoverCard extends StatelessWidget {
         ProfileAvatar(
           seed: userprofile.email,
           size: AppStyles.avatarSize - 10,
+          showBorder: userprofile.isExpert as bool,
         ),
         const SizedBox(width: TwitterDimensions.spacingSmall),
         Expanded(

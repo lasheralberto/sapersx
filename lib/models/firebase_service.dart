@@ -209,6 +209,7 @@ class FirebaseService {
         return SAPPost(
           id: doc.id,
           title: data['title'] ?? '',
+          isExpert: data['isExpert'] ?? false,
           content: data['content'] ?? '',
           author: data['author'] ?? '',
           timestamp: (data['timestamp'] as Timestamp).toDate(),
@@ -256,6 +257,7 @@ class FirebaseService {
       return SAPPost(
         id: doc.id,
         title: data['title'] ?? '',
+        isExpert: data['isExpert'] ?? false,
         content: data['content'] ?? '',
         author: data['author'] ?? '',
         timestamp: (data['timestamp'] as Timestamp).toDate(),
@@ -289,6 +291,7 @@ class FirebaseService {
           location: data['location'] ?? '',
           email: data['email'] ?? '',
           website: data['website'] ?? '',
+          isExpert: data['isExpert'] ?? false,
         );
 
         // Guardar en cache
@@ -431,6 +434,7 @@ class FirebaseService {
       return SAPPost(
         id: doc.id,
         title: data['title'] ?? '',
+        isExpert: data['isExpert'] ?? false,
         content: data['content'] ?? '',
         author: data['author'] ?? '',
         timestamp: (data['timestamp'] as Timestamp).toDate(),
@@ -454,6 +458,7 @@ class FirebaseService {
             id: doc.id,
             title: data['title'] ?? '',
             content: data['content'] ?? '',
+            isExpert: data['isExpert'] ?? false,
             author: data['author'] ?? '',
             timestamp: (data['timestamp'] as Timestamp).toDate(),
             module: data['module'] ?? '',
@@ -616,7 +621,7 @@ class FirebaseService {
     }
   }
 
- // Verifica si el usuario actual ha dado like
+  // Verifica si el usuario actual ha dado like
   Future<bool> hasUserLiked(String postId, String replyId) async {
     try {
       final userInfo = await getUserInfoByEmail(
@@ -674,7 +679,7 @@ class FirebaseService {
             userId: userInfo.username,
             timestamp: DateTime.now(),
           ).toMap();
-          
+
           transaction.update(replyRef, {
             'likes': likes,
             'likeCount': currentLikeCount + 1,
@@ -686,6 +691,7 @@ class FirebaseService {
       rethrow;
     }
   }
+
   Future<void> createReply(
     String username,
     String postId,

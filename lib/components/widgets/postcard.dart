@@ -61,7 +61,8 @@ class _PostCardState extends State<PostCard> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildPostHeader(constraints.maxWidth, widget.post.id),
+              _buildPostHeader(
+                  constraints.maxWidth, widget.post.id, widget.post.isExpert),
               if (isExpanded) // Muestra replies solo cuando está expandido
                 ReplySection(
                   post: widget.post,
@@ -83,7 +84,7 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _buildPostHeader(double maxWidth, String postId) {
+  Widget _buildPostHeader(double maxWidth, String postId, bool isExpert) {
     return InkWell(
       onTap: () {
         setState(() => isExpanded = !isExpanded);
@@ -94,7 +95,7 @@ class _PostCardState extends State<PostCard> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildAuthorAvatar(),
+            _buildAuthorAvatar(isExpert),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -108,7 +109,11 @@ class _PostCardState extends State<PostCard> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      CommentButton(replyCount: widget.post.replyCount),
+                      CommentButton(
+                        replyCount: widget.post.replyCount,
+                        iconSize: 15,
+                        iconColor: AppStyles.colorAvatarBorder,
+                      ),
                       SAPAttachmentsViewerHeader(
                         reply: widget.post,
                         onAttachmentOpen: (attachment) {
@@ -131,9 +136,9 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _buildAuthorAvatar() {
+  Widget _buildAuthorAvatar(isExpert) {
     return UserProfileCardHover(
-      isExpert: true,
+      isExpert: isExpert,
       post: widget.post,
       onProfileOpen: () {
         // Opcional: Añade aquí lógica adicional cuando se abre el perfil

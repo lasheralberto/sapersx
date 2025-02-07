@@ -22,7 +22,7 @@ class ProfileAvatar extends StatelessWidget {
         border: Border.all(
           color: showBorder == true
               ? AppStyles.colorAvatarBorder
-              : AppStyles.colorAvatarBorderLighter,
+              : const Color.fromARGB(255, 150, 202, 237),
           width: 4,
         ),
       ),
