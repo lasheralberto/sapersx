@@ -105,13 +105,27 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
 
   @override
   Widget build(BuildContext context) {
-    var mediaquery = MediaQuery.of(context).size;
+    var mediaQuery = MediaQuery.of(context).size;
+    // Calculate responsive width based on screen size
+    double dialogWidth;
+    if (mediaQuery.width < 600) {
+      // Mobile screens - full width with small padding
+      dialogWidth = mediaQuery.width ;
+    } else if (mediaQuery.width < 900) {
+      // Tablet/smaller screens - 75% of screen width
+      dialogWidth = mediaQuery.width * 0.75;
+    } else {
+      // Larger screens - 66% of screen width (original 1.5 ratio)
+      dialogWidth = mediaQuery.width / 1.5;
+    }
 
     return Dialog(
       child: Container(
         padding: const EdgeInsets.all(16),
         constraints: BoxConstraints(
-            maxWidth: mediaquery.width / 1.5, maxHeight: mediaquery.height),
+          maxWidth: dialogWidth,
+          maxHeight: mediaQuery.height,
+        ),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,7 +137,9 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                     // Añadido Flexible
                     child: Text(
                         Texts.translate('crearNuevoPost', globalLanguage),
-                        style: AppStyles().getTextStyle(context)),
+                        style: AppStyles().getTextStyle(context,
+                            fontSize: AppStyles.fontSizeMedium,
+                            fontWeight: FontWeight.bold)),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -140,18 +156,20 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                       context)),
               const SizedBox(height: 16),
               TextField(
+                textAlign: TextAlign.start,
                 controller: _descriptionController,
                 decoration: styles.getInputDecoration(
                     Texts.translate('descripcion', globalLanguage),
                     null,
                     context),
-                maxLines: (mediaquery.height * 0.4 / 24).round(),
+                maxLines: (mediaQuery.height * 0.4 / 24).round(),
               ),
               const SizedBox(height: 16),
               // Modificado el dropdown para ser responsivo
               ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: mediaquery.width / 4,
+                  maxWidth: dialogWidth -
+                      32, // Ancho máximo para evitar que sea demasiado grande
                   minWidth:
                       10, // Ancho mínimo para evitar que sea demasiado pequeño
                 ),

@@ -188,7 +188,7 @@ class AppStyles {
       labelText: label,
       labelStyle: getTextStyle(context),
       filled: true,
-      fillColor: isDarkMode ? _darkerGray : _lightGray,
+      fillColor: isDarkMode ? _darkerGray : const Color.fromARGB(255, 255, 252, 252),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
