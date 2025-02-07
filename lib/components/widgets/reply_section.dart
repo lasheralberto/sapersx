@@ -160,7 +160,7 @@ class _ReplySectionState extends State<ReplySection> {
   Widget _buildAuthorAvatar(SAPReply reply) {
     return UserProfileCardHover(
       isExpert: true,
-      post: widget.post,
+      post: reply,
       onProfileOpen: () {
         // Opcional: Añade aquí lógica adicional cuando se abre el perfil
       },

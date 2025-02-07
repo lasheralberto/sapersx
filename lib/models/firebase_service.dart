@@ -32,6 +32,9 @@ class FirebaseService {
       FirebaseFirestore.instance.collection('userinfo');
   final CollectionReference repliesCollection =
       FirebaseFirestore.instance.collection('replies');
+  //Projects collection
+  final CollectionReference projectsCollection =
+      FirebaseFirestore.instance.collection('projects');
 
   // Constantes para paginación
   static const int postsPerPage = 10;
@@ -39,30 +42,54 @@ class FirebaseService {
   // Cache para información de usuarios
   final Map<String, UserInfoPopUp> _userCache = {};
 
-  //Método para aceptar o rechazar una invitación a un proyecto
+  //Método para añadir a un usuario a un proyecto
+  Future<bool> addUserToProject(String uid, String projectId) async {
+    try {
+      await projectsCollection.doc(projectId).update({
+        'members': FieldValue.arrayUnion([uid])
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  //Método para cancelar la invitación de un proyecto
+  
+
   Future<bool> acceptPendingInvitation(String uid, bool value) async {
     try {
-      // Realiza la consulta para obtener los mensajes que cumplen con los criterios:
-      // 'from' igual a fromUser y 'accepted' igual a false.
+      // 1. Consulta solo invitaciones no aceptadas previamente
       QuerySnapshot querySnapshot = await _firestore
           .collection('messages')
           .where('invitationUid', isEqualTo: uid)
+          .where('accepted', isEqualTo: false) // Evita reprocesar
           .get();
 
-      // Si no se encuentran documentos, puedes decidir retornar false o true según tu lógica.
-      if (querySnapshot.docs.isEmpty) {
-        return false;
-      }
+      if (querySnapshot.docs.isEmpty) return false;
 
-      // Actualiza el campo 'accepted' a true para cada documento encontrado.
+      // 2. Procesar cada invitación
       for (var doc in querySnapshot.docs) {
         await doc.reference.update({'accepted': value});
+
+        // 3. Crear proyecto solo si se acepta (value = true)
+        if (value) {
+          // Asume que el campo 'fromUid' existe en el documento (quien envía la invitación)
+          String fromUid = doc['invitationUid'];
+
+          // Crea el proyecto con ambos miembros
+          await _firestore.collection('projects').add({
+            'projectid': fromUid, // ID auto-generado
+            'createdIn': FieldValue.serverTimestamp(), // Fecha del servidor
+            'createdBy': doc['from'], // Quien envió la invitación
+            'members': [doc['to']], // Invitador + usuario actual
+          });
+        }
       }
 
       return true;
     } catch (e) {
-      // Manejo del error, por ejemplo, imprimir el error en consola.
-      print('Error al aceptar invitaciones: $e');
+      print('Error al procesar invitación: $e');
       return false;
     }
   }
@@ -93,25 +120,6 @@ class FirebaseService {
       return false;
     }
   }
-  // //Metodo para crear un proyecto
-  // Future<bool> createProject({
-  //   required String to,
-  //   required String message,
-  //   required String from
-  // }) async {
-  //   try {
-  //     // Crea una instancia del generador de UUID.
-
-  //     await _firestore.collection('messages').add({
-  //       'timestamp': FieldValue.serverTimestamp(),
-  //       'invitationUid': uuid,
-  //       'invitees': []
-  //     });
-  //     return true;
-  //   } catch (e) {
-  //     return false;
-  //   }
-  // }
 
   Stream<QuerySnapshot> getMessages(String username) {
     return FirebaseFirestore.instance

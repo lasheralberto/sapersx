@@ -59,8 +59,19 @@ class _MessageItemState extends State<MessageItem> {
                     setState(() {
                       isToggled = value;
                     });
-                    await FirebaseService().acceptPendingInvitation(
+                    bool isAccepted = await FirebaseService().acceptPendingInvitation(
                         widget.message['invitationUid'], isToggled);
+                    
+                    if(isAccepted){
+                      bool isUserAddedToProject = await FirebaseService().addUserToProject(
+                         currentUser!.uid,
+                          widget.message['invitationUid']);
+                    }
+                    
+                    
+
+                    
+                    
                   }
                 },
                 activeColor: AppStyles.colorAvatarBorder,
