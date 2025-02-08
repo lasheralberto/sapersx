@@ -57,6 +57,12 @@ class Texts {
       'send': 'Enviar',
       'accept': 'Aceptar',
       'reject': 'Rechazar',
+      'noprojects': 'No hay proyectos disponibles',
+      'nuevoProyecto': 'Nuevo proyecto',
+      'nombreDelProyecto': 'Nombre del proyecto',
+      'tagsSeparadosPorComas': 'Tags',
+      'crear': 'Crear',
+      'projectsTab': 'Proyectos',
     },
     'en': {
       'addAttachment': 'Add attachment',
@@ -113,6 +119,12 @@ class Texts {
       'send': 'Send',
       'accept': 'Accept',
       'reject': 'Reject',
+      'noprojects': 'No projects available',
+      'nuevoProyecto': 'New project',
+      'nombreDelProyecto': 'Project name',
+      'tagsSeparadosPorComas': 'Tags',
+      'crear': 'Create',
+      'projectsTab': 'Projects',
     },
   };
 

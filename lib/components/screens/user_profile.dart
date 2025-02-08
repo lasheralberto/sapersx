@@ -7,6 +7,7 @@ import 'package:sapers/components/widgets/invitation_item.dart';
 import 'package:sapers/components/widgets/profile_header.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/project.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
@@ -34,14 +35,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
     userProfileData = _loadUserProfileData();
   }
 
-  // Función que combina ambos datos en una sola estructura
   Future<UserInfoPopUp?> _loadUserProfileData() async {
-    final profileFuture =
-        await _firebaseService.getUserInfoByEmail(widget.userinfo!.email);
-
-    return profileFuture;
-    // Combina los datos en una sola clase
-    // return UserInfoPopUp(username: userInfo.username, email: userInfo.email, bio: userInfo.bio, location: userInfo.location, website: userInfo.website, isExpert: userInfo.isExpert, specialty: userInfo.specialty, hourlyRate: userInfo.hourlyRate, joinDate: userInfo.joinDate, isAvailable: userInfo.isAvailable, experience: userInfo.experience, reviews: userInfo.reviews);
+    return await _firebaseService.getUserInfoByEmail(widget.userinfo!.email);
   }
 
   @override
@@ -50,29 +45,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
       backgroundColor: AppStyles().getBackgroundColor(context),
       body: CustomScrollView(
         slivers: [
-          // AppBar
           SliverAppBar(
             backgroundColor: AppStyles().getBackgroundColor(context),
             elevation: 0,
             pinned: true,
-            // title: Text(
-            //   widget.userinfo!.username,
-            //   style: AppStyles().getTextStyle(context),
-            //),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               color: TwitterColors.darkGray,
               onPressed: () => Navigator.pop(context),
             ),
           ),
-
-          // Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
-                  // Profile Header y Expert Profile Card
                   FutureBuilder<UserInfoPopUp?>(
                     future: userProfileData,
                     builder: (context, snapshot) {
@@ -92,10 +79,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           child:
                               Text('No se encontró información del usuario.'),
                         );
-                      } else {
-                        final data = snapshot.data!;
-                        return ResponsiveProfileLayout(data: data);
                       }
+                      return ResponsiveProfileLayout(data: snapshot.data!);
                     },
                   ),
                 ],
@@ -108,100 +93,193 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 }
 
-class ResponsiveProfileLayout extends StatelessWidget {
+class ResponsiveProfileLayout extends StatefulWidget {
   final UserInfoPopUp data;
 
   const ResponsiveProfileLayout({
     required this.data,
     super.key,
   });
-  Widget _buildSendMessageDialog(BuildContext context, String username) {
-    final TextEditingController messageController = TextEditingController();
-    final Color backgroundColor = Colors.white; // Color base suave
-    bool isMessageSending = false;
 
-    return AlertDialog(
-      backgroundColor: backgroundColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      elevation: AppStyles().getCardElevation(context),
-      title: Center(
-        child: isMessageSending == true
-            ? AppStyles().progressIndicatorButton()
-            : Text(
-                Texts.translate('send_project_invitation', globalLanguage),
-                style: AppStyles().getTextStyle(
-                  context,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+  @override
+  State<ResponsiveProfileLayout> createState() =>
+      _ResponsiveProfileLayoutState();
+}
+
+class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
+  UserInfoPopUp? userFrom;
+  String? selectedProject;
+  bool isMessageSending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserFrom();
+  }
+
+  Future<void> _getUserFrom() async {
+    final user = await FirebaseService()
+        .getUserInfoByEmail(FirebaseAuth.instance.currentUser!.email!);
+    setState(() {
+      userFrom = user;
+    });
+  }
+
+  Widget _buildSendMessageDialog(BuildContext context, UserInfoPopUp profile) {
+    final messageController = TextEditingController();
+    final backgroundColor = Colors.white;
+
+    return StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        backgroundColor: backgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: AppStyles().getCardElevation(context),
+        title: Center(
+          child: isMessageSending
+              ? AppStyles().progressIndicatorButton()
+              : Text(
+                  Texts.translate('send_project_invitation', globalLanguage),
+                  style: AppStyles().getTextStyle(
+                    context,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-      ),
-      content: Container(
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(12),
         ),
-        padding: const EdgeInsets.all(12),
-        child: TextField(
-          controller: messageController,
-          decoration: InputDecoration(
-            hintText: Texts.translate('writeYourMessage', globalLanguage),
-            hintStyle: AppStyles().getTextStyle(context,
-                fontSize: 14, fontWeight: FontWeight.w300),
-            border: InputBorder.none,
+        content: Container(
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(12),
           ),
-          maxLines: 10,
-          style: AppStyles().getTextStyle(context, fontSize: 16),
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseService()
+                    .getCreatedProjectsForUser(userFrom!.username),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No projects yet',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    );
+                  }
+
+                  final projects = snapshot.data!.docs
+                      .map((doc) => Project.fromMap(
+                          doc.data() as Map<String, dynamic>, doc.id))
+                      .toList();
+
+                  return DropdownButton<String>(
+                    isExpanded: true,
+                    value: selectedProject,
+                    hint: Text(
+                      Texts.translate('selectProject', globalLanguage),
+                      style: AppStyles().getTextStyle(context),
+                    ),
+                    items: projects.map((project) {
+                      return DropdownMenuItem<String>(
+                        value: project.projectid,
+                        child: Text(
+                          project.projectName,
+                          style: AppStyles().getTextStyle(context),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (String? value) {
+                      setState(() {
+                        selectedProject = value;
+                      });
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: messageController,
+                decoration: InputDecoration(
+                  hintText: Texts.translate('writeYourMessage', globalLanguage),
+                  hintStyle: AppStyles().getTextStyle(context,
+                      fontSize: 14, fontWeight: FontWeight.w300),
+                  border: InputBorder.none,
+                ),
+                maxLines: 10,
+                style: AppStyles().getTextStyle(context, fontSize: 16),
+              ),
+            ],
+          ),
         ),
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () async {
-            final message = messageController.text.trim();
-            if (message.isNotEmpty) {
-              // Obtener el usuario que envía el mensaje
-              UserInfoPopUp? fromUser = await FirebaseService()
-                  .getUserInfoByEmail(
-                      FirebaseAuth.instance.currentUser!.email!);
-              // Envía el mensaje a Firebase
-              isMessageSending = true;
-              final success = await FirebaseService().sendProjectInvitation(
-                  to: username, message: message, from: fromUser!.username);
-              if (success) {
-                isMessageSending = false;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content:
-                          Text(Texts.translate('messageSent', globalLanguage))),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content:
-                          Text(Texts.translate('passError', globalLanguage))),
-                );
-              }
-            }
-            Navigator.of(context).pop();
-          },
-          style: AppStyles().getButtonStyle(context),
-          child: Text(
-            Texts.translate('send', globalLanguage),
-            style: AppStyles().getTextStyle(
-              context,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+        actions: [
+          ElevatedButton(
+            onPressed: selectedProject == null
+                ? null
+                : () async {
+                    final message = messageController.text.trim();
+                    if (message.isNotEmpty) {
+                      setState(() {
+                        isMessageSending = true;
+                      });
+                      try {
+                        final success =
+                            await FirebaseService().sendProjectInvitation(
+                          to: profile.username,
+                          message: message,
+                          from: userFrom!.username,
+                          projectId: selectedProject!,
+                        );
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                Texts.translate('messageSent', globalLanguage),
+                              ),
+                            ),
+                          );
+                          Navigator.of(context).pop();
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                Texts.translate('passError', globalLanguage)),
+                          ),
+                        );
+                      } finally {
+                        setState(() {
+                          isMessageSending = false;
+                        });
+                      }
+                    }
+                  },
+            style: AppStyles().getButtonStyle(context),
+            child: Text(
+              Texts.translate('send', globalLanguage),
+              style: AppStyles().getTextStyle(
+                context,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildMessagesSection(BuildContext context, profile) {
-    bool? isToggled = false;
+  Widget _buildMessagesSection(BuildContext context, UserInfoPopUp profile) {
     return Card(
       color: AppStyles().getCardColor(context),
       elevation: AppStyles().getCardElevation(context),
@@ -214,18 +292,17 @@ class ResponsiveProfileLayout extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Encabezado de mensajes
             Row(
               children: [
-                InkWell(
-                  onTap: () {
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () {
                     showDialog(
                       context: context,
                       builder: (context) =>
-                          _buildSendMessageDialog(context, profile.username),
+                          _buildSendMessageDialog(context, profile),
                     );
                   },
-                  child: const Icon(Icons.add),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -239,9 +316,8 @@ class ResponsiveProfileLayout extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            // Contenedor de altura fija para que la lista tenga scroll interno
             SizedBox(
-              height: 300, // Ajusta esta altura según tus necesidades
+              height: 300,
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseService().getMessages(profile.username),
                 builder: (context, snapshot) {
@@ -254,10 +330,10 @@ class ResponsiveProfileLayout extends StatelessWidget {
                   }
 
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Text(
-                        'No messages yet',
-                        style: TextStyle(
+                        Texts.translate('noMessages', globalLanguage),
+                        style: const TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
                         ),
@@ -265,17 +341,13 @@ class ResponsiveProfileLayout extends StatelessWidget {
                     );
                   }
 
-                  final messages = snapshot.data!.docs;
-
                   return ListView.builder(
-                    itemCount: messages.length,
+                    itemCount: snapshot.data!.docs.length,
                     itemBuilder: (context, index) {
-                      final message = messages[index];
-
-                      // Convertir y formatear el timestamp
-                      final Timestamp firestoreTimestamp = message['timestamp'];
-                      final DateTime dateTime = firestoreTimestamp.toDate();
-                      final String formattedDate =
+                      final message = snapshot.data!.docs[index];
+                      final dateTime =
+                          (message['timestamp'] as Timestamp).toDate();
+                      final formattedDate =
                           DateFormat('dd-MM-yyyy HH:mm').format(dateTime);
 
                       return MessageItem(
@@ -295,14 +367,11 @@ class ResponsiveProfileLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Definimos un breakpoint para cambiar entre layouts
-    final bool isDesktop = MediaQuery.of(context).size.width > 768;
+    final isDesktop = MediaQuery.of(context).size.width > 768;
 
-    // Layout responsive que cambia entre Row y Column
     return LayoutBuilder(
       builder: (context, constraints) {
         if (isDesktop) {
-          // Layout de escritorio (Row)
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -310,34 +379,29 @@ class ResponsiveProfileLayout extends StatelessWidget {
                 width: MediaQuery.of(context).size.width / 2,
                 child: Column(
                   children: [
-                    ProfileHeader(profile: data),
-                    _buildMessagesSection(context, data)
+                    ProfileHeader(profile: widget.data),
+                    _buildMessagesSection(context, widget.data)
                   ],
                 ),
               ),
               const SizedBox(width: 16),
-              if (data.isExpert == true)
+              if (widget.data.isExpert == true)
                 Expanded(
-                  child: SAPExpertProfile(
-                    profile: data,
-                  ),
-                ),
-            ],
-          );
-        } else {
-          // Layout móvil (Column)
-          return Column(
-            children: [
-              ProfileHeader(profile: data),
-              _buildMessagesSection(context, data),
-              const SizedBox(height: 16),
-              if (data.isExpert == true)
-                SAPExpertProfile(
-                  profile: data,
+                  child: SAPExpertProfile(profile: widget.data),
                 ),
             ],
           );
         }
+
+        return Column(
+          children: [
+            ProfileHeader(profile: widget.data),
+            _buildMessagesSection(context, widget.data),
+            const SizedBox(height: 16),
+            if (widget.data.isExpert == true)
+              SAPExpertProfile(profile: widget.data),
+          ],
+        );
       },
     );
   }

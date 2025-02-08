@@ -6,15 +6,19 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/components/screens/popup_create_post.dart';
+import 'package:sapers/components/screens/project_dialog.dart';
 import 'package:sapers/components/widgets/postcard.dart';
+import 'package:sapers/components/widgets/project_card.dart';
 import 'package:sapers/components/widgets/searchbar.dart';
 import 'package:sapers/components/widgets/user_avatar.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/posts.dart';
+import 'package:sapers/models/project.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/theme.dart';
+import 'package:sapers/models/user.dart';
 
 class Feed extends StatefulWidget {
   final User? user;
@@ -36,6 +40,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   String _selectedModule = '';
   Future<List<SAPPost>>? _postsFutureGeneral;
   Future<List<SAPPost>>? _postsFutureFollowing;
+  Future<List<Project>>? _postsProjects;
   bool _isRefreshing = false;
   bool isPostExpanded = false;
 
@@ -58,7 +63,12 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+      
+      }); // Esto fuerza la reconstrucción del widget al cambiar de tab.
+    });
     _updateFutures();
   }
 
@@ -75,10 +85,12 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         ? _firebaseService.getPostsFuture()
         : _firebaseService.getPostsByModuleFuture(_selectedModule);
     final followingPosts = _firebaseService.getPostsFollowingFuture();
+    final projectsPosts = _firebaseService.getProjectsFuture();
 
     setState(() {
       _postsFutureGeneral = generalPosts;
       _postsFutureFollowing = followingPosts;
+      _postsProjects = projectsPosts;
     });
   }
 
@@ -103,6 +115,24 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
       if (result != null) {
         await _firebaseService.createPost(result);
+        _updateFutures();
+      }
+    }
+  }
+
+  void _showCreateProjectDialog() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      showDialog(context: context, builder: (context) => const LoginDialog());
+    } else {
+      UserInfoPopUp? user = await FirebaseService()
+          .getUserInfoByEmail(FirebaseAuth.instance.currentUser!.email!);
+      final result = await showDialog<Project>(
+        context: context,
+        builder: (context) => CreateProjectDialog(user: user),
+      );
+
+      if (result != null) {
+        await _firebaseService.createProject(result);
         _updateFutures();
       }
     }
@@ -180,6 +210,64 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                       );
                     },
                     childCount: posts.length,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProjectsGrid(Future<List<Project>> future, bool isMobile) {
+    return FutureBuilder<List<Project>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: SelectableText('Error: ${snapshot.error}'));
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final projects = snapshot.data ?? [];
+        if (projects.isEmpty) {
+          return Center(
+              child: Text(Texts.translate('noprojects', globalLanguage)));
+        }
+
+        return RefreshIndicator(
+          onRefresh: _handleRefresh,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              if (_isRefreshing)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 8.0 : 16.0,
+                  vertical: 8.0,
+                ),
+                sliver: SliverGrid(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: isMobile ? 2 : 5,
+                    mainAxisSpacing: 6,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.95,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => ProjectCard(
+                      project: projects[index],
+                      isMobile: isMobile,
+                    ),
+                    childCount: projects.length,
                   ),
                 ),
               ),
@@ -277,6 +365,13 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
+                  Tab(
+                      child: Text(
+                    Texts.translate('projectsTab', globalLanguage),
+                    style: const TextStyle(
+                      fontSize: AppStyles.fontSize,
+                    ),
+                  ))
                 ],
               ),
               Expanded(
@@ -285,6 +380,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   children: [
                     _buildPostsList(_postsFutureGeneral!, isMobile),
                     _buildPostsList(_postsFutureFollowing!, isMobile),
+                    _buildProjectsGrid(_postsProjects!, isMobile),
                   ],
                 ),
               ),
@@ -292,17 +388,30 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        foregroundColor: Colors.white,
-        backgroundColor: AppStyles.colorAvatarBorder,
-        enableFeedback: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(25.0)),
-        ),
-        mini: false,
-        onPressed: _showCreatePostDialog,
-        child: const Icon(EvaIcons.plus_outline),
-      ),
+      floatingActionButton:
+          (_tabController.index == 0 || _tabController.index == 1)
+              ? FloatingActionButton(
+                  foregroundColor: Colors.white,
+                  backgroundColor: AppStyles.colorAvatarBorder,
+                  enableFeedback: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                  ),
+                  mini: false,
+                  onPressed: _showCreatePostDialog,
+                  child: const Icon(EvaIcons.plus_outline),
+                )
+              : FloatingActionButton(
+                  foregroundColor: Colors.white,
+                  backgroundColor: AppStyles.colorAvatarBorder,
+                  enableFeedback: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                  ),
+                  mini: false,
+                  onPressed: _showCreateProjectDialog,
+                  child: const Icon(EvaIcons.folder_add),
+                ),
     );
   }
 }

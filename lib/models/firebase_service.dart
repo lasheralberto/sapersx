@@ -16,6 +16,7 @@ import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/components/widgets/like_button.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/posts.dart';
+import 'package:sapers/models/project.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
 import 'package:sapers/models/user_reviews.dart';
@@ -36,18 +37,85 @@ class FirebaseService {
   final CollectionReference projectsCollection =
       FirebaseFirestore.instance.collection('projects');
 
+  //Messages collection
+  final CollectionReference messagesCollection =
+      FirebaseFirestore.instance.collection('messages');
+
   // Constantes para paginación
   static const int postsPerPage = 10;
 
   // Cache para información de usuarios
   final Map<String, UserInfoPopUp> _userCache = {};
 
-  //Método para añadir a un usuario a un proyecto
-  Future<bool> addUserToProject(String uid, String projectId) async {
+  Future<List<Project>> getProjectsFuture() async {
+    final snapshot = await projectsCollection.get();
+    return snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return Project.fromMap(data, doc.id);
+    }).toList();
+  }
+
+// Obtiene en tiempo real los proyectos creados por el usuario (QuerySnapshot)
+  Stream<QuerySnapshot> getCreatedProjectsForUser(String uid) {
     try {
-      await projectsCollection.doc(projectId).update({
-        'members': FieldValue.arrayUnion([uid])
-      });
+      // Retornamos el stream de snapshots que se actualiza automáticamente
+      return projectsCollection.where('createdBy', isEqualTo: uid).snapshots();
+    } catch (e) {
+      print('Error al obtener proyectos creados para el usuario: $e');
+      // En caso de error, retornamos un stream vacío
+      return const Stream.empty();
+    }
+  }
+
+  /// Crea un nuevo proyecto en Firestore.
+  ///
+  /// Se utiliza [project.toMap()] para convertir el objeto a un mapa, se almacena
+  /// y luego se actualiza el campo 'id' con el ID generado por Firestore.
+  Future<bool> createProject(Project project) async {
+    try {
+      // Se agrega el proyecto a Firestore y se obtiene la referencia al documento creado.
+      DocumentReference docRef = await projectsCollection.add(project.toMap());
+
+      // Actualizamos el campo 'id' del documento con el ID generado.
+      // await projectsCollection.doc(docRef.id).update({'id': docRef.id});
+
+      return true;
+    } catch (e) {
+      print('Error al crear el proyecto: $e');
+      return false;
+    }
+  }
+
+  //Método para añadir a un usuario a un proyecto
+  Future<bool> addUserToProject(String username, String projectId) async {
+    try {
+      QuerySnapshot project = await projectsCollection
+          .where('projectid', isEqualTo: projectId)
+          .get();
+      for (var doc in project.docs) {
+        doc.reference.update({
+          'members': FieldValue.arrayUnion([username])
+        });
+      }
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+// Método para eliminar a un usuario de un proyecto
+  Future<bool> removeUserFromProject(String username, String projectId) async {
+    try {
+      QuerySnapshot project = await projectsCollection
+          .where('projectid', isEqualTo: projectId)
+          .get();
+      for (var doc in project.docs) {
+        doc.reference.update({
+          'members': FieldValue.arrayRemove([username])
+        });
+      }
+
       return true;
     } catch (e) {
       return false;
@@ -55,65 +123,59 @@ class FirebaseService {
   }
 
   //Método para cancelar la invitación de un proyecto
-  
 
   Future<bool> acceptPendingInvitation(String uid, bool value) async {
     try {
-      // 1. Consulta solo invitaciones no aceptadas previamente
-      QuerySnapshot querySnapshot = await _firestore
-          .collection('messages')
+      // 1. Buscar invitaciones dirigidas al usuario actual
+      QuerySnapshot invitations = await messagesCollection
           .where('invitationUid', isEqualTo: uid)
-          .where('accepted', isEqualTo: false) // Evita reprocesar
+          .where('accepted', isEqualTo: false)
           .get();
 
-      if (querySnapshot.docs.isEmpty) return false;
+      if (invitations.docs.isEmpty) return false;
 
-      // 2. Procesar cada invitación
-      for (var doc in querySnapshot.docs) {
-        await doc.reference.update({'accepted': value});
-
-        // 3. Crear proyecto solo si se acepta (value = true)
-        if (value) {
-          // Asume que el campo 'fromUid' existe en el documento (quien envía la invitación)
-          String fromUid = doc['invitationUid'];
-
-          // Crea el proyecto con ambos miembros
-          await _firestore.collection('projects').add({
-            'projectid': fromUid, // ID auto-generado
-            'createdIn': FieldValue.serverTimestamp(), // Fecha del servidor
-            'createdBy': doc['from'], // Quien envió la invitación
-            'members': [doc['to']], // Invitador + usuario actual
-          });
-        }
+      for (var inviteDoc in invitations.docs) {
+        await inviteDoc.reference.update({'accepted': value});
       }
-
       return true;
     } catch (e) {
-      print('Error al procesar invitación: $e');
+      return false;
+    }
+  }
+
+  Future<bool> removePendingInvitation(String uid, bool value) async {
+    try {
+      // 1. Buscar invitaciones dirigidas al usuario actual
+      QuerySnapshot invitations = await messagesCollection
+          .where('invitationUid', isEqualTo: uid)
+          .where('accepted', isEqualTo: true)
+          .get();
+
+      if (invitations.docs.isEmpty) return false;
+
+      for (var inviteDoc in invitations.docs) {
+        await inviteDoc.reference.update({'accepted': value});
+      }
+      return true;
+    } catch (e) {
       return false;
     }
   }
 
   // Método para enviar mensaje
-  Future<bool> sendProjectInvitation({
-    required String to,
-    required String message,
-    required String from,
-  }) async {
+  Future<bool> sendProjectInvitation(
+      {required String to,
+      required String message,
+      required String from,
+      required String projectId}) async {
     try {
-      // Crea una instancia del generador de UUID.
-      var uuid = UtilsSapers().generateSimpleUID();
-
-      // Genera un UUID versión 4 (aleatorio).
-      String uniqueId = uuid;
-
       await _firestore.collection('messages').add({
         'to': to,
         'from': from,
         'message': message,
         'accepted': false,
         'timestamp': FieldValue.serverTimestamp(),
-        'invitationUid': uniqueId
+        'invitationUid': projectId
       });
       return true;
     } catch (e) {
