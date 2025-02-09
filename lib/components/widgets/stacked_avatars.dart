@@ -13,7 +13,7 @@ class StackedAvatars extends StatelessWidget {
     required this.members,
     this.overlap = 0.3,
     this.maxDisplayed = 5,
-    this.minAvatarSize = 24, // Tamaño mínimo por defecto
+    this.minAvatarSize = 20, // Tamaño mínimo por defecto
     this.maxAvatarSize = 40, // Tamaño máximo por defecto
   }) : super(key: key);
 
@@ -26,21 +26,25 @@ class StackedAvatars extends StatelessWidget {
         final availableHeight = constraints.maxHeight;
 
         // Calculamos el tamaño base del avatar según el espacio disponible
-        double avatarSize = (availableHeight * 0.8).clamp(minAvatarSize, maxAvatarSize);
-        
+        double avatarSize =
+            (availableHeight * 0.8).clamp(minAvatarSize, maxAvatarSize);
+
         // Ajustamos el tamaño si no hay suficiente espacio horizontal
-        final totalWidth = avatarSize + ((members.length - 1) * avatarSize * (1 - overlap));
+        final totalWidth =
+            avatarSize + ((members.length - 1) * avatarSize * (1 - overlap));
         if (totalWidth > availableWidth) {
           // Recalculamos el tamaño para que quepa en el espacio disponible
-          avatarSize = (availableWidth / (1 + (members.length - 1) * (1 - overlap)))
-              .clamp(minAvatarSize, maxAvatarSize);
+          avatarSize =
+              (availableWidth / (1 + (members.length - 1) * (1 - overlap)))
+                  .clamp(minAvatarSize, maxAvatarSize);
         }
 
         return SizedBox(
           height: avatarSize,
           width: members.isEmpty
               ? 0
-              : avatarSize + ((members.length - 1) * avatarSize * (1 - overlap)),
+              : avatarSize +
+                  ((members.length - 1) * avatarSize * (1 - overlap)),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -72,7 +76,8 @@ class StackedAvatars extends StatelessWidget {
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onPrimary,
                             fontWeight: FontWeight.bold,
-                            fontSize: avatarSize * 0.4, // Texto proporcional al avatar
+                            fontSize: avatarSize *
+                                0.4, // Texto proporcional al avatar
                           ),
                         ),
                       ),

@@ -123,17 +123,7 @@ class ProjectCard extends StatelessWidget {
                         children: [
                           Column(
                             children: [
-                              Text(
-                                'Miembros:',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize:
-                                      (theme.textTheme.bodySmall?.fontSize ??
-                                              12) *
-                                          scale,
-                                  color: colorScheme.onSurface.withOpacity(0.6),
-                                ),
-                              ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 5,
                               ),
                               Expanded(

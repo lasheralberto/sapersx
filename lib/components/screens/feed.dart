@@ -65,9 +65,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
-      setState(() {
-      
-      }); // Esto fuerza la reconstrucción del widget al cambiar de tab.
+      setState(
+          () {}); // Esto fuerza la reconstrucción del widget al cambiar de tab.
     });
     _updateFutures();
   }
@@ -259,7 +258,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: isMobile ? 2 : 5,
                     mainAxisSpacing: 6,
-                    crossAxisSpacing: 12,
+                    crossAxisSpacing: 24,
                     childAspectRatio: 0.95,
                   ),
                   delegate: SliverChildBuilderDelegate(
