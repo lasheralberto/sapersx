@@ -168,6 +168,7 @@ class FirebaseService {
       {required String to,
       required String message,
       required String from,
+      required String projectName,
       required String projectId}) async {
     try {
       await messagesCollection.add({
@@ -176,6 +177,7 @@ class FirebaseService {
         'message': message,
         'accepted': false,
         'timestamp': FieldValue.serverTimestamp(),
+        'projectName':projectName,
         'invitationUid': projectId
       });
       return true;

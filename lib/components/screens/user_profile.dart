@@ -128,6 +128,9 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
   Widget _buildSendMessageDialog(BuildContext context, UserInfoPopUp profile) {
     final messageController = TextEditingController();
     final backgroundColor = Colors.white;
+    String? selectedProject; // Guardará el ID del proyecto seleccionado
+    Project?
+        selectedProjectObj; // Guardará el objeto completo del proyecto seleccionado
 
     return StatefulBuilder(
       builder: (context, setState) => AlertDialog(
@@ -178,6 +181,7 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                     );
                   }
 
+                  // Convertir los documentos en objetos Project
                   final projects = snapshot.data!.docs
                       .map((doc) => Project.fromMap(
                           doc.data() as Map<String, dynamic>, doc.id))
@@ -202,6 +206,10 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                     onChanged: (String? value) {
                       setState(() {
                         selectedProject = value;
+                        // Buscar y asignar el objeto completo correspondiente
+                        selectedProjectObj = projects.firstWhere(
+                          (project) => project.projectid == value,
+                        );
                       });
                     },
                   );
@@ -239,24 +247,12 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                           message: message,
                           from: userFrom!.username,
                           projectId: selectedProject!,
+                          projectName: selectedProjectObj!
+                              .projectName, // Aquí pasas el projectName
                         );
-                        if (success) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                Texts.translate('messageSent', globalLanguage),
-                              ),
-                            ),
-                          );
-                          Navigator.of(context).pop();
-                        }
+                        // Manejo del éxito...
                       } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                                Texts.translate('passError', globalLanguage)),
-                          ),
-                        );
+                        // Manejo de errores...
                       } finally {
                         setState(() {
                           isMessageSending = false;
@@ -264,15 +260,7 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                       }
                     }
                   },
-            style: AppStyles().getButtonStyle(context),
-            child: Text(
-              Texts.translate('send', globalLanguage),
-              style: AppStyles().getTextStyle(
-                context,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: const Text('Enviar Invitación'),
           ),
         ],
       ),

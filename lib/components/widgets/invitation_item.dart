@@ -97,12 +97,15 @@ class _InvitationItemState extends State<InvitationItem> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Remitente
-                  Text(
-                    widget.message['from'],
-                    style: AppStyles().getTextStyle(
-                      context,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                  ListTile(
+                    title: Text(widget.message['projectName']),
+                    subtitle: Text(
+                      widget.message['from'],
+                      style: AppStyles().getTextStyle(
+                        context,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
