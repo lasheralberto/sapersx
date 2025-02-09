@@ -263,6 +263,7 @@ class _MessageCard extends StatelessWidget {
                               Icons.question_mark_sharp,
                               color: AppStyles.colorAvatarBorder,
                             ),
+                          const SizedBox(width: 10),
                           Text(
                             message.author,
                             style: theme.textTheme.bodyLarge?.copyWith(
