@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/components/widgets/like_button.dart';
+import 'package:sapers/components/widgets/mesmorphic_popup.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/project.dart';
@@ -169,7 +170,7 @@ class FirebaseService {
       required String from,
       required String projectId}) async {
     try {
-      await _firestore.collection('messages').add({
+      await messagesCollection.add({
         'to': to,
         'from': from,
         'message': message,
@@ -882,6 +883,15 @@ class AuthService {
 }
 
 class UtilsSapers {
+  showTextPopup(context, message) {
+    showDialog(
+        context: context,
+        builder: (context) => MesomorphicPopup(
+              text: message,
+              onClose: () => Navigator.pop(context),
+            ));
+  }
+
   String generateSimpleUID() {
     final random = Random();
     final timestamp = DateTime.now().microsecondsSinceEpoch;

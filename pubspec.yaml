@@ -25,6 +25,7 @@ dependencies:
   pasteboard: ^0.3.0
   crypto: ^3.0.6
   icons_plus: ^5.0.0
+  avatar_stack: ^3.0.0
 
  
  

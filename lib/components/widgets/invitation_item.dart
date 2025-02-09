@@ -8,21 +8,21 @@ import 'package:sapers/models/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sapers/models/texts.dart';
 
-class MessageItem extends StatefulWidget {
+class InvitationItem extends StatefulWidget {
   final QueryDocumentSnapshot<Object?> message;
   final String formattedDate;
 
-  const MessageItem({
+  const InvitationItem({
     Key? key,
     required this.message,
     required this.formattedDate,
   }) : super(key: key);
 
   @override
-  _MessageItemState createState() => _MessageItemState();
+  _InvitationItemState createState() => _InvitationItemState();
 }
 
-class _MessageItemState extends State<MessageItem> {
+class _InvitationItemState extends State<InvitationItem> {
   late bool isToggled;
 
   @override
@@ -91,12 +91,7 @@ class _MessageItemState extends State<MessageItem> {
           Expanded(
             child: InkWell(
               onTap: () {
-                showDialog(
-                    context: context,
-                    builder: (context) => MesomorphicPopup(
-                          text: widget.message['message'],
-                          onClose: () => Navigator.pop(context),
-                        ));
+                UtilsSapers().showTextPopup(context, widget.message['message']);
               },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

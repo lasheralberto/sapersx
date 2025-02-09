@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sapers/components/screens/project_screen.dart';
+import 'package:sapers/components/widgets/stacked_avatars.dart';
 import 'package:sapers/models/project.dart';
 
 class ProjectCard extends StatelessWidget {
@@ -34,7 +36,14 @@ class ProjectCard extends StatelessWidget {
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(16 * scale),
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProjectDetailScreen(project: project),
+                ),
+              );
+            },
             hoverColor: colorScheme.primary.withOpacity(0.05),
             splashColor: colorScheme.primary.withOpacity(0.1),
             child: SizedBox.expand(
@@ -112,18 +121,25 @@ class ProjectCard extends StatelessWidget {
                       height: 24 * scale,
                       child: Row(
                         children: [
-                          Text(
-                            'Miembros:',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize:
-                                  (theme.textTheme.bodySmall?.fontSize ?? 12) *
-                                      scale,
-                              color: colorScheme.onSurface.withOpacity(0.6),
-                            ),
-                          ),
-                          SizedBox(width: 8 * scale),
-                          Expanded(
-                            child: _buildMemberAvatars(project.members, scale),
+                          Column(
+                            children: [
+                              Text(
+                                'Miembros:',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize:
+                                      (theme.textTheme.bodySmall?.fontSize ??
+                                              12) *
+                                          scale,
+                                  color: colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 5,
+                              ),
+                              Expanded(
+                                child: StackedAvatars(members: project.members),
+                              ),
+                            ],
                           ),
                         ],
                       ),

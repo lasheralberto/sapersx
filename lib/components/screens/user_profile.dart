@@ -350,7 +350,7 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                       final formattedDate =
                           DateFormat('dd-MM-yyyy HH:mm').format(dateTime);
 
-                      return MessageItem(
+                      return InvitationItem(
                         message: message,
                         formattedDate: formattedDate,
                       );
