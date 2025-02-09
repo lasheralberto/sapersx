@@ -14,23 +14,22 @@ class UserInfoPopUp {
   Timestamp? joinDate;
   bool? isAvailable;
   String? experience;
-  List<Map<String,dynamic>>? reviews;
+  List<Map<String, dynamic>>? reviews;
 
-  UserInfoPopUp({
-    required this.uid,
-    required this.username,
-    required this.email,
-    this.bio,
-    this.location,
-    this.website,
-    this.isExpert,
-    this.specialty,
-    this.hourlyRate,
-    this.isAvailable,
-    this.joinDate,
-    this.experience,
-    this.reviews
-  });
+  UserInfoPopUp(
+      {required this.uid,
+      required this.username,
+      required this.email,
+      this.bio,
+      this.location,
+      this.website,
+      this.isExpert,
+      this.specialty,
+      this.hourlyRate,
+      this.isAvailable,
+      this.joinDate,
+      this.experience,
+      this.reviews});
 
   // Convertir objeto a Map para guardarlo en Firebase
   Map<String, dynamic> toMap() {
@@ -52,20 +51,25 @@ class UserInfoPopUp {
   }
 
   // Crear un objeto UserInfo desde un documento de Firebase
+// Crear un objeto UserInfoPopUp desde un documento de Firebase
   factory UserInfoPopUp.fromMap(Map<String, dynamic> map) {
     return UserInfoPopUp(
-        uid: map['uid'] ?? '',
-        username: map['username'] ?? '',
-        email: map['email'] ?? '',
-        bio: map['bio'] ?? '',
-        location: map['location'] ?? '',
-        website: map['website'] ?? '',
-        isExpert: map['isExpert'] ?? false,
-        specialty: map['specialty'] ?? '',
-        hourlyRate: (map['hourlyRate'] ?? 0.0).toDouble(),
-        joinDate: map['joinDate'] ?? DateTime.now().toString(),
-        isAvailable: map['isAvailable'] ?? false,
-        reviews: map['reviews'] ?? [],
-        experience: map['experience'] ?? '');
+      uid: map['uid'] ?? '',
+      username: map['username'] ?? '',
+      email: map['email'] ?? '',
+      bio: map['bio'] ?? '',
+      location: map['location'] ?? '',
+      website: map['website'] ?? '',
+      isExpert: map['isExpert'] ?? false,
+      specialty: map['specialty'] ?? '',
+      hourlyRate: (map['hourlyRate'] ?? 0.0).toDouble(),
+      joinDate: map['joinDate'] ?? DateTime.now().toString(),
+      isAvailable: map['isAvailable'] ?? false,
+      reviews: (map['reviews'] as List<dynamic>?)
+              ?.map((review) => review as Map<String, dynamic>)
+              .toList() ??
+          [],
+      experience: map['experience'] ?? '',
+    );
   }
 }

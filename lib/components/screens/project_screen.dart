@@ -1,11 +1,7 @@
-import 'package:avatar_stack/animated_avatar_stack.dart';
-import 'package:avatar_stack/avatar_stack.dart';
-import 'package:avatar_stack/positions.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:sapers/components/widgets/profile_avatar.dart';
+import 'package:sapers/components/widgets/expandable_metadata_row.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
-import 'package:sapers/components/widgets/user_hover_card.dart';
 import 'package:sapers/models/message_project.dart';
 import 'package:sapers/models/project.dart';
 import 'package:sapers/models/styles.dart';
@@ -76,81 +72,48 @@ class ProjectDetailScreen extends StatelessWidget {
         ),
       ),
       child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 48),
-            Text(
-              project.projectName.toUpperCase(),
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 48),
+              Text(
+                project.projectName.toUpperCase(),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: colorScheme.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            _buildMetadataRow(
-              icon: Icons.person_outline,
-              text: project.createdBy,
-              context: context,
-              light: true,
-            ),
-            const SizedBox(height: 8),
-            _buildMetadataRow(
-              icon: Icons.calendar_today_outlined,
-              text: project.createdIn,
-              context: context,
-              light: true,
-            ),
-            const SizedBox(height: 16),
-            _buildMetadataRow(
-              icon: Icons.description,
-              text: project.description,
-              context: context,
-              light: true,
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            _buildMembersList(context, project.members),
-          ],
+              const SizedBox(height: 16),
+              ExpandableMetadataRow(
+                icon: Icons.person_outline,
+                text: project.createdBy,
+                light: true,
+              ),
+              const SizedBox(height: 8),
+              ExpandableMetadataRow(
+                icon: Icons.calendar_today_outlined,
+                text: project.createdIn,
+                light: true,
+              ),
+              const SizedBox(height: 16),
+              ExpandableMetadataRow(
+                icon: Icons.description,
+                text: project.description,
+                maxLinesCollapsed: 3,
+                maxLinesExpanded: 20,
+                light: true,
+              ),
+              const SizedBox(height: 16),
+              _buildMembersList(context, project.members),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildMetadataRow({
-    required IconData icon,
-    required String text,
-    required BuildContext context,
-    bool light = false,
-  }) {
-    final color = light
-        ? Theme.of(context).colorScheme.onPrimary
-        : Theme.of(context).colorScheme.onSurface;
-
-    return Row(
-      crossAxisAlignment:
-          CrossAxisAlignment.start, // Align to top for multiline text
-      children: [
-        Icon(icon, size: 16, color: color.withOpacity(0.8)),
-        const SizedBox(width: 8),
-        Expanded(
-          // Added Expanded widget to allow text wrapping
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: color.withOpacity(0.8),
-                ),
-            softWrap: true, // Ensure text wraps
-            overflow: TextOverflow.ellipsis, // Add ellipsis when text overflows
-            maxLines: 10, // Limit to 3 lines - adjust as needed
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMembersList(BuildContext context, List<String> projectMembers) {
+  Widget _buildMembersList(BuildContext context, List<Member> projectMembers) {
     return SizedBox(
       height: 50,
       child: Row(
@@ -167,8 +130,11 @@ class ProjectDetailScreen extends StatelessWidget {
           Expanded(
             child: StackedAvatars(
               members: projectMembers,
-              overlap: 0.3,
-              maxDisplayed: 5,
+              maxDisplayed: 4,
+              overlap: 0.25,
+              minAvatarSize: 35,
+              maxAvatarSize: 40,
+              showTooltips: true,
             ),
           ),
         ],
@@ -181,8 +147,6 @@ class ProjectDetailScreen extends StatelessWidget {
       stream: FirebaseFirestore.instance
           .collection('messages')
           .where('invitationUid', isEqualTo: project.projectid)
-          // .where('accepted', isEqualTo: true)
-          //.orderBy('timestamp', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {

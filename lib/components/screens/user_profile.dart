@@ -251,6 +251,7 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                               .projectName, // Aquí pasas el projectName
                         );
                         // Manejo del éxito...
+                        Navigator.pop(context);
                       } catch (e) {
                         // Manejo de errores...
                       } finally {

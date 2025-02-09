@@ -1,4 +1,29 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:sapers/models/user.dart';
+
+class Member {
+  final String memberId;
+  final UserInfoPopUp userInfo;
+
+  Member({
+    required this.memberId,
+    required this.userInfo,
+  });
+
+  factory Member.fromMap(String member, Map<String, dynamic> userInfoData) {
+    return Member(
+      memberId: member ?? '',
+      userInfo: UserInfoPopUp.fromMap(userInfoData),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'memberId': memberId,
+      'userInfo': userInfo.toMap(),
+    };
+  }
+}
 
 class Project {
   final String projectid;
@@ -7,7 +32,7 @@ class Project {
   final String createdBy;
   final List<String> tags;
   final String createdIn; // Cambiado a String
-  final List<String> members;
+  final List<Member> members;
 
   Project({
     required this.projectid,
@@ -20,6 +45,19 @@ class Project {
   });
 
   factory Project.fromMap(Map<String, dynamic> data, String id) {
+    // Verifica si 'members' es un mapa con las claves 'member' y 'userinfo'
+    final membersData = data['members'];
+    List<Member> membersList = [];
+
+    if (membersData is Map) {
+      final memberList = membersData['member'] as List<dynamic>;
+      final userInfoData = membersData['userinfo'] as Map<String, dynamic>;
+
+      membersList = memberList
+          .map((memberData) => Member.fromMap(memberData, userInfoData))
+          .toList();
+    }
+
     return Project(
       projectid: data['projectid'] ?? '',
       projectName: data['projectName'] ?? '',
@@ -28,7 +66,7 @@ class Project {
       createdBy: data['createdBy'] ?? '',
       createdIn:
           _formatTimestamp(data['createdIn']), // Convertir Timestamp a String
-      members: List<String>.from(data['members'] ?? []),
+      members: membersList,
     );
   }
 
@@ -49,7 +87,10 @@ class Project {
       'tags': tags,
       'createdBy': createdBy,
       'createdIn': createdIn,
-      'members': members,
+      'members': {
+        'member': members.map((member) => member.toMap()).toList(),
+        'userinfo': members.isNotEmpty ? members.first.userInfo.toMap() : {},
+      },
     };
   }
 }

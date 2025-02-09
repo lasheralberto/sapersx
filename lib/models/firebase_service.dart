@@ -88,14 +88,18 @@ class FirebaseService {
   }
 
   //Método para añadir a un usuario a un proyecto
-  Future<bool> addUserToProject(String username, String projectId) async {
+  Future<bool> addUserToProject(
+      String username, String projectId, UserInfoPopUp userinfo) async {
     try {
       QuerySnapshot project = await projectsCollection
           .where('projectid', isEqualTo: projectId)
           .get();
       for (var doc in project.docs) {
         doc.reference.update({
-          'members': FieldValue.arrayUnion([username])
+          'members': {
+            'userinfo': userinfo.toMap(),
+            'member': FieldValue.arrayUnion([username])
+          },
         });
       }
 
@@ -112,13 +116,17 @@ class FirebaseService {
           .where('projectid', isEqualTo: projectId)
           .get();
       for (var doc in project.docs) {
-        doc.reference.update({
-          'members': FieldValue.arrayRemove([username])
+        await doc.reference.update({
+          // Remueve el username del array 'member'
+          'members.member': FieldValue.arrayRemove([username]),
+          // Remueve el campo con la key correspondiente al username dentro del mapa 'userinfo'
+          'members.userinfo.${username}': FieldValue.delete(),
         });
       }
-
       return true;
     } catch (e) {
+      // Puedes imprimir el error para debug
+      print('Error al remover usuario: $e');
       return false;
     }
   }
@@ -177,7 +185,7 @@ class FirebaseService {
         'message': message,
         'accepted': false,
         'timestamp': FieldValue.serverTimestamp(),
-        'projectName':projectName,
+        'projectName': projectName,
         'invitationUid': projectId
       });
       return true;

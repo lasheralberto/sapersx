@@ -256,15 +256,18 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                 ),
                 sliver: SliverGrid(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: isMobile ? 2 : 5,
+                    crossAxisCount: isMobile ? 1 : 4,
                     mainAxisSpacing: 6,
                     crossAxisSpacing: 24,
-                    childAspectRatio: 0.95,
+                    childAspectRatio: 0.99,
                   ),
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) => ProjectCard(
-                      project: projects[index],
-                      isMobile: isMobile,
+                    (context, index) => Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: ProjectCard(
+                        project: projects[index],
+                        isMobile: isMobile,
+                      ),
                     ),
                     childCount: projects.length,
                   ),

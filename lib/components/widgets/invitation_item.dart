@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sapers/components/widgets/mesmorphic_popup.dart';
+import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/styles.dart';
@@ -71,12 +72,12 @@ class _InvitationItemState extends State<InvitationItem> {
 
                     bool isAccepted = await FirebaseService()
                         .acceptPendingInvitation(
-                            widget.message['invitationUid'], isToggled);
+                            widget.message['invitationUid'], isToggled );
 
                     if (isAccepted) {
                       await FirebaseService().addUserToProject(
                           currentUser!.username,
-                          widget.message['invitationUid']);
+                          widget.message['invitationUid'], currentUser);
                       return;
                     }
                   }
@@ -98,41 +99,69 @@ class _InvitationItemState extends State<InvitationItem> {
                 children: [
                   // Remitente
                   ListTile(
-                    title: Text(widget.message['projectName']),
-                    subtitle: Text(
-                      widget.message['from'],
-                      style: AppStyles().getTextStyle(
-                        context,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.message['projectName'] ?? '',
+                          style: AppStyles().getTextStyle(
+                            context,
+                            fontWeight: FontWeight.bold,
+                            fontSize: AppStyles.fontSizeLarge,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.message['message'] ?? '',
+                          style: AppStyles().getTextStyle(
+                            context,
+                            fontSize: AppStyles.fontSize,
+                            fontWeight: FontWeight.normal,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                widget.message['from'] ?? '',
+                                style: AppStyles().getTextStyle(
+                                  context,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).hintColor,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                            Text(
+                              widget.formattedDate,
+                              style: AppStyles().getTextStyle(
+                                context,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w300,
+                                color: Theme.of(context).hintColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  // Mensaje
 
-                  Text(
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
-                    softWrap: true,
-                    widget.message['message'],
-                    style: AppStyles().getTextStyle(
-                      context,
-                      fontSize: AppStyles.fontSize,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-                  // Timestamp formateado
-                  Text(
-                    widget.formattedDate,
-                    style: AppStyles().getTextStyle(
-                      context,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w300,
-                    ),
-                  ),
                   const SizedBox(height: 8),
                   // Toggle Button
                 ],

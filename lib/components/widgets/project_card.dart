@@ -127,7 +127,15 @@ class ProjectCard extends StatelessWidget {
                                 height: 5,
                               ),
                               Expanded(
-                                child: StackedAvatars(members: project.members),
+                                child: StackedAvatars(
+                                  members: project.members,
+                                  maxDisplayed: 4,
+                                  overlap: 0.25,
+                                  minAvatarSize: 35,
+                                  maxAvatarSize: 40,
+                                  showTooltips: false,
+                                  showBorder: true,
+                                ),
                               ),
                             ],
                           ),
