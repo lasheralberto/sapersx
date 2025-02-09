@@ -129,14 +129,22 @@ class ProjectDetailScreen extends StatelessWidget {
         : Theme.of(context).colorScheme.onSurface;
 
     return Row(
+      crossAxisAlignment:
+          CrossAxisAlignment.start, // Align to top for multiline text
       children: [
         Icon(icon, size: 16, color: color.withOpacity(0.8)),
         const SizedBox(width: 8),
-        Text(
-          text,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: color.withOpacity(0.8),
-              ),
+        Expanded(
+          // Added Expanded widget to allow text wrapping
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: color.withOpacity(0.8),
+                ),
+            softWrap: true, // Ensure text wraps
+            overflow: TextOverflow.ellipsis, // Add ellipsis when text overflows
+            maxLines: 10, // Limit to 3 lines - adjust as needed
+          ),
         ),
       ],
     );
@@ -173,6 +181,7 @@ class ProjectDetailScreen extends StatelessWidget {
       stream: FirebaseFirestore.instance
           .collection('messages')
           .where('invitationUid', isEqualTo: project.projectid)
+          // .where('accepted', isEqualTo: true)
           //.orderBy('timestamp', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
@@ -230,7 +239,6 @@ class _MessageCard extends StatelessWidget {
 
     return Card(
       color: AppStyles.postCardReplyColor,
-      
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -245,13 +253,23 @@ class _MessageCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
+                          if (message.accepted == true)
+                            const Icon(
+                              Icons.verified_outlined,
+                              color: Colors.green,
+                            ),
+                          if (message.accepted == false)
+                            const Icon(
+                              Icons.question_mark_sharp,
+                              color: AppStyles.colorAvatarBorder,
+                            ),
                           Text(
                             message.author,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 10),
                           Icon(
                             Icons.arrow_forward,
                             size: 16,
