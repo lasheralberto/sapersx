@@ -48,14 +48,19 @@ class Project {
     // Verifica si 'members' es un mapa con las claves 'member' y 'userinfo'
     final membersData = data['members'];
     List<Member> membersList = [];
+    List<dynamic> memberList = [];
+    Map<String, dynamic> userInfoData = {};
 
-    if (membersData is Map) {
-      final memberList = membersData['member'] as List<dynamic>;
-      final userInfoData = membersData['userinfo'] as Map<String, dynamic>;
+    if (membersData is Map && membersData.isNotEmpty) {
+      memberList = membersData['member'] as List<dynamic>;
+      userInfoData = membersData['userinfo'] as Map<String, dynamic>;
 
-      membersList = memberList
-          .map((memberData) => Member.fromMap(memberData, userInfoData))
+      membersList = memberList!
+          .map((memberData) => Member.fromMap(memberData, userInfoData!))
           .toList();
+    } else {
+      memberList = [];
+      userInfoData = {};
     }
 
     return Project(
@@ -92,5 +97,73 @@ class Project {
         'userinfo': members.isNotEmpty ? members.first.userInfo.toMap() : {},
       },
     };
+  }
+}
+
+// task_model.dart
+class ProjectTask {
+  final String id;
+  final String title;
+  final String description;
+  final String status;
+  final double progress;
+  final String assigneeId;
+  final DateTime dueDate;
+
+  ProjectTask({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.status,
+    required this.progress,
+    required this.assigneeId,
+    required this.dueDate,
+  });
+
+  factory ProjectTask.fromSnapshot(DocumentSnapshot snapshot) {
+    final data = snapshot.data() as Map<String, dynamic>;
+    return ProjectTask(
+      id: snapshot.id,
+      title: data['title'],
+      description: data['description'],
+      status: data['status'],
+      progress: data['progress']?.toDouble() ?? 0.0,
+      assigneeId: data['assigneeId'],
+      dueDate: (data['dueDate'] as Timestamp).toDate(),
+    );
+  }
+}
+
+// meeting_model.dart
+class ProjectMeeting {
+  final String id;
+  final String title;
+  final DateTime date;
+  final List<String> participants;
+  final String agenda;
+  final String organizer;
+  final String status;
+
+  ProjectMeeting({
+    required this.id,
+    required this.title,
+    required this.date,
+    required this.participants,
+    required this.agenda,
+    required this.organizer,
+    required this.status,
+  });
+
+  factory ProjectMeeting.fromSnapshot(DocumentSnapshot snapshot) {
+    final data = snapshot.data() as Map<String, dynamic>;
+    return ProjectMeeting(
+      id: snapshot.id,
+      title: data['title'],
+      date: (data['date'] as Timestamp).toDate(),
+      participants: List<String>.from(data['participants']),
+      agenda: data['agenda'],
+      organizer: data['organizer'],
+      status: data['status'],
+    );
   }
 }

@@ -240,6 +240,21 @@ class AppStyles {
     }
   }
 
+    Color getProjectCardColor(String projectId) {
+    final colors = [
+      Colors.blueAccent,
+      Colors.greenAccent,
+      Colors.orangeAccent,
+      Colors.purpleAccent,
+      Colors.yellow,
+      Colors.green,
+      Colors.pink,
+      Colors.red,
+      Colors.deepPurple
+    ];
+    return colors[int.parse(projectId.hashCode.toString().substring(0, 1))];
+  }
+
   double getFeedWith(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
 

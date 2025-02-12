@@ -72,12 +72,15 @@ class _InvitationItemState extends State<InvitationItem> {
 
                     bool isAccepted = await FirebaseService()
                         .acceptPendingInvitation(
-                            widget.message['invitationUid'], isToggled );
+                            widget.message['invitationUid'],
+                            isToggled,
+                            widget.message['to']);
 
                     if (isAccepted) {
                       await FirebaseService().addUserToProject(
                           currentUser!.username,
-                          widget.message['invitationUid'], currentUser);
+                          widget.message['invitationUid'],
+                          currentUser);
                       return;
                     }
                   }

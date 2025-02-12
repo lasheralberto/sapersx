@@ -48,6 +48,60 @@ class FirebaseService {
   // Cache para información de usuarios
   final Map<String, UserInfoPopUp> _userCache = {};
 
+  Stream<QuerySnapshot> getProjectRequirementsStream(String projectId) {
+    return _firestore
+        .collection('projects')
+        .doc(projectId)
+        .collection('requirements')
+        .snapshots();
+  }
+
+  Future<void> addProjectRequirement({
+    required String projectId,
+    required String title,
+    required String description,
+  }) async {
+    await _firestore
+        .collection('projects')
+        .doc(projectId)
+        .collection('requirements')
+        .add({
+      'title': title,
+      'description': description,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> updateProjectRequirement({
+    required String projectId,
+    required String requirementId,
+    required String title,
+    required String description,
+  }) async {
+    await _firestore
+        .collection('projects')
+        .doc(projectId)
+        .collection('requirements')
+        .doc(requirementId)
+        .update({
+      'title': title,
+      'description': description,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> deleteProjectRequirement({
+    required String projectId,
+    required String requirementId,
+  }) async {
+    await _firestore
+        .collection('projects')
+        .doc(projectId)
+        .collection('requirements')
+        .doc(requirementId)
+        .delete();
+  }
+
   Future<List<Project>> getProjectsFuture() async {
     final snapshot = await projectsCollection.get();
     return snapshot.docs.map((doc) {
@@ -133,12 +187,14 @@ class FirebaseService {
 
   //Método para cancelar la invitación de un proyecto
 
-  Future<bool> acceptPendingInvitation(String uid, bool value) async {
+  Future<bool> acceptPendingInvitation(
+      String uid, bool value, String invitationRecipient) async {
     try {
       // 1. Buscar invitaciones dirigidas al usuario actual
       QuerySnapshot invitations = await messagesCollection
           .where('invitationUid', isEqualTo: uid)
           .where('accepted', isEqualTo: false)
+          .where('to', isEqualTo: invitationRecipient)
           .get();
 
       if (invitations.docs.isEmpty) return false;

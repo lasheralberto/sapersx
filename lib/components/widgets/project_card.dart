@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
 import 'package:sapers/models/project.dart';
+import 'package:sapers/models/styles.dart';
 
 class ProjectCard extends StatelessWidget {
   final Project project;
@@ -25,6 +26,7 @@ class ProjectCard extends StatelessWidget {
         final colorScheme = theme.colorScheme;
 
         return Card(
+          color: Colors.white,
           elevation: 2,
           margin: EdgeInsets.all(isMobile ? 4 * scale : 8 * scale),
           shape: RoundedRectangleBorder(
@@ -59,7 +61,8 @@ class ProjectCard extends StatelessWidget {
                           width: 40 * scale,
                           height: 40 * scale,
                           decoration: BoxDecoration(
-                            color: _getProjectColor(project.projectid),
+                            color: AppStyles()
+                                .getProjectCardColor(project.projectid),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -104,18 +107,18 @@ class ProjectCard extends StatelessWidget {
                       context: context,
                       scale: scale,
                     ),
-                    SizedBox(height: 16 * scale),
+                    //SizedBox(height: 16 * scale),
                     // Progress Bar
-                    SizedBox(
-                      height: 6 * scale,
-                      child: LinearProgressIndicator(
-                        value: 0.75,
-                        backgroundColor: colorScheme.surfaceVariant,
-                        color: _getProjectColor(project.projectid),
-                        minHeight: 6 * scale,
-                      ),
-                    ),
-                    SizedBox(height: 12 * scale),
+                    // SizedBox(
+                    //   height: 6 * scale,
+                    //   child: LinearProgressIndicator(
+                    //     value: 0.75,
+                    //     backgroundColor: colorScheme.surfaceVariant,
+                    //     color: _getProjectColor(project.projectid),
+                    //     minHeight: 6 * scale,
+                    //   ),
+                    // ),
+                    // SizedBox(height: 12 * scale),
                     // Miembros
                     SizedBox(
                       height: 24 * scale,
@@ -181,57 +184,5 @@ class ProjectCard extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Widget _buildMemberAvatars(List<String> members, double scale) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        for (int i = 0; i < (members.length > 3 ? 3 : members.length); i++)
-          Positioned(
-            left: i * 20.0 * scale,
-            child: CircleAvatar(
-              radius: 12 * scale,
-              backgroundColor: Colors.primaries[i % Colors.primaries.length],
-              child: Text(
-                members.isNotEmpty && members[i].isNotEmpty
-                    ? members[i][0].toUpperCase()
-                    : '?',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12 * scale,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-        if (members.length > 3)
-          Positioned(
-            left: 60.0 * scale,
-            child: CircleAvatar(
-              radius: 12 * scale,
-              backgroundColor: Colors.grey.shade300,
-              child: Text(
-                '+${members.length - 3}',
-                style: TextStyle(
-                  color: Colors.grey.shade700,
-                  fontSize: 10 * scale,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Color _getProjectColor(String projectId) {
-    final colors = [
-      Colors.blueAccent,
-      Colors.greenAccent,
-      Colors.orangeAccent,
-      Colors.purpleAccent,
-    ];
-    return colors[projectId.hashCode % colors.length];
   }
 }
