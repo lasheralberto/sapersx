@@ -26,6 +26,7 @@ dependencies:
   crypto: ^3.0.6
   icons_plus: ^5.0.0
   avatar_stack: ^3.0.0
+  flutter_staggered_animations: ^1.1.1
 
  
  

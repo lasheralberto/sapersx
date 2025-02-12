@@ -149,6 +149,7 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
                   child: CircularProgressIndicator(),
                 )
               : ProfileAvatar(
+                  userInfoPopUp: user,
                   showBorder: user?.isExpert as bool,
                   seed: user!.email.toString(),
                   size: AppStyles.avatarSize - 5,

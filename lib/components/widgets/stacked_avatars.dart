@@ -134,26 +134,24 @@ class StackedAvatars extends StatelessWidget {
   Widget _buildProfileAvatar(BuildContext context, double size, Member member) {
     return Material(
       type: MaterialType.transparency,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(size / 2),
-        onTap: () {}, // Añadir lógica de tap si es necesario
-        child: showTooltips
-            ? Tooltip(
-                message: member.memberId,
-                preferBelow: false,
-                verticalOffset: -size,
-                child: ProfileAvatar(
-                  seed: member.memberId,
-                  size: size - (showBorder ? 4 : 0),
-                  showBorder: member.userInfo.isExpert as bool,
-                ),
-              )
-            : ProfileAvatar(
-                showBorder: member.userInfo.isExpert as bool,
+      child: showTooltips
+          ? Tooltip(
+              message: member.memberId,
+              preferBelow: false,
+              verticalOffset: -size,
+              child: ProfileAvatar(
                 seed: member.memberId,
                 size: size - (showBorder ? 4 : 0),
+                userInfoPopUp: member.userInfo,
+                showBorder: member.userInfo.isExpert as bool,
               ),
-      ),
+            )
+          : ProfileAvatar(
+              userInfoPopUp: member.userInfo,
+              showBorder: member.userInfo.isExpert as bool,
+              seed: member.memberId,
+              size: size - (showBorder ? 4 : 0),
+            ),
     );
   }
 

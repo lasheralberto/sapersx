@@ -18,11 +18,12 @@ class UserAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Si no hay un usuario autenticado, mostramos el icono de login
     if (user == null) {
-      if (1 == 1)
+      if (1 == 1) {
         return IconButton(
           icon: const Icon(Icons.account_circle_outlined),
           onPressed: () => _showLoginDialog(context),
         );
+      }
     }
 
     // Si hay un usuario autenticado, mostramos el avatar del usuario
@@ -46,6 +47,8 @@ class UserAvatar extends StatelessWidget {
 
           return PopupMenuButton(
             child: ProfileAvatar(
+              isProfileMenuButton: true,
+              userInfoPopUp: user,
               size: AppStyles.avatarSize,
               seed: userAvatar,
               showBorder: user.isExpert as bool,

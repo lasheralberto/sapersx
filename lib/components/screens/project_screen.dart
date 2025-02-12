@@ -74,8 +74,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                   _buildProjectDescription(context),
                   const SizedBox(height: 30),
                   _buildRequirementsSection(context, isOwner),
-                  const SizedBox(height: 30),
-                  _buildMemberSection(context, widget.project.members),
                 ],
               ),
             ),
@@ -127,6 +125,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 ),
               ),
             ),
+            const SizedBox(
+              height: 10,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: StackedAvatars(members: widget.project.members),
+            )
           ],
         ),
       ),
