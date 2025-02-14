@@ -4,7 +4,8 @@ import 'package:sapers/models/project.dart';
 
 class StackedAvatars extends StatelessWidget {
   final List<Member> members;
-  final double overlap;
+  final double
+      overlap; // Value between 0 and 1, where 0 means no overlap and 1 means complete overlap
   final int maxDisplayed;
   final double minAvatarSize;
   final double maxAvatarSize;
@@ -14,7 +15,7 @@ class StackedAvatars extends StatelessWidget {
   const StackedAvatars({
     Key? key,
     required this.members,
-    this.overlap = 0.25,
+    this.overlap = 0.25, // 25% overlap by default
     this.maxDisplayed = 5,
     this.minAvatarSize = 24,
     this.maxAvatarSize = 40,
@@ -33,36 +34,39 @@ class StackedAvatars extends StatelessWidget {
         final maxWidth = constraints.maxWidth;
         final maxHeight = constraints.maxHeight;
 
-        // 1. Cálculo base del tamaño del avatar
         double avatarSize =
             _calculateBaseSize(maxWidth, maxHeight, totalAvatars);
 
-        // 2. Ajuste final considerando densidad de pantalla
+        // Adjust for device pixel ratio
         final media = MediaQuery.of(context);
         avatarSize = avatarSize / media.devicePixelRatio;
 
-        // 3. Validación de tamaño mínimo/máximo
+        // Clamp size within bounds
         avatarSize = avatarSize.clamp(minAvatarSize, maxAvatarSize);
+
+        // Calculate total width needed
+        final totalWidth = _calculateTotalWidth(avatarSize, totalAvatars);
 
         return SizedBox(
           height: avatarSize,
-          width: _calculateTotalWidth(avatarSize, totalAvatars),
+          width: totalWidth,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
               for (int i = 0; i < totalAvatars; i++)
-                _buildAvatar(
-                  context,
-                  index: i,
-                  avatarSize: avatarSize,
-                  member: i < effectiveMembers.length
-                      ? effectiveMembers[i]
-                      : Member(
-                          memberId: '',
-                          userInfo: effectiveMembers[i]
-                              .userInfo), // Provide a default Member object
-                  isOverflow: hasOverflow && i == totalAvatars - 1,
-                  overflowCount: members.length - maxDisplayed,
+                Positioned(
+                  // Key positioning change: multiply by overlap factor
+                  left: i * (avatarSize * (1 - overlap)),
+                  child: _buildAvatar(
+                    context,
+                    index: i,
+                    avatarSize: avatarSize,
+                    member: i < effectiveMembers.length
+                        ? effectiveMembers[i]
+                        : effectiveMembers.last,
+                    isOverflow: hasOverflow && i == totalAvatars - 1,
+                    overflowCount: members.length - maxDisplayed,
+                  ),
                 ),
             ],
           ),
@@ -73,19 +77,22 @@ class StackedAvatars extends StatelessWidget {
 
   double _calculateBaseSize(
       double maxWidth, double maxHeight, int totalAvatars) {
-    // Tamaño basado en el ancho disponible y cantidad de avatares
+    // Calculate size based on available width and number of avatars
+    // Account for overlap in width calculation
     final widthBasedSize =
-        (maxWidth / (1 + (totalAvatars - 1) * (1 - overlap)));
+        maxWidth / (totalAvatars - ((totalAvatars - 1) * overlap));
 
-    // Tamaño basado en alto disponible
+    // Use 90% of available height as maximum
     final heightBasedSize = maxHeight * 0.9;
 
-    // Usar el menor de los dos valores
+    // Return smaller of the two to ensure fitting in container
     return widthBasedSize < heightBasedSize ? widthBasedSize : heightBasedSize;
   }
 
   double _calculateTotalWidth(double avatarSize, int totalAvatars) {
-    return avatarSize * (1 + (totalAvatars - 1) * (1 - overlap));
+    if (totalAvatars <= 1) return avatarSize;
+    // Calculate total width accounting for overlap
+    return avatarSize + (avatarSize * (1 - overlap) * (totalAvatars - 1));
   }
 
   Widget _buildAvatar(
@@ -99,35 +106,32 @@ class StackedAvatars extends StatelessWidget {
     final borderColor = Theme.of(context).colorScheme.surface;
     final borderRadius = avatarSize / 2;
 
-    return Positioned(
-      left: index * avatarSize * (1 - overlap),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        width: avatarSize,
-        height: avatarSize,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(borderRadius),
-          border: showBorder
-              ? Border.all(
-                  color: borderColor,
-                  width: 2,
-                  strokeAlign: BorderSide.strokeAlignOutside,
-                )
-              : null,
-          boxShadow: [
-            if (showBorder)
-              const BoxShadow(
-                color: Colors.black12,
-                blurRadius: 6,
-                offset: Offset(0, 2),
-              ),
-          ],
-        ),
-        child: isOverflow
-            ? _buildOverflowCounter(context, avatarSize, overflowCount)
-            : _buildProfileAvatar(context, avatarSize, member),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      width: avatarSize,
+      height: avatarSize,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: showBorder
+            ? Border.all(
+                color: borderColor,
+                width: 2,
+                strokeAlign: BorderSide.strokeAlignOutside,
+              )
+            : null,
+        boxShadow: [
+          if (showBorder)
+            const BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+        ],
       ),
+      child: isOverflow
+          ? _buildOverflowCounter(context, avatarSize, overflowCount)
+          : _buildProfileAvatar(context, avatarSize, member),
     );
   }
 

@@ -133,7 +133,7 @@ class ProjectCard extends StatelessWidget {
                                 child: StackedAvatars(
                                   members: project.members,
                                   maxDisplayed: 4,
-                                  overlap: 0.25,
+                                  overlap: 0.35,
                                   minAvatarSize: 35,
                                   maxAvatarSize: 40,
                                   showTooltips: false,

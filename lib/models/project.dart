@@ -48,19 +48,11 @@ class Project {
     // Verifica si 'members' es un mapa con las claves 'member' y 'userinfo'
     final membersData = data['members'];
     List<Member> membersList = [];
-    List<dynamic> memberList = [];
-    Map<String, dynamic> userInfoData = {};
 
-    if (membersData is Map && membersData.isNotEmpty) {
-      memberList = membersData['member'] as List<dynamic>;
-      userInfoData = membersData['userinfo'] as Map<String, dynamic>;
-
-      membersList = memberList!
-          .map((memberData) => Member.fromMap(memberData, userInfoData!))
-          .toList();
-    } else {
-      memberList = [];
-      userInfoData = {};
+    if (membersData.isNotEmpty) {
+      for (var mem in membersData) {
+        membersList.add(Member.fromMap(mem['memberId'], mem['userInfo']));
+      }
     }
 
     return Project(

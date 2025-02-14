@@ -141,24 +141,36 @@ class FirebaseService {
     }
   }
 
-  //Método para añadir a un usuario a un proyecto
   Future<bool> addUserToProject(
       String username, String projectId, UserInfoPopUp userinfo) async {
     try {
-      QuerySnapshot project = await projectsCollection
+      // 1. Buscar el documento usando where
+      QuerySnapshot projectQuery = await projectsCollection
           .where('projectid', isEqualTo: projectId)
           .get();
-      for (var doc in project.docs) {
-        doc.reference.update({
-          'members': {
-            'userinfo': userinfo.toMap(),
-            'member': FieldValue.arrayUnion([username])
-          },
-        });
+
+      if (projectQuery.docs.isEmpty) {
+        print('Project not found');
+        return false;
       }
+
+      // 2. Obtener la referencia del primer documento encontrado
+      DocumentReference docRef = projectQuery.docs.first.reference;
+
+      // 3. Crear objeto miembro completo
+      final newMember = {
+        'memberId': username,
+        'userInfo': userinfo.toMap(),
+      };
+
+      // 4. Actualización atómica usando arrayUnion
+      await docRef.update({
+        'members': FieldValue.arrayUnion([newMember])
+      });
 
       return true;
     } catch (e) {
+      print('Error adding user: $e');
       return false;
     }
   }
