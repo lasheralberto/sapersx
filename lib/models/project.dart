@@ -19,8 +19,8 @@ class Member {
 
   Map<String, dynamic> toMap() {
     return {
-      'memberId': memberId,
-      'userInfo': userInfo.toMap(),
+      'member': memberId,
+      'userinfo': userInfo.toMap(),
     };
   }
 }
@@ -45,14 +45,64 @@ class Project {
   });
 
   factory Project.fromMap(Map<String, dynamic> data, String id) {
-    // Verifica si 'members' es un mapa con las claves 'member' y 'userinfo'
-    final membersData = data['members'];
     List<Member> membersList = [];
 
-    if (membersData.isNotEmpty) {
-      for (var mem in membersData) {
-        membersList.add(Member.fromMap(mem['memberId'], mem['userInfo']));
+    // Obtenemos el valor sin forzar el tipo, ya que puede ser Map o List.
+    final dynamic membersRaw = data['members'];
+
+    Map<String, dynamic> membersData;
+    if (membersRaw is Map<String, dynamic>) {
+      // Si ya es un Map, lo usamos directamente.
+      membersData = membersRaw;
+    } else if (membersRaw is List) {
+      // Si es una lista, asumimos que es una lista de mapas (cada uno con 'member' y 'userinfo').
+      if (membersRaw.isNotEmpty && membersRaw[0] is Map<String, dynamic>) {
+        List<dynamic> memberIds = [];
+        List<dynamic> userinfoList = [];
+
+        // Recorremos cada elemento de la lista y extraemos los datos.
+        for (var item in membersRaw) {
+          // Usamos 'member' o 'memberid', según cómo se guarden los IDs.
+          memberIds.add(item['member'] ?? item['memberid'] ?? '');
+          userinfoList.add(item['userinfo'] ?? {});
+        }
+        membersData = {
+          'member': memberIds,
+          'userinfo': userinfoList,
+        };
+      } else {
+        // Si la lista está vacía o no tiene el formato esperado, usamos un mapa vacío.
+        membersData = {};
       }
+    } else {
+      // Si no es Map ni List, lo dejamos como mapa vacío.
+      membersData = {};
+    }
+
+    // Extraemos la lista de IDs. Si no existe, usamos una lista vacía.
+    final List<dynamic> memberIds =
+        membersData['member'] as List<dynamic>? ?? [];
+
+    // Extraemos la información de usuario; puede venir como List o como Map.
+    final dynamic userinfoRaw = membersData['userinfo'];
+    List<dynamic> userinfoList;
+    if (userinfoRaw is List<dynamic>) {
+      userinfoList = userinfoRaw;
+    } else if (userinfoRaw is Map<String, dynamic>) {
+      // Convertimos los valores del mapa a una lista.
+      userinfoList = userinfoRaw.values.toList();
+    } else {
+      userinfoList = [];
+    }
+
+    // Combinamos ambas listas usando el mismo índice.
+    for (int i = 0; i < memberIds.length; i++) {
+      final String memberId = memberIds[i].toString();
+      final Map<String, dynamic> userInfoMap =
+          (i < userinfoList.length && userinfoList[i] is Map<String, dynamic>)
+              ? userinfoList[i] as Map<String, dynamic>
+              : {};
+      membersList.add(Member.fromMap(memberId, userInfoMap));
     }
 
     return Project(
@@ -61,8 +111,7 @@ class Project {
       description: data['description'] ?? '',
       tags: List<String>.from(data['tags'] ?? []),
       createdBy: data['createdBy'] ?? '',
-      createdIn:
-          _formatTimestamp(data['createdIn']), // Convertir Timestamp a String
+      createdIn: _formatTimestamp(data['createdIn']),
       members: membersList,
     );
   }

@@ -159,8 +159,8 @@ class FirebaseService {
 
       // 3. Crear objeto miembro completo
       final newMember = {
-        'memberId': username,
-        'userInfo': userinfo.toMap(),
+        'memberid': username,
+        'userinfo': userinfo.toMap(),
       };
 
       // 4. Actualización atómica usando arrayUnion

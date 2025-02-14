@@ -118,7 +118,6 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
   }
 
   Future<void> _getUserFrom() async {
-    
     final user = await FirebaseService()
         .getUserInfoByEmail(FirebaseAuth.instance.currentUser!.email!);
     setState(() {
