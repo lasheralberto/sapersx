@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
 import 'package:sapers/models/firebase_service.dart';
@@ -10,9 +11,11 @@ import 'package:sapers/models/user.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final Project project;
+  final UserInfoPopUp userinfo;
 
   ProjectDetailScreen({
     Key? key,
+    required this.userinfo,
     required this.project,
   }) : super(key: key);
 
@@ -22,72 +25,82 @@ class ProjectDetailScreen extends StatefulWidget {
 
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   final FirebaseService _firebaseService = FirebaseService();
+  final TextEditingController _messageController = TextEditingController();
+  final _scrollController = ScrollController();
   bool isOwner = false;
+  bool isMember = false;
+  UserInfoPopUp? currentUser;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+    _loadCurrentUser();
+    isOwnerCheck().then((value) => setState(() => isOwner = value));
+    isMemberUser();
+  }
 
-    isOwnerCheck().then((value) {
-      setState(() {
-        isOwner = value;
-      });
-    });
+  Future<void> _loadCurrentUser() async {
+    final user = await _firebaseService
+        .getUserInfoByEmail(FirebaseAuth.instance.currentUser!.email!);
+    setState(() => currentUser = user);
   }
 
   Future<bool> isOwnerCheck() async {
-    final userinfo = await FirebaseService().getUserInfoByEmail(
-        FirebaseAuth.instance.currentUser!.email.toString());
-    return widget.project.createdBy == userinfo!.username;
+    return widget.project.createdBy == currentUser?.username;
+  }
+
+  Future<void> isMemberUser() async {
+    var isMemberUser = await FirebaseService()
+        .isProjectMember(widget.project.projectid, currentUser!.username);
+
+    setState(() => isMember = isMemberUser);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: MediaQuery.of(context).size.height * 0.3,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildHeader(context),
-            ),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              if (isOwner)
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () => _editProjectDetails(context),
+      body: Column(
+        children: [
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  expandedHeight: MediaQuery.of(context).size.height * 0.3,
+                  pinned: true,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: _buildHeader(context),
+                  ),
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  actions: [
+                    if (isOwner)
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => _editProjectDetails(context),
+                      ),
+                  ],
                 ),
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProjectDescription(context),
-                  const SizedBox(height: 30),
-                  _buildRequirementsSection(context, isOwner),
-                ],
-              ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildProjectDescription(context),
+                        const SizedBox(height: 30),
+                        _buildChatSection(context),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+          isMember == false ? SizedBox.shrink() : _buildMessageInput(),
         ],
       ),
-      floatingActionButton: isOwner
-          ? FloatingActionButton(
-              backgroundColor:
-                  AppStyles().getProjectCardColor(widget.project.projectid),
-              child: const Icon(Icons.add, color: Colors.white),
-              onPressed: () => _addRequirement(context),
-            )
-          : null,
     );
   }
 
@@ -125,9 +138,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 ),
               ),
             ),
-            const SizedBox(
-              height: 10,
-            ),
+            const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: StackedAvatars(members: widget.project.members),
@@ -165,28 +176,18 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     );
   }
 
-  Widget _buildRequirementsSection(BuildContext context, bool isOwner) {
+  Widget _buildChatSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Requerimientos',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            if (isOwner)
-              IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () => _editRequirements(context),
-              ),
-          ],
+        Text(
+          'Chat del Proyecto',
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 15),
         StreamBuilder<QuerySnapshot>(
-          stream: _firebaseService
-              .getProjectRequirementsStream(widget.project.projectid),
+          stream:
+              _firebaseService.getProjectChatStream(widget.project.projectid),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -195,19 +196,19 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               return Center(child: Text('Error: ${snapshot.error}'));
             }
             if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return const Center(child: Text('No hay requerimientos'));
+              return const Center(child: Text('No hay mensajes'));
             }
 
-            final requirements = snapshot.data!.docs;
+            final messages = snapshot.data!.docs;
             return ListView.builder(
+              controller: _scrollController,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: requirements.length,
+              itemCount: messages.length,
               itemBuilder: (context, index) {
-                final requirement = requirements[index];
-                final data = requirement.data() as Map<String, dynamic>;
-                return _buildRequirementItem(
-                    requirement.id, data, isOwner, context);
+                final message = messages[index];
+                final data = message.data() as Map<String, dynamic>;
+                return _buildMessageItem(data, context);
               },
             );
           },
@@ -216,173 +217,119 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     );
   }
 
-  Widget _buildRequirementItem(
-      String id, Map<String, dynamic> data, bool isOwner, context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
-        title: Text(data['title']),
-        subtitle: Text(data['description']),
-        trailing: isOwner
-            ? IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () => _deleteRequirement(id, context),
-              )
-            : null,
-        onTap: () => _editRequirement(id, data, context),
+  Widget _buildMessageItem(Map<String, dynamic> data, BuildContext context) {
+    final isCurrentUser = data['senderId'] == currentUser?.username;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment:
+            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!isCurrentUser)
+            ProfileAvatar(
+              seed: currentUser!.username,
+              size: 20,
+            ),
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.7,
+              ),
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isCurrentUser
+                    ? AppStyles().getProjectCardColor(widget.project.projectid)
+                    : Colors.grey[200],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data['senderName'],
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isCurrentUser ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    data['text'],
+                    style: TextStyle(
+                      color: isCurrentUser ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormat('HH:mm')
+                        .format((data['timestamp'] as Timestamp).toDate()),
+                    style: TextStyle(
+                      color: isCurrentUser ? Colors.white70 : Colors.black54,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isCurrentUser)
+            ProfileAvatar(
+              seed: currentUser!.username,
+              size: 20,
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildMemberSection(BuildContext context, List<Member> members) {
-    return StackedAvatars(members: members);
-  }
-
-  void _addRequirement(BuildContext context) async {
-    final result = await showDialog(
-      context: context,
-      builder: (context) => const RequirementDialog(),
-    );
-
-    if (result != null) {
-      await _firebaseService.addProjectRequirement(
-        projectId: widget.project.projectid,
-        title: result['title'],
-        description: result['description'],
-      );
-    }
-  }
-
-  void _editRequirement(String id, Map<String, dynamic> data, context) async {
-    final result = await showDialog(
-      context: context,
-      builder: (context) => RequirementDialog(initialData: data),
-    );
-
-    if (result != null) {
-      await _firebaseService.updateProjectRequirement(
-        projectId: widget.project.projectid,
-        requirementId: id,
-        title: result['title'],
-        description: result['description'],
-      );
-    }
-  }
-
-  void _deleteRequirement(String id, context) async {
-    final confirm = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Requerimiento'),
-        content: const Text('¿Estás seguro de eliminar este requerimiento?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+  Widget _buildMessageInput() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              decoration: InputDecoration(
+                hintText: 'Escribe un mensaje...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+              ),
+            ),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: Icon(Icons.send,
+                color:
+                    AppStyles().getProjectCardColor(widget.project.projectid)),
+            onPressed: _sendMessage,
           ),
         ],
       ),
     );
+  }
 
-    if (confirm == true) {
-      await _firebaseService.deleteProjectRequirement(
-        projectId: widget.project.projectid,
-        requirementId: id,
-      );
-    }
+  void _sendMessage() async {
+    if (_messageController.text.trim().isEmpty) return;
+
+    await _firebaseService.sendProjectMessage(
+      projectId: widget.project.projectid,
+      text: _messageController.text,
+      senderId: currentUser!.uid!,
+      senderName: currentUser!.username!,
+      senderPhoto: currentUser!.username ?? '',
+    );
+
+    _messageController.clear();
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
   }
 
   void _editProjectDetails(BuildContext context) {
     // Implementar lógica para editar detalles del proyecto
-  }
-
-  void _editRequirements(BuildContext context) {
-    // Implementar lógica para editar múltiples requerimientos
-  }
-}
-
-class RequirementDialog extends StatefulWidget {
-  final String? requirementId;
-  final Map<String, dynamic>? initialData;
-
-  const RequirementDialog({this.requirementId, this.initialData});
-
-  @override
-  _RequirementDialogState createState() => _RequirementDialogState();
-}
-
-class _RequirementDialogState extends State<RequirementDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.initialData != null) {
-      _titleController.text = widget.initialData!['title'];
-      _descriptionController.text = widget.initialData!['description'];
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.requirementId == null
-          ? 'Añadir Requerimiento'
-          : 'Editar Requerimiento'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Título'),
-                validator: (value) => value!.isEmpty ? 'Requerido' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Descripción'),
-                maxLines: 3,
-                validator: (value) => value!.isEmpty ? 'Requerido' : null,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: const Text('Guardar'),
-        ),
-      ],
-    );
-  }
-
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.pop(context, {
-        'title': _titleController.text,
-        'description': _descriptionController.text,
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
   }
 }

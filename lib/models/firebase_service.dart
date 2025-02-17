@@ -48,6 +48,61 @@ class FirebaseService {
   // Cache para información de usuarios
   final Map<String, UserInfoPopUp> _userCache = {};
 
+  Stream<QuerySnapshot> getProjectChatStream(String projectId) {
+    return FirebaseFirestore.instance
+        .collection('projects')
+        .doc(projectId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots();
+  }
+
+  Future<bool> isProjectMember(String projectId, String userId) async {
+    final projectQuery = await FirebaseFirestore.instance
+        .collection('projects')
+        .where('projectid', isEqualTo: projectId)
+        .limit(1)
+        .get();
+
+    if (projectQuery.docs.isEmpty) return false;
+
+    final projectData = projectQuery.docs.first.data();
+    final members = (projectData['members']['member'] as List<dynamic>?) ?? [];
+
+    return members.any((member) {
+      final memberMap = member as Map<String, dynamic>;
+      return memberMap['userId'] == userId;
+    });
+  }
+
+  Future<void> sendProjectMessage({
+    required String projectId,
+    required String text,
+    required String senderId,
+    required String senderName,
+    required String senderPhoto,
+  }) async {
+    // Verificar membresía
+    final isMember = await isProjectMember(projectId, senderId);
+
+    if (!isMember) {
+      throw Exception('Usuario no es miembro del proyecto');
+    }
+
+    // Enviar mensaje
+    await FirebaseFirestore.instance
+        .collection('projects')
+        .doc(projectId)
+        .collection('messages')
+        .add({
+      'text': text,
+      'senderId': senderId,
+      'senderName': senderName,
+      'senderPhoto': senderPhoto,
+      'timestamp': Timestamp.now(),
+    });
+  }
+
   Stream<QuerySnapshot> getProjectRequirementsStream(String projectId) {
     return _firestore
         .collection('projects')

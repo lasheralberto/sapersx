@@ -1,16 +1,20 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
 import 'package:sapers/models/project.dart';
 import 'package:sapers/models/styles.dart';
+import 'package:sapers/models/user.dart';
 
 class ProjectCard extends StatelessWidget {
   final Project project;
   final bool isMobile;
+  final UserInfoPopUp userinfo;
 
   const ProjectCard({
     Key? key,
     required this.project,
+    required this.userinfo,
     this.isMobile = false,
   }) : super(key: key);
 
@@ -43,7 +47,10 @@ class ProjectCard extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ProjectDetailScreen(project: project),
+                  builder: (context) => ProjectDetailScreen(
+                    project: project,
+                    userinfo: userinfo,
+                  ),
                 ),
               );
             },
