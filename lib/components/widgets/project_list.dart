@@ -5,6 +5,7 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/project.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
@@ -15,12 +16,10 @@ class ProjectListView extends StatefulWidget {
   final bool isMobile;
   final VoidCallback onRefresh;
   final bool isRefreshing;
-  final UserInfoPopUp userinfo;
 
   const ProjectListView({
     Key? key,
     required this.future,
-    required this.userinfo,
     required this.isMobile,
     required this.onRefresh,
     this.isRefreshing = false,
@@ -71,7 +70,7 @@ class _ProjectListViewState extends State<ProjectListView> {
                   horizontal: widget.isMobile ? 12.0 : 24.0,
                   vertical: 8.0,
                 ),
-                sliver: _buildListView(projects, widget.userinfo),
+                sliver: _buildListView(projects),
               ),
               const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
             ],
@@ -81,7 +80,7 @@ class _ProjectListViewState extends State<ProjectListView> {
     );
   }
 
-  Widget _buildListView(List<Project> projects, UserInfoPopUp userinfo) {
+  Widget _buildListView(List<Project> projects) {
     return AnimationLimiter(
       child: SliverList(
         delegate: SliverChildBuilderDelegate(
@@ -93,7 +92,7 @@ class _ProjectListViewState extends State<ProjectListView> {
               child: FadeInAnimation(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
-                  child: _buildProjectListCard(projects[index], userinfo, context),
+                  child: _buildProjectListCard(projects[index], context),
                 ),
               ),
             ),
@@ -104,7 +103,7 @@ class _ProjectListViewState extends State<ProjectListView> {
     );
   }
 
-  Widget _buildProjectListCard(Project project, UserInfoPopUp userinfo, context) {
+  Widget _buildProjectListCard(Project project, context) {
     return Card(
       color: AppStyles().getCardColor(context),
       elevation: AppStyles().getCardElevation(context),
@@ -112,7 +111,7 @@ class _ProjectListViewState extends State<ProjectListView> {
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
       ),
       child: InkWell(
-        onTap: () => _handleProjectTap(project,userinfo, context),
+        onTap: () => _handleProjectTap(project, context),
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         child: Container(
           //height: 120,
@@ -243,12 +242,17 @@ class _ProjectListViewState extends State<ProjectListView> {
     );
   }
 
-  void _handleProjectTap(Project project,UserInfoPopUp userinfo, BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProjectDetailScreen(project: project, userinfo: userinfo,),
-      ),
-    );
+  void _handleProjectTap(Project project, BuildContext context) {
+    bool isUserLogued = AuthService().isUserLoggedIn(context);
+    if (isUserLogued) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProjectDetailScreen(
+            project: project,
+          ),
+        ),
+      );
+    }
   }
 }

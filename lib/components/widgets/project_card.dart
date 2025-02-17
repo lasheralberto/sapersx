@@ -49,7 +49,6 @@ class ProjectCard extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) => ProjectDetailScreen(
                     project: project,
-                    userinfo: userinfo,
                   ),
                 ),
               );

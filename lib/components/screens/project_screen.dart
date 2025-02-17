@@ -11,11 +11,9 @@ import 'package:sapers/models/user.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final Project project;
-  final UserInfoPopUp userinfo;
 
   ProjectDetailScreen({
     Key? key,
-    required this.userinfo,
     required this.project,
   }) : super(key: key);
 
@@ -34,26 +32,72 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _loadCurrentUser();
-    isOwnerCheck().then((value) => setState(() => isOwner = value));
-    isMemberUser();
+    _initializeUserData();
+  }
+
+  Future<void> _initializeUserData() async {
+    await _loadCurrentUser();
+
+    if (mounted) {
+      await _checkProjectPermissions();
+    }
   }
 
   Future<void> _loadCurrentUser() async {
-    final user = await _firebaseService
-        .getUserInfoByEmail(FirebaseAuth.instance.currentUser!.email!);
-    setState(() => currentUser = user);
+    try {
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser == null || firebaseUser.email == null) {
+        setState(() => currentUser = null);
+        return;
+      }
+
+      final user =
+          await _firebaseService.getUserInfoByEmail(firebaseUser.email!);
+      setState(() => currentUser = user);
+    } catch (e) {
+      setState(() => currentUser = null);
+    }
+  }
+
+  Future<void> _checkProjectPermissions() async {
+    if (currentUser == null) {
+      setState(() {
+        isOwner = false;
+        isMember = false;
+      });
+      return;
+    }
+
+    final ownerCheck = await isOwnerCheck();
+    final memberCheck = await _isMemberUser();
+
+    if (mounted) {
+      setState(() {
+        isOwner = ownerCheck;
+        if (isOwner) {
+          isMember = true;
+        } else {
+          isMember = memberCheck;
+        }
+      });
+    }
   }
 
   Future<bool> isOwnerCheck() async {
-    return widget.project.createdBy == currentUser?.username;
+    return currentUser?.username == widget.project.createdBy;
   }
 
-  Future<void> isMemberUser() async {
-    var isMemberUser = await FirebaseService()
-        .isProjectMember(widget.project.projectid, currentUser!.username);
+  Future<bool> _isMemberUser() async {
+    if (currentUser?.username == null)
+      return false; // Usar userId en lugar de username
 
-    setState(() => isMember = isMemberUser);
+    try {
+      return await FirebaseService().isProjectMember(widget.project.projectid,
+          currentUser!.username! // Enviar userId en lugar de username
+          );
+    } catch (e) {
+      return false;
+    }
   }
 
   @override
@@ -98,7 +142,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               ],
             ),
           ),
-          isMember == false ? SizedBox.shrink() : _buildMessageInput(),
+          if (isMember && currentUser != null) _buildMessageInput(),
         ],
       ),
     );
@@ -218,7 +262,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   }
 
   Widget _buildMessageItem(Map<String, dynamic> data, BuildContext context) {
-    final isCurrentUser = data['senderId'] == currentUser?.username;
+    final isCurrentUser = data['senderName'] == currentUser?.username;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -228,8 +272,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         children: [
           if (!isCurrentUser)
             ProfileAvatar(
-              seed: currentUser!.username,
-              size: 20,
+              seed: data['senderName'],
+              size: 22,
             ),
           Flexible(
             child: Container(
@@ -277,7 +321,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           if (isCurrentUser)
             ProfileAvatar(
               seed: currentUser!.username,
-              size: 20,
+              size: 22,
             ),
         ],
       ),

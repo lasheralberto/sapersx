@@ -73,9 +73,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     final followingPosts = _firebaseService.getPostsFollowingFuture();
     final projectsPosts = _firebaseService.getProjectsFuture();
 
-    userinfo = await FirebaseService().getUserInfoByEmail(
-        FirebaseAuth.instance.currentUser!.email.toString());
-
     setState(() {
       _postsFutureGeneral = generalPosts;
       _postsFutureFollowing = followingPosts;
@@ -319,7 +316,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
             _buildPostsList(_postsFutureFollowing!, isMobile),
             ProjectListView(
               future: _postsProjects!,
-              userinfo: userinfo!,
               isMobile: isMobile,
               onRefresh: () {},
             ),

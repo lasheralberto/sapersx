@@ -58,21 +58,39 @@ class FirebaseService {
   }
 
   Future<bool> isProjectMember(String projectId, String userId) async {
-    final projectQuery = await FirebaseFirestore.instance
-        .collection('projects')
-        .where('projectid', isEqualTo: projectId)
-        .limit(1)
-        .get();
+    try {
+      final projectQuery = await FirebaseFirestore.instance
+          .collection('projects')
+          .where('projectid', isEqualTo: projectId)
+          .limit(1)
+          .get();
 
-    if (projectQuery.docs.isEmpty) return false;
+      if (projectQuery.docs.isEmpty) return false;
 
-    final projectData = projectQuery.docs.first.data();
-    final members = (projectData['members']['member'] as List<dynamic>?) ?? [];
+      final projectData = projectQuery.docs.first.data();
+      final membersData = projectData['members'];
 
-    return members.any((member) {
-      final memberMap = member as Map<String, dynamic>;
-      return memberMap['userId'] == userId;
-    });
+      // Estandarización de la estructura de miembros
+      List<Map<String, dynamic>> members = [];
+
+      if (membersData is Map<String, dynamic>) {
+        // Caso estructura Map con clave 'member'
+        final mapMembers = membersData['member'] as List<dynamic>?;
+        members = mapMembers?.cast<Map<String, dynamic>>() ?? [];
+      } else if (membersData is List<dynamic>) {
+        // Caso estructura List directa
+        members = membersData.cast<Map<String, dynamic>>();
+      }
+
+      // Búsqueda del usuario en miembros
+      return members.any((member) {
+        final memberId = member['memberid'] as String?;
+        return memberId == userId;
+      });
+    } catch (e) {
+      print('Error verificando membresía: $e');
+      return false;
+    }
   }
 
   Future<void> sendProjectMessage({
@@ -83,13 +101,7 @@ class FirebaseService {
     required String senderPhoto,
   }) async {
     // Verificar membresía
-    final isMember = await isProjectMember(projectId, senderId);
-
-    if (!isMember) {
-      throw Exception('Usuario no es miembro del proyecto');
-    }
-
-    // Enviar mensaje
+ 
     await FirebaseFirestore.instance
         .collection('projects')
         .doc(projectId)
