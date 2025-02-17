@@ -28,10 +28,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   bool isOwner = false;
   bool isMember = false;
   UserInfoPopUp? currentUser;
+  bool? isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    isLoading = true;
     _initializeUserData();
   }
 
@@ -64,6 +66,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       setState(() {
         isOwner = false;
         isMember = false;
+        isLoading = false;
       });
       return;
     }
@@ -79,6 +82,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         } else {
           isMember = memberCheck;
         }
+        isLoading = false;
       });
     }
   }
@@ -102,50 +106,56 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  expandedHeight: MediaQuery.of(context).size.height * 0.3,
-                  pinned: true,
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: _buildHeader(context),
-                  ),
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  actions: [
-                    if (isOwner)
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => _editProjectDetails(context),
+    return isLoading == true
+        ? const Center(
+            child: CircularProgressIndicator(),
+          )
+        : Scaffold(
+            body: Column(
+              children: [
+                Expanded(
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverAppBar(
+                        expandedHeight:
+                            MediaQuery.of(context).size.height * 0.3,
+                        pinned: true,
+                        flexibleSpace: FlexibleSpaceBar(
+                          background: _buildHeader(context),
+                        ),
+                        leading: IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        actions: [
+                          if (isOwner)
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _editProjectDetails(context),
+                            ),
+                        ],
                       ),
-                  ],
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildProjectDescription(context),
-                        const SizedBox(height: 30),
-                        _buildChatSection(context),
-                      ],
-                    ),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildProjectDescription(context),
+                              const SizedBox(height: 30),
+                              _buildChatSection(context),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                if (isMember != false && currentUser != null)
+                  _buildMessageInput(),
               ],
             ),
-          ),
-          if (isMember && currentUser != null) _buildMessageInput(),
-        ],
-      ),
-    );
+          );
   }
 
   Widget _buildHeader(BuildContext context) {
