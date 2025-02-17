@@ -8,6 +8,7 @@ import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/texts.dart';
 import '../screens/login_dialog.dart';
+import 'package:sapers/models/auth_utils.dart' as zauth;
 
 class UserAvatar extends StatelessWidget {
   final User? user;
@@ -38,7 +39,7 @@ class UserAvatar extends StatelessWidget {
   }
 
   Widget _buildUserAvatar(BuildContext context) {
-    return Consumer<main.AuthProvider>(
+    return Consumer<zauth.AuthProvider>(
       builder: (context, authProvider, child) {
         // Si los datos del usuario están disponibles, mostramos el avatar
         if (authProvider.userInfo != null) {

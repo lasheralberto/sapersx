@@ -25,8 +25,6 @@ class SearchBarCustom extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
       ),
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.2),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: SizedBox(
@@ -46,9 +44,8 @@ class SearchBarCustom extends StatelessWidget {
                       BorderRadius.circular(AppStyles.borderRadiusValue),
                   borderSide: BorderSide.none),
               filled: true,
-              fillColor: Theme.of(context)
-                  .cardColor
-                  .withOpacity(0.05), // Color de fondo más sutil
+              fillColor:
+                  Theme.of(context).cardColor, // Color de fondo más sutil
 
               suffixIcon: Row(
                 mainAxisSize: MainAxisSize.min,

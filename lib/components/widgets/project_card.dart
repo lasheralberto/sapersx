@@ -16,11 +16,12 @@ class ProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos LayoutBuilder para obtener el ancho asignado a la tarjeta
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Definimos una base de 400 px; si el ancho asignado es menor, el scale será < 1
-        double scale = constraints.maxWidth / 350;
+        double scale = constraints.maxWidth / 500;
+
+        // Definimos una altura fija más pequeña para garantizar el aspecto rectangular
+        double fixedHeight = 120.0 * scale; // Altura base más pequeña
 
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
@@ -30,14 +31,14 @@ class ProjectCard extends StatelessWidget {
           elevation: 2,
           margin: EdgeInsets.all(isMobile ? 4 * scale : 8 * scale),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16 * scale),
+            borderRadius: BorderRadius.circular(8 * scale),
             side: BorderSide(
               color: colorScheme.outline.withOpacity(0.1),
               width: 1,
             ),
           ),
           child: InkWell(
-            borderRadius: BorderRadius.circular(16 * scale),
+            borderRadius: BorderRadius.circular(8 * scale),
             onTap: () {
               Navigator.push(
                 context,
@@ -48,102 +49,69 @@ class ProjectCard extends StatelessWidget {
             },
             hoverColor: colorScheme.primary.withOpacity(0.05),
             splashColor: colorScheme.primary.withOpacity(0.1),
-            child: SizedBox.expand(
+            child: SizedBox(
+              // Cambiamos Container por SizedBox para mayor eficiencia
+              height: fixedHeight, // Usamos la altura fija
               child: Padding(
-                padding: EdgeInsets.all(16.0 * scale),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16.0 * scale,
+                  vertical: 12.0 * scale,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Header
-                    Row(
-                      children: [
-                        Container(
-                          width: 40 * scale,
-                          height: 40 * scale,
-                          decoration: BoxDecoration(
-                            color: AppStyles()
-                                .getProjectCardColor(project.projectid),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.work_outline,
-                            color: colorScheme.onPrimary,
-                            size: 20 * scale,
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          icon: Icon(Icons.more_vert, size: 20 * scale),
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12 * scale),
-                    // Título
-                    Text(
-                      project.projectName.toUpperCase(),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontSize: (theme.textTheme.titleLarge?.fontSize ?? 20) *
-                            scale,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5 * scale,
-                        color: colorScheme.primary,
+                    Container(
+                      width: 45 *
+                          scale, // Reducimos ligeramente el tamaño del ícono
+                      height: 45 * scale,
+                      decoration: BoxDecoration(
+                        color:
+                            AppStyles().getProjectCardColor(project.projectid),
+                        shape: BoxShape.circle,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      child: Icon(
+                        Icons.work_outline,
+                        color: colorScheme.onPrimary,
+                        size: 22 * scale,
+                      ),
                     ),
-                    SizedBox(height: 16 * scale),
-                    // Metadatos
-                    _buildMetadataRow(
-                      icon: Icons.person_outline,
-                      text: project.createdBy,
-                      context: context,
-                      scale: scale,
-                    ),
-                    SizedBox(height: 8 * scale),
-                    _buildMetadataRow(
-                      icon: Icons.calendar_today_outlined,
-                      text: project.createdIn,
-                      context: context,
-                      scale: scale,
-                    ),
-                    //SizedBox(height: 16 * scale),
-                    // Progress Bar
-                    // SizedBox(
-                    //   height: 6 * scale,
-                    //   child: LinearProgressIndicator(
-                    //     value: 0.75,
-                    //     backgroundColor: colorScheme.surfaceVariant,
-                    //     color: _getProjectColor(project.projectid),
-                    //     minHeight: 6 * scale,
-                    //   ),
-                    // ),
-                    // SizedBox(height: 12 * scale),
-                    // Miembros
-                    SizedBox(
-                      height: 24 * scale,
-                      child: Row(
+                    SizedBox(width: 16 * scale),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Column(
-                            children: [
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              Expanded(
-                                child: StackedAvatars(
-                                  members: project.members,
-                                  maxDisplayed: 4,
-                                  overlap: 0.35,
-                                  minAvatarSize: 35,
-                                  maxAvatarSize: 40,
-                                  showTooltips: false,
-                                  showBorder: true,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            project.projectName.toUpperCase(),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontSize:
+                                  (theme.textTheme.titleLarge?.fontSize ?? 20) *
+                                      scale,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5 * scale,
+                              color: colorScheme.primary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 8 * scale),
+                          _buildMetadataRow(
+                            icon: Icons.person_outline,
+                            text: project.createdBy,
+                            context: context,
+                            scale: scale,
                           ),
                         ],
                       ),
+                    ),
+                    StackedAvatars(
+                      members: project.members,
+                      maxDisplayed: 2,
+                      overlap: 0.35,
+                      minAvatarSize: 30,
+                      maxAvatarSize: 35,
+                      showTooltips: false,
+                      showBorder: true,
                     ),
                   ],
                 ),

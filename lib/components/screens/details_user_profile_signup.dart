@@ -9,6 +9,7 @@ import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
+import 'package:sapers/models/auth_utils.dart' as zauth;
 
 class UserProfilePopup extends StatefulWidget {
   final String email;
@@ -120,7 +121,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
 
       if (mounted) {
         final authProvider =
-            Provider.of<main.AuthProvider>(context, listen: false);
+            Provider.of<zauth.AuthProvider>(context, listen: false);
         await authProvider.refreshUserInfo();
         Navigator.pop(context, true);
       }

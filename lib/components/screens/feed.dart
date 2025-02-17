@@ -11,6 +11,7 @@ import 'package:sapers/components/screens/project_dialog.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/widgets/postcard.dart';
 import 'package:sapers/components/widgets/project_card.dart';
+import 'package:sapers/components/widgets/project_list.dart';
 import 'package:sapers/components/widgets/searchbar.dart';
 import 'package:sapers/components/widgets/user_avatar.dart';
 import 'package:sapers/main.dart';
@@ -46,7 +47,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   bool _isRefreshing = false;
   bool isPostExpanded = false;
 
-  // Estilo Mesomórfico para el feed
   static const _mesoShadow = [
     BoxShadow(
       color: Color.fromARGB(33, 208, 116, 116),
@@ -67,8 +67,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
-      setState(
-          () {}); // Esto fuerza la reconstrucción del widget al cambiar de tab.
+      setState(() {});
     });
     _updateFutures();
   }
@@ -221,8 +220,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     );
   }
 
-  
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -325,7 +322,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   children: [
                     _buildPostsList(_postsFutureGeneral!, isMobile),
                     _buildPostsList(_postsFutureFollowing!, isMobile),
-                    EnhancedProjectsGrid(
+                    ProjectListView(
                       future: _postsProjects!,
                       isMobile: isMobile,
                       onRefresh: () {},
@@ -339,219 +336,34 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       ),
       floatingActionButton:
           (_tabController.index == 0 || _tabController.index == 1)
-              ? FloatingActionButton(
-                  foregroundColor: Colors.white,
-                  backgroundColor: AppStyles.colorAvatarBorder,
-                  enableFeedback: true,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
+              ? Visibility(
+                  visible: MediaQuery.of(context).viewInsets == 0.0,
+                  child: FloatingActionButton(
+                    foregroundColor: Colors.white,
+                    backgroundColor: AppStyles.colorAvatarBorder,
+                    enableFeedback: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                    ),
+                    mini: false,
+                    onPressed: _showCreatePostDialog,
+                    child: const Icon(EvaIcons.plus_outline),
                   ),
-                  mini: false,
-                  onPressed: _showCreatePostDialog,
-                  child: const Icon(EvaIcons.plus_outline),
                 )
-              : FloatingActionButton(
-                  foregroundColor: Colors.white,
-                  backgroundColor: AppStyles.colorAvatarBorder,
-                  enableFeedback: true,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                  ),
-                  mini: false,
-                  onPressed: _showCreateProjectDialog,
-                  child: const Icon(EvaIcons.folder_add),
-                ),
-    );
-  }
-}
-
-class EnhancedProjectsGrid extends StatelessWidget {
-  final Future<List<Project>> future;
-  final bool isMobile;
-  final VoidCallback onRefresh;
-  final bool isRefreshing;
-
-  const EnhancedProjectsGrid({
-    Key? key,
-    required this.future,
-    required this.isMobile,
-    required this.onRefresh,
-    this.isRefreshing = false,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<Project>>(
-      future: future,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return _buildErrorState(snapshot.error.toString());
-        }
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildLoadingState();
-        }
-
-        final projects = snapshot.data ?? [];
-        if (projects.isEmpty) {
-          return _buildEmptyState();
-        }
-
-        return RefreshIndicator(
-          onRefresh: () async => onRefresh(),
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              if (isRefreshing)
-                SliverToBoxAdapter(
-                  child: Container(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: const Center(
-                      child: LinearProgressIndicator(
-                        backgroundColor: Colors.transparent,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                      ),
+              : Visibility(
+                  visible: MediaQuery.of(context).viewInsets == 0.0,
+                  child: FloatingActionButton(
+                    foregroundColor: Colors.white,
+                    backgroundColor: AppStyles.colorAvatarBorder,
+                    enableFeedback: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(25.0)),
                     ),
+                    mini: false,
+                    onPressed: _showCreateProjectDialog,
+                    child: const Icon(EvaIcons.folder_add),
                   ),
                 ),
-              SliverPadding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 12.0 : 24.0,
-                  vertical: 16.0,
-                ),
-                sliver: AnimationLimiter(
-                  child: SliverGrid(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: _calculateCrossAxisCount(),
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: isMobile ? 1.1 : 1.0,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => AnimationConfiguration.staggeredGrid(
-                        position: index,
-                        duration: const Duration(milliseconds: 375),
-                        columnCount: _calculateCrossAxisCount(),
-                        child: SlideAnimation(
-                          verticalOffset: 50.0,
-                          child: FadeInAnimation(
-                            child: _buildProjectCard(projects[index], context),
-                          ),
-                        ),
-                      ),
-                      childCount: projects.length,
-                    ),
-                  ),
-                ),
-              ),
-              // Add some bottom padding
-              const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-            ],
-          ),
-        );
-      },
     );
-  }
-
-  Widget _buildProjectCard(Project project, context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Stack(
-          children: [
-            ProjectCard(
-              project: project,
-              isMobile: isMobile,
-            ),
-            Positioned.fill(
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _handleProjectTap(project, context),
-                  splashColor: Colors.white.withOpacity(0.1),
-                  highlightColor: Colors.transparent,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String error) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.red),
-          const SizedBox(height: 16),
-          SelectableText(
-            'Error: $error',
-            style: const TextStyle(color: Colors.red),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: onRefresh,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 16),
-          Text(
-            'Loading projects...',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.folder_open, size: 48, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            Texts.translate('noprojects', globalLanguage),
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: onRefresh,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Refresh'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  int _calculateCrossAxisCount() {
-    if (isMobile) return 1;
-    return 4;
-  }
-
-  void _handleProjectTap(Project project, context) {
-    // Implement your project tap handling logic here
-    Navigator.push(context, MaterialPageRoute(
-      builder: (context) {
-        return ProjectDetailScreen(project: project);
-      },
-    ));
   }
 }

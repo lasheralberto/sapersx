@@ -86,7 +86,7 @@ class _InvitationItemState extends State<InvitationItem> {
                   }
                 },
                 activeColor: AppStyles.colorAvatarBorder,
-                inactiveThumbColor: AppStyles.scaffoldBackgroundColorDar,
+                inactiveThumbColor: AppStyles.scaffoldBackgroundColorBright,
                 inactiveTrackColor: AppStyles.colorAvatarBorderLighter,
               ),
             ),

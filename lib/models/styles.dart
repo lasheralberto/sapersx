@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class AppStyles {
-  // Paleta de colores principal - Amazon Inspired
-  static const Color _amazonOrange = Color(0xFFFF9900);
-  static const Color _amazonLightOrange = Color(0xFFFFAB40);
-  static const Color _amazonDarkOrange = Color(0xFFE88A00);
+  // Main color palette - Elegant Orange Theme
+  static const Color _orangePrimary = Color(0xFFFF9900);
+  static const Color _orangeLight = Color(0xFFFFB74D);
+  static const Color _orangeDark = Color(0xFFE88A00);
   static const Color _pureWhite = Colors.white;
   static const Color _warmWhite = Color(0xFFFAF9F6);
   static const Color _lightGray = Color(0xFFF5F5F5);
@@ -12,40 +12,56 @@ class AppStyles {
   static const Color _darkGray = Color(0xFF232F3E);
   static const Color _darkerGray = Color(0xFF191C1F);
 
-  // Colores del Scaffold
-  static const scaffoldBackgroundColorBright = _pureWhite;
-  static const scaffoldBackgroundColorDar = _darkGray;
+  // Text colors
+  static const Color textColor = _darkGray;
+  static const Color textColorLight = _mediumGray;
+  static const Color textColorDark = _darkerGray;
 
-  //Decidir si mostrar avatares o no
+  // Background colors
+  static const Color scaffoldBackgroundColorBright = _warmWhite;
+  static const Color scaffoldBackgroundColorDark = _darkGray;
+  static const Color cardBackgroundColor = _pureWhite;
+  static const Color inputBackgroundColor = _pureWhite;
+
+  // Border and icon colors
+  static const Color borderColor = _mediumGray;
+  static const Color iconColor = _darkGray;
+
+  // Avatar and selection colors
   static const bool showAvatars = false;
+  static const Color colorAvatarBorder = _orangePrimary;
+  static const Color colorAvatarBorderLighter = Color(0xFFFFCCB3);
 
-  // Colores de las tarjetas
-  static const postCardColorSelected = _lightGray; // Naranja muy claro
-  static const postCardColor = Colors.transparent;
-  static const postCardReplyColor = _pureWhite;
-  static const Color colorAvatarBorder = _amazonOrange;
-  static const Color colorAvatarBorderLighter =
-      Color.fromARGB(255, 237, 199, 150);
+  // Card colors
+  static const Color postCardColorSelected = _lightGray;
+  static const Color postCardColor = Colors.transparent;
+  static const Color postCardReplyColor = _pureWhite;
 
-  // Colores de los botones
-  static const sendButtonColor = _amazonDarkOrange;
-  static const sendButtonColorDisabled = _mediumGray;
+  // Button colors
+  static const Color sendButtonColor = _orangeDark;
+  static const Color sendButtonColorDisabled = _mediumGray;
+  static const Color buttonHoverColor = Color(0xFFFFF3E0);
 
-  //Redondez de los botones
-  static const double borderRadiusValue = 8;
-
-  //Tamaño de los avatars de perfil
+  // Dimensions
+  static const double borderRadiusValue = 8.0;
   static const double avatarSize = 33.0;
+  static const double cardElevation = 2.0;
+  static const double dialogBorderRadius = 12.0;
 
-  //Font size
+  // Typography
   static const double fontSize = 12.0;
   static const double fontSizeMedium = 14.0;
   static const double fontSizeLarge = 16.0;
+  static const double fontSizeHeading = 20.0;
 
-  //Tab marker
+  // Assets
   static const String tabMarkerImage = 'assets/images/tabmarker.png';
-  //logo iamge
   static const String logoImage = 'assets/images/logo.png';
+
+  // Spacing
+  static const double spacingSmall = 8.0;
+  static const double spacingMedium = 16.0;
+  static const double spacingLarge = 24.0;
 
   Widget progressIndicatorCreatePostButton() {
     return const CircularProgressIndicator(
@@ -60,13 +76,13 @@ class AppStyles {
   //Progress indicator button
   Widget progressIndicatorButton() {
     return const CircularProgressIndicator(
-      valueColor: AlwaysStoppedAnimation<Color>(_amazonDarkOrange),
+      valueColor: AlwaysStoppedAnimation<Color>(_orangePrimary),
     );
   }
 
   Color getBackgroundColor(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
-        ? scaffoldBackgroundColorDar
+        ? scaffoldBackgroundColorDark
         : scaffoldBackgroundColorBright;
   }
 
@@ -108,10 +124,10 @@ class AppStyles {
       ),
       overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
         if (states.contains(WidgetState.pressed)) {
-          return _amazonOrange.withOpacity(0.1);
+          return _orangePrimary.withOpacity(0.1);
         }
         if (states.contains(WidgetState.hovered)) {
-          return _amazonOrange.withOpacity(0.05);
+          return _orangePrimary.withOpacity(0.05);
         }
         return null;
       }),
@@ -131,8 +147,8 @@ class AppStyles {
 
   Color getButtonColor(context) {
     return Theme.of(context).brightness == Brightness.dark
-        ? _amazonLightOrange
-        : _amazonOrange;
+        ? _orangeLight
+        : _orangePrimary;
   }
 
   Color getTextFieldColor(context) {
@@ -214,7 +230,7 @@ class AppStyles {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: _amazonOrange, width: 1.5),
+        borderSide: const BorderSide(color: _orangeDark, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -240,7 +256,7 @@ class AppStyles {
     }
   }
 
-    Color getProjectCardColor(String projectId) {
+  Color getProjectCardColor(String projectId) {
     final colors = [
       Colors.blueAccent,
       Colors.greenAccent,
@@ -289,4 +305,220 @@ class TwitterDimensions {
   static const double borderRadius = 12.0;
   static const double spacing = 16.0;
   static const double spacingSmall = 8.0;
+}
+
+class AppTheme {
+  static ThemeData getLightTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      primaryColor: AppStyles.colorAvatarBorder,
+      scaffoldBackgroundColor: AppStyles.scaffoldBackgroundColorBright,
+      colorScheme: const ColorScheme.light(
+        primary: AppStyles.colorAvatarBorder,
+        secondary: AppStyles._orangeLight,
+        surface: AppStyles._pureWhite,
+        background: AppStyles.scaffoldBackgroundColorBright,
+        error: Colors.redAccent,
+        onPrimary: AppStyles._pureWhite,
+        onSecondary: AppStyles._pureWhite,
+        onSurface: AppStyles.textColor,
+        onBackground: AppStyles.textColor,
+        onError: AppStyles._pureWhite,
+      ),
+      cardTheme: CardTheme(
+        color: AppStyles.cardBackgroundColor,
+        elevation: AppStyles.cardElevation,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+        ),
+        margin: const EdgeInsets.all(AppStyles.spacingSmall),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: IconThemeData(
+          color: AppStyles.iconColor,
+        ),
+        titleTextStyle: TextStyle(
+          color: AppStyles.textColor,
+          fontSize: AppStyles.fontSizeLarge,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
+          fontSize: AppStyles.fontSizeLarge,
+          fontWeight: FontWeight.bold,
+          color: AppStyles.textColor,
+        ),
+        displayMedium: TextStyle(
+          fontSize: AppStyles.fontSizeMedium,
+          fontWeight: FontWeight.bold,
+          color: AppStyles.textColor,
+        ),
+        displaySmall: TextStyle(
+          fontSize: AppStyles.fontSize,
+          fontWeight: FontWeight.bold,
+          color: AppStyles.textColor,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: AppStyles.fontSizeHeading,
+          fontWeight: FontWeight.w600,
+          color: AppStyles.textColor,
+        ),
+        titleLarge: TextStyle(
+          fontSize: AppStyles.fontSizeLarge,
+          fontWeight: FontWeight.w600,
+          color: AppStyles.textColor,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: AppStyles.fontSizeMedium,
+          color: AppStyles.textColor,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: AppStyles.fontSize,
+          color: AppStyles.textColor,
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        fillColor: AppStyles.inputBackgroundColor,
+        filled: true,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppStyles.dialogBorderRadius),
+          borderSide: const BorderSide(
+            color: AppStyles.borderColor,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppStyles.dialogBorderRadius),
+          borderSide: const BorderSide(
+            color: AppStyles.borderColor,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppStyles.dialogBorderRadius),
+          borderSide: const BorderSide(
+            color: AppStyles.colorAvatarBorder,
+            width: 2,
+          ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppStyles.spacingMedium,
+          vertical: AppStyles.spacingMedium,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppStyles.colorAvatarBorder,
+          foregroundColor: AppStyles._pureWhite,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppStyles.dialogBorderRadius),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppStyles.spacingLarge,
+            vertical: AppStyles.spacingMedium,
+          ),
+          elevation: 0,
+        ).copyWith(
+          overlayColor: MaterialStateProperty.resolveWith<Color?>(
+            (Set<MaterialState> states) {
+              if (states.contains(MaterialState.hovered)) {
+                return AppStyles.buttonHoverColor;
+              }
+              return null;
+            },
+          ),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: AppStyles.colorAvatarBorder,
+        foregroundColor: AppStyles._pureWhite,
+        elevation: AppStyles.cardElevation,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppStyles.dialogBorderRadius),
+        ),
+      ),
+    );
+  }
+
+  static ThemeData getDarkTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+
+      primaryColor: AppStyles.colorAvatarBorder,
+      scaffoldBackgroundColor: AppStyles.scaffoldBackgroundColorDark,
+
+      colorScheme: ColorScheme.dark(
+        primary: AppStyles.colorAvatarBorder,
+        secondary: AppStyles._orangeLight,
+        surface: AppStyles._darkGray,
+        background: AppStyles.scaffoldBackgroundColorDark,
+        error: Colors.redAccent,
+        onPrimary: AppStyles._pureWhite,
+        onSecondary: AppStyles._pureWhite,
+        onSurface: AppStyles._warmWhite,
+        onBackground: AppStyles._warmWhite,
+        onError: AppStyles._pureWhite,
+      ),
+
+      // Dark theme specific overrides
+      cardTheme: CardTheme(
+        color: AppStyles._darkGray,
+        elevation: AppStyles.cardElevation,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+        ),
+      ),
+
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: AppStyles._warmWhite,
+        ),
+        displayMedium: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: AppStyles._warmWhite,
+        ),
+        displaySmall: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: AppStyles._warmWhite,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: AppStyles.fontSizeHeading,
+          fontWeight: FontWeight.w600,
+          color: AppStyles._warmWhite,
+        ),
+        titleLarge: TextStyle(
+          fontSize: AppStyles.fontSizeLarge,
+          fontWeight: FontWeight.w600,
+          color: AppStyles._warmWhite,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: AppStyles.fontSizeMedium,
+          color: AppStyles._warmWhite,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: AppStyles.fontSize,
+          color: AppStyles._warmWhite,
+        ),
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        fillColor: AppStyles._darkerGray,
+        filled: true,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppStyles.dialogBorderRadius),
+          borderSide: const BorderSide(
+            color: AppStyles.borderColor,
+          ),
+        ),
+      ),
+    );
+  }
 }
