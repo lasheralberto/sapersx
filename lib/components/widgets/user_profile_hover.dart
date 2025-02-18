@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sapers/components/screens/user_profile.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/user_hover_card.dart';
@@ -133,14 +134,19 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
             setState(() {
               isLoguedIn = checkUserIsLoguedIn(firebaseService);
             });
-
             if (isLoguedIn && user != null) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => UserProfilePage(userinfo: user),
-                ),
-              );
+              context.push('/profile/${user!.username}');
+              // O si prefieres push que permite retroceder:
+              // context.push('/profile/${user.username}');
             }
+
+            // if (isLoguedIn && user != null) {
+            //   Navigator.of(context).push(
+            //     MaterialPageRoute(
+            //       builder: (_) => UserProfilePage(userinfo: user),
+            //     ),
+            //   );
+            // }
           },
           child: _isLoading
               ? const SizedBox(

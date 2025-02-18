@@ -27,6 +27,7 @@ dependencies:
   icons_plus: ^5.0.0
   avatar_stack: ^3.0.0
   flutter_staggered_animations: ^1.1.1
+  go_router: ^14.8.0
 
  
  

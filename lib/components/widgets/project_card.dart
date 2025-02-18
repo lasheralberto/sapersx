@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
 import 'package:sapers/models/project.dart';
@@ -44,14 +45,17 @@ class ProjectCard extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(8 * scale),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProjectDetailScreen(
-                    project: project,
-                  ),
-                ),
-              );
+              context.go('/project/${project.projectid}', extra: project);
+// O si prefieres go():
+// context.go('/project/${project.id}', extra: project);
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(
+              //     builder: (context) => ProjectDetailScreen(
+              //       project: project,
+              //     ),
+              //   ),
+              // );
             },
             hoverColor: colorScheme.primary.withOpacity(0.05),
             splashColor: colorScheme.primary.withOpacity(0.1),

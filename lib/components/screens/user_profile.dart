@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:sapers/components/widgets/expert_profile_card.dart';
 import 'package:sapers/components/widgets/invitation_item.dart';
@@ -52,7 +53,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               color: TwitterColors.darkGray,
-              onPressed: () => Navigator.pop(context),
+              onPressed: () =>
+                  context.canPop() ? context.pop() : context.go('/home'),
+              //onPressed: () => Navigator.pop(context),
             ),
           ),
           SliverToBoxAdapter(

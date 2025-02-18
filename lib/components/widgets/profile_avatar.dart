@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:random_avatar/random_avatar.dart';
 import 'package:sapers/components/screens/user_profile.dart';
 import 'package:sapers/models/firebase_service.dart';
@@ -63,11 +64,7 @@ class ProfileAvatar extends StatelessWidget {
                               AuthService().isUserLoggedIn(context);
 
                           if (isUserLoggedIn) {
-                            Navigator.push(context, MaterialPageRoute(
-                              builder: (context) {
-                                return UserProfilePage(userinfo: userInfoPopUp);
-                              },
-                            ));
+                            context.go('/profile/${userInfoPopUp!.username}');
                           }
                         }
                       },

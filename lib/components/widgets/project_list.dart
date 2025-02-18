@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
@@ -245,14 +246,17 @@ class _ProjectListViewState extends State<ProjectListView> {
   void _handleProjectTap(Project project, BuildContext context) {
     bool isUserLogued = AuthService().isUserLoggedIn(context);
     if (isUserLogued) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ProjectDetailScreen(
-            project: project,
-          ),
-        ),
-      );
+      context.push('/project/${project.projectid}', extra: project);
+// O si prefieres go():
+// context.go('/project/${project.id}', extra: project);
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => ProjectDetailScreen(
+      //       project: project,
+      //     ),
+      //   ),
+      // );
     }
   }
 }

@@ -12,6 +12,7 @@ import 'package:sapers/models/theme.dart';
 import 'package:sapers/models/user.dart';
 import 'firebase_options.dart';
 import 'package:sapers/models/auth_utils.dart' as zauth;
+import 'package:sapers/models/router.dart';
 
 // Variables globales
 String globalLanguage = 'es';
@@ -74,17 +75,18 @@ class _SAPSocialAppState extends State<SAPSocialApp> {
   Widget build(BuildContext context) {
     return Consumer2<ThemeNotifier, zauth.AuthProvider>(
       builder: (context, themeNotifier, authProvider, child) {
-        return MaterialApp(
+        return MaterialApp.router(
+          routerConfig: router,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.getLightTheme(),
           darkTheme: AppTheme.getDarkTheme(),
           themeMode:
               themeNotifier.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          home: const AuthWrapper(),
-          routes: {
-            '/feed': (context) => Feed(user: authProvider?.user),
-            '/login': (context) => const LoginDialog(),
-          },
+          // home: const AuthWrapper(),
+          // routes: {
+          //   '/feed': (context) => Feed(user: authProvider.user),
+          //   '/login': (context) => const LoginDialog(),
+          // },
         );
       },
     );

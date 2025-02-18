@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
@@ -124,9 +125,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                           background: _buildHeader(context),
                         ),
                         leading: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () => Navigator.pop(context),
-                        ),
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () => context.canPop()
+                                ? context.pop()
+                                : context.push('/home')
+                            // Navigator.pop(context),
+                            ),
                         actions: [
                           if (isOwner)
                             IconButton(
@@ -153,6 +157,14 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 ),
                 if (isMember != false && currentUser != null)
                   _buildMessageInput(),
+                if (isMember == false && currentUser != null)
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Center(
+                      child: Text(
+                          'Necesitas ser miembro del proyecto para escribir'),
+                    ),
+                  )
               ],
             ),
           );
@@ -340,7 +352,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(20.0),
       color: Colors.white,
       child: Row(
         children: [
@@ -350,7 +362,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               decoration: InputDecoration(
                 hintText: 'Escribe un mensaje...',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius:
+                      BorderRadius.circular(AppStyles.borderRadiusValue),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20),
               ),

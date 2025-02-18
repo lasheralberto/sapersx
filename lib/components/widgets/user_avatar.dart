@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/user_profile.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
@@ -59,12 +60,10 @@ class UserAvatar extends StatelessWidget {
                 child: GestureDetector(
                   child: Text(user.email),
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UserProfilePage(userinfo: user),
-                      ),
-                    );
+                    context.go('/profile/${user.username}');
+
+                  
+                  
                   },
                 ),
               ),
