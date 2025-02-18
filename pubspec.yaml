@@ -28,6 +28,7 @@ dependencies:
   avatar_stack: ^3.0.0
   flutter_staggered_animations: ^1.1.1
   go_router: ^14.8.0
+  url_strategy: ^0.3.0
 
  
  

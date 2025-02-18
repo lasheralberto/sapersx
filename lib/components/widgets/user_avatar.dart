@@ -60,10 +60,7 @@ class UserAvatar extends StatelessWidget {
                 child: GestureDetector(
                   child: Text(user.email),
                   onTap: () {
-                    context.go('/profile/${user.username}');
-
-                  
-                  
+                    context.push('/profile/${user.username}');
                   },
                 ),
               ),

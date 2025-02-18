@@ -46,16 +46,7 @@ class ProjectCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(8 * scale),
             onTap: () {
               context.go('/project/${project.projectid}', extra: project);
-// O si prefieres go():
-// context.go('/project/${project.id}', extra: project);
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => ProjectDetailScreen(
-              //       project: project,
-              //     ),
-              //   ),
-              // );
+ 
             },
             hoverColor: colorScheme.primary.withOpacity(0.05),
             splashColor: colorScheme.primary.withOpacity(0.1),

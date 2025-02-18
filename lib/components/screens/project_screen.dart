@@ -159,7 +159,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                   _buildMessageInput(),
                 if (isMember == false && currentUser != null)
                   const Padding(
-                    padding: EdgeInsets.all(8.0),
+                    padding: EdgeInsets.all(50.0),
                     child: Center(
                       child: Text(
                           'Necesitas ser miembro del proyecto para escribir'),
@@ -353,7 +353,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   Widget _buildMessageInput() {
     return Container(
       padding: const EdgeInsets.all(20.0),
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       child: Row(
         children: [
           Expanded(
@@ -371,9 +371,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: Icon(Icons.send,
-                color:
-                    AppStyles().getProjectCardColor(widget.project.projectid)),
+            icon: Icon(Icons.send, color: Theme.of(context).primaryColor),
             onPressed: _sendMessage,
           ),
         ],

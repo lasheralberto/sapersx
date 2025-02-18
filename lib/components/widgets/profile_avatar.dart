@@ -64,7 +64,7 @@ class ProfileAvatar extends StatelessWidget {
                               AuthService().isUserLoggedIn(context);
 
                           if (isUserLoggedIn) {
-                            context.go('/profile/${userInfoPopUp!.username}');
+                            context.push('/profile/${userInfoPopUp!.username}');
                           }
                         }
                       },

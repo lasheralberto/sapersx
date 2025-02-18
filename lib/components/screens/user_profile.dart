@@ -51,12 +51,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
             elevation: 0,
             pinned: true,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              color: TwitterColors.darkGray,
-              onPressed: () =>
-                  context.canPop() ? context.pop() : context.go('/home'),
-              //onPressed: () => Navigator.pop(context),
-            ),
+                icon: const Icon(Icons.arrow_back),
+                color: TwitterColors.darkGray,
+                onPressed: () => context.pop()
+                // context.canPop() ? context.pop() : context.go('/home'),
+                ),
           ),
           SliverToBoxAdapter(
             child: Padding(

@@ -101,7 +101,7 @@ class FirebaseService {
     required String senderPhoto,
   }) async {
     // Verificar membresía
- 
+
     await FirebaseFirestore.instance
         .collection('projects')
         .doc(projectId)

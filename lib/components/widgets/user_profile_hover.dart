@@ -1,22 +1,30 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sapers/components/screens/user_profile.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/user_hover_card.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/user.dart';
-import 'package:sapers/components/widgets/profile_header.dart';
+
+// 1. Caché global para todos los usuarios
+class UserCacheManager {
+  static final Map<String, UserInfoPopUp> _userCache = {};
+
+  static UserInfoPopUp? getCachedUser(String username) => _userCache[username];
+
+  static void cacheUser(String username, UserInfoPopUp user) {
+    _userCache[username] = user;
+  }
+}
 
 class UserProfileCardHover extends StatefulWidget {
-  final dynamic post;
+  final String authorUsername;
   final VoidCallback onProfileOpen;
-  bool isExpert;
+  final bool isExpert;
 
-  UserProfileCardHover({
+  const UserProfileCardHover({
     super.key,
-    required this.post,
+    required this.authorUsername,
     required this.isExpert,
     required this.onProfileOpen,
   });
@@ -29,30 +37,24 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
   bool _isHovering = false;
-  UserInfoPopUp? user;
-  FirebaseService firebaseService = FirebaseService();
-  bool isLoguedIn = false;
-  bool _isLoading = true; // Nuevo flag para control de carga
+  bool _isLoggedIn = false;
 
-  Future<void> _initializeUserProfile() async {
-    setState(() => _isLoading = true);
+  // 2. Acceso al usuario en caché
+  UserInfoPopUp? get _cachedUser =>
+      UserCacheManager.getCachedUser(widget.authorUsername);
+
+  // 3. Carga optimizada del perfil
+  Future<void> _loadUserProfile() async {
+    if (_cachedUser != null) return;
 
     try {
       final userData =
-          await FirebaseService().getUserInfoByUsername(widget.post.author);
-
+          await FirebaseService().getUserInfoByUsername(widget.authorUsername);
       if (mounted) {
-        setState(() {
-          user = userData;
-          _isLoading = false;
-        });
+        UserCacheManager.cacheUser(widget.authorUsername, userData!);
+        setState(() {});
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
       debugPrint('Error loading user profile: $e');
     }
   }
@@ -60,15 +62,14 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
   @override
   void initState() {
     super.initState();
-    _initializeUserProfile();
+    _loadUserProfile();
   }
 
   @override
   void didUpdateWidget(UserProfileCardHover oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Actualizar el perfil si cambia el autor del post
-    if (oldWidget.post.author != widget.post.author) {
-      _initializeUserProfile();
+    if (oldWidget.authorUsername != widget.authorUsername) {
+      _loadUserProfile();
     }
   }
 
@@ -83,35 +84,28 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
     _overlayEntry = null;
   }
 
-  bool checkUserIsLoguedIn(FirebaseService firebaseServiceInstance) {
-    return AuthService().isUserLoggedIn(context);
-  }
-
+  // 4. Mostrar hover card solo si hay datos
   void _showHoverCard() {
-    if (_isLoading || user == null) {
-      return; // No mostrar si está cargando o no hay usuario
-    }
+    if (_cachedUser == null) return;
 
     _removeOverlay();
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        width: 300,
-        child: CompositedTransformFollower(
-          link: _layerLink,
-          offset: const Offset(0, 60),
-          child: Material(
-            elevation: 8,
-            borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-            child: UserHoverCard(profile: user),
-          ),
-        ),
-      ),
-    );
+        builder: (context) => Positioned(
+              width: 300,
+              child: CompositedTransformFollower(
+                link: _layerLink,
+                offset: const Offset(0, 60),
+                child: Material(
+                  elevation: 8,
+                  borderRadius:
+                      BorderRadius.circular(AppStyles.borderRadiusValue),
+                  child: UserHoverCard(profile: _cachedUser!),
+                ),
+              ),
+            ));
 
-    if (mounted && context.mounted) {
-      Overlay.of(context).insert(_overlayEntry!);
-    }
+    if (mounted) Overlay.of(context).insert(_overlayEntry!);
   }
 
   @override
@@ -119,49 +113,33 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
     return CompositedTransformTarget(
       link: _layerLink,
       child: MouseRegion(
-        onEnter: (_) {
-          if (!_isLoading) {
-            setState(() => _isHovering = true);
-            _showHoverCard();
-          }
-        },
-        onExit: (_) {
-          setState(() => _isHovering = false);
-          _removeOverlay();
-        },
+        onEnter: (_) => _showHoverCard(),
+        onExit: (_) => _removeOverlay(),
         child: GestureDetector(
           onTap: () {
-            setState(() {
-              isLoguedIn = checkUserIsLoguedIn(firebaseService);
-            });
-            if (isLoguedIn && user != null) {
-              context.push('/profile/${user!.username}');
-              // O si prefieres push que permite retroceder:
-              // context.push('/profile/${user.username}');
+            _isLoggedIn = AuthService().isUserLoggedIn(context);
+            if (_isLoggedIn && _cachedUser != null) {
+              context.push('/profile/${_cachedUser!.username}');
             }
-
-            // if (isLoguedIn && user != null) {
-            //   Navigator.of(context).push(
-            //     MaterialPageRoute(
-            //       builder: (_) => UserProfilePage(userinfo: user),
-            //     ),
-            //   );
-            // }
           },
-          child: _isLoading
-              ? const SizedBox(
-                  width: TwitterDimensions.avatarSizeSmall,
-                  height: TwitterDimensions.avatarSizeSmall,
-                  child: CircularProgressIndicator(),
-                )
-              : ProfileAvatar(
-                  userInfoPopUp: user,
-                  showBorder: user?.isExpert as bool,
-                  seed: user!.email.toString(),
-                  size: AppStyles.avatarSize - 5,
-                ),
+          child: _cachedUser == null
+              ? _buildLoadingIndicator()
+              : _buildProfileAvatar(),
         ),
       ),
     );
   }
+
+  Widget _buildLoadingIndicator() => const SizedBox(
+        width: TwitterDimensions.avatarSizeSmall,
+        height: TwitterDimensions.avatarSizeSmall,
+        child: CircularProgressIndicator(),
+      );
+
+  Widget _buildProfileAvatar() => ProfileAvatar(
+        userInfoPopUp: _cachedUser,
+        showBorder: _cachedUser!.isExpert as bool,
+        seed: _cachedUser!.email,
+        size: AppStyles.avatarSize - 5,
+      );
 }

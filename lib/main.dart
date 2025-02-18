@@ -13,12 +13,14 @@ import 'package:sapers/models/user.dart';
 import 'firebase_options.dart';
 import 'package:sapers/models/auth_utils.dart' as zauth;
 import 'package:sapers/models/router.dart';
+import 'package:url_strategy/url_strategy.dart';
 
 // Variables globales
 String globalLanguage = 'es';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  setPathUrlStrategy(); // Configura el modo path-based routing
 
   // Inicializar Firebase
   if (kIsWeb) {
@@ -82,11 +84,7 @@ class _SAPSocialAppState extends State<SAPSocialApp> {
           darkTheme: AppTheme.getDarkTheme(),
           themeMode:
               themeNotifier.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          // home: const AuthWrapper(),
-          // routes: {
-          //   '/feed': (context) => Feed(user: authProvider.user),
-          //   '/login': (context) => const LoginDialog(),
-          // },
+ 
         );
       },
     );

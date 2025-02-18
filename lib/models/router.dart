@@ -17,7 +17,6 @@ final router = GoRouter(
       path: '/home',
       builder: (context, state) => const AuthWrapper(),
     ),
-    // En tu configuración de rutas
     GoRoute(
       name: 'project-detail',
       path: '/project/:projectId',
@@ -27,31 +26,34 @@ final router = GoRouter(
       },
     ),
     GoRoute(
-        name: 'profile',
-        path: '/profile/:username',
-        builder: (context, state) {
-          final username = state.pathParameters['username'];
-          return FutureBuilder<UserInfoPopUp?>(
-              future: FirebaseService().getUserInfoByUsername(username ?? ''),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+      name: 'profile',
+      path: '/profile/:username', // Cambiado a user=:username
+      builder: (context, state) {
+        final username =
+            state.pathParameters['username']; // Obtener el parámetro
+        return FutureBuilder<UserInfoPopUp?>(
+          future: FirebaseService().getUserInfoByUsername(username ?? ''),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
 
-                if (!snapshot.hasData) {
-                  return const Center(child: Text('Usuario no encontrado'));
-                }
+            if (!snapshot.hasData) {
+              return const Center(child: Text('Usuario no encontrado'));
+            }
 
-                final userInfo = snapshot.data;
-                if (userInfo == null) {
-                  return const Center(child: Text('Usuario no encontrado'));
-                }
-                return UserProfilePage(userinfo: userInfo);
-              });
-        })
+            final userInfo = snapshot.data;
+            if (userInfo == null) {
+              return const Center(child: Text('Usuario no encontrado'));
+            }
+            return UserProfilePage(userinfo: userInfo);
+          },
+        );
+      },
+    ),
   ],
 );

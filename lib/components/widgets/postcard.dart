@@ -61,8 +61,7 @@ class _PostCardState extends State<PostCard> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildPostHeader(
-                  constraints.maxWidth, widget.post.id, widget.post.isExpert),
+              _buildPostHeader(constraints.maxWidth, widget.post.id),
               if (isExpanded) // Muestra replies solo cuando está expandido
                 ReplySection(
                   post: widget.post,
@@ -84,7 +83,7 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _buildPostHeader(double maxWidth, String postId, bool isExpert) {
+  Widget _buildPostHeader(double maxWidth, String postId) {
     return InkWell(
       onTap: () {
         setState(() => isExpanded = !isExpanded);
@@ -95,7 +94,7 @@ class _PostCardState extends State<PostCard> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildAuthorAvatar(isExpert),
+            _buildAuthorAvatar(),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -136,10 +135,10 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _buildAuthorAvatar(isExpert) {
+  Widget _buildAuthorAvatar() {
     return UserProfileCardHover(
-      isExpert: isExpert,
-      post: widget.post,
+      isExpert: widget.post.isExpert,
+      authorUsername: widget.post.author,
       onProfileOpen: () {
         // Opcional: Añade aquí lógica adicional cuando se abre el perfil
       },
