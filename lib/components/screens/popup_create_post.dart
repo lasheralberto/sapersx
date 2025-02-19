@@ -18,10 +18,12 @@ class CreatePostDialog extends StatefulWidget {
 class _CreatePostDialogState extends State<CreatePostDialog> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _tagsController = TextEditingController();
   String _selectedModule = 'FI';
   final bool _isQuestion = false;
   AppStyles styles = AppStyles();
   List<PlatformFile> selectedFiles = [];
+  List<String> _tags = [];
   String postId = '';
   String replyId = '';
   late SAPPost newPost;
@@ -33,6 +35,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _tagsController.dispose();
     super.dispose();
   }
 
@@ -64,7 +67,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         child: InkWell(
           borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-          onTap: () {}, // Opcional: manejar tap en el archivo
+          onTap: () {},
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
@@ -103,6 +106,44 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
     );
   }
 
+  Widget _buildTagChips() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: _tags.map((tag) => _buildTagChip(tag)).toList(),
+    );
+  }
+
+  Widget _buildTagChip(String tag) {
+    return Chip(
+      label: Text(tag),
+      deleteIcon: const Icon(Icons.close, size: 16),
+      onDeleted: () => _removeTag(tag),
+      backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+      labelStyle: TextStyle(
+        color: Theme.of(context).colorScheme.onSecondaryContainer,
+      ),
+    );
+  }
+
+  void _removeTag(String tag) {
+    setState(() {
+      _tags.remove(tag);
+    });
+  }
+
+  void _handleTagsInput(String value) {
+    if (value.contains(' ')) {
+      final newTag = value.trim().replaceAll(' ', '');
+      if (newTag.isNotEmpty && !_tags.contains(newTag)) {
+        setState(() {
+          _tags.add(newTag);
+          _tagsController.clear();
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double dialogWidth = AppStyles().getMaxWidthDialog(context);
@@ -123,7 +164,6 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Flexible(
-                    // Añadido Flexible
                     child: Text(
                         Texts.translate('crearNuevoPost', globalLanguage),
                         style: AppStyles().getTextStyle(context,
@@ -154,13 +194,22 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 maxLines: (mediaQuery.height * 0.4 / 24).round(),
               ),
               const SizedBox(height: 16),
-              // Modificado el dropdown para ser responsivo
+              TextField(
+                controller: _tagsController,
+                decoration: styles.getInputDecoration(
+                  '${Texts.translate('tags', globalLanguage)} (${Texts.translate('separarConEspacios', globalLanguage)})',
+                  null,
+                  context,
+                ),
+                onChanged: _handleTagsInput,
+              ),
+              const SizedBox(height: 8),
+              _buildTagChips(),
+              const SizedBox(height: 16),
               ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: dialogWidth -
-                      32, // Ancho máximo para evitar que sea demasiado grande
-                  minWidth:
-                      10, // Ancho mínimo para evitar que sea demasiado pequeño
+                  maxWidth: dialogWidth - 32,
+                  minWidth: 10,
                 ),
                 child: DropdownButtonFormField<String>(
                   value: _selectedModule,
@@ -184,28 +233,23 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Botones envueltos en Wrap para que se ajusten automáticamente
               Wrap(
                 alignment: WrapAlignment.end,
-                spacing: 8, // Espacio horizontal entre botones
-                runSpacing:
-                    8, // Espacio vertical cuando los botones saltan de línea
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.attach_file),
                     onPressed: () async {
-                      var files =
-                          await UtilsSapers().pickFiles(selectedFiles, context);
+                      var files = await UtilsSapers().pickFiles(context);
                       setState(() {
-                        selectedFiles = files;
+                        selectedFiles = files!;
                       });
                     },
                     tooltip: Texts.translate('addAttachment', globalLanguage),
                   ),
                   _buildAttachmentUploadedReply(),
-                  const SizedBox(
-                    width: 5,
-                  ),
+                  const SizedBox(width: 5),
                   Align(
                     alignment: Alignment.bottomRight,
                     child: FilledButton(
@@ -220,7 +264,6 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                                 .toString());
 
                         setState(() {
-                          //postId = DateTime.now().toString();
                           postId = UtilsSapers().generateSimpleUID();
                           replyId = UtilsSapers().getReplyId(context);
                         });
@@ -243,7 +286,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                                 timestamp: DateTime.now(),
                                 module: _selectedModule,
                                 isQuestion: _isQuestion,
-                                tags: [],
+                                tags: _tags,
                                 isExpert: user.isExpert as bool,
                                 attachments: filesNewPost,
                                 replyCount: 0);
@@ -259,7 +302,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                                 module: _selectedModule,
                                 isExpert: user.isExpert as bool,
                                 isQuestion: _isQuestion,
-                                tags: [],
+                                tags: _tags,
                                 replyCount: 0);
                           });
                         }

@@ -1067,23 +1067,19 @@ class UtilsSapers {
         .toList();
   }
 
-  Future<dynamic> pickFiles(selectedFiles, context) async {
+  Future<List<PlatformFile>?> pickFiles(BuildContext context) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx', '.jpg', '.jpeg', '.png'],
         allowMultiple: true,
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'png', 'pdf', 'txt', 'doc', 'docx'],
       );
-
-      if (result != null) {
-        selectedFiles.addAll(result.files);
-        return selectedFiles;
-      }
+      return result?.files;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(Texts.translate('filePickError', globalLanguage))),
+        SnackBar(content: Text('Error al seleccionar archivos: $e')),
       );
+      return null;
     }
   }
 

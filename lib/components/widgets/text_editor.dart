@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/abap_formatter.dart';
+import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 
 class TextEditorWithCode extends StatefulWidget {
   final TextEditingController textController;
+  final String globalLanguage;
+  final Function(List<PlatformFile>)? onFilesSelected;
 
-  const TextEditorWithCode({super.key, required this.textController});
+  const TextEditorWithCode({
+    super.key,
+    required this.textController,
+    required this.globalLanguage,
+    this.onFilesSelected,
+  });
 
   @override
   _TextEditorWithCodeState createState() => _TextEditorWithCodeState();
@@ -16,250 +26,226 @@ class TextEditorWithCode extends StatefulWidget {
 
 class _TextEditorWithCodeState extends State<TextEditorWithCode> {
   bool _isCodeMode = false;
-  final bool _isDarkMode = false;
-  final TextEditingController _formattedController = TextEditingController();
-  final double _minHeight = 100.0; // Altura mínima inicial
-  final double _maxHeight = 500.0; // Altura máxima permitida
+  late final TextEditingController _formattedController;
+  final double _minHeight = 100.0;
+  final double _maxHeight = 500.0;
+  final FocusNode _focusNode = FocusNode();
+  final ABAPCodeFormatter _abapFormatter = ABAPCodeFormatter();
 
   @override
   void initState() {
     super.initState();
-    _formattedController.text = widget.textController.text;
-
-    // Añadir listeners para detectar cambios en el texto
-    widget.textController.addListener(_onTextChange);
-    _formattedController.addListener(_onTextChange);
+    _formattedController =
+        TextEditingController(text: widget.textController.text);
+    widget.textController.addListener(_syncControllers);
+    _formattedController.addListener(_syncControllers);
   }
 
-  void _onTextChange() {
-    setState(() {
-      // Forzar rebuild para recalcular altura
-    });
+  void _syncControllers() {
+    if (_isCodeMode) {
+      widget.textController.text = _formattedController.text;
+    } else {
+      _formattedController.text = widget.textController.text;
+    }
+  }
+
+  Future<void> _handleFileSelection() async {
+    final files = await UtilsSapers().pickFiles(context);
+    if (files != null && files.isNotEmpty) {
+      widget.onFilesSelected?.call(files);
+    }
   }
 
   void _toggleCodeFormat() {
-    final TextEditingController currentController =
-        _isCodeMode ? _formattedController : widget.textController;
+    final selection = _getCurrentSelection();
+    final isTextSelected = selection.baseOffset != selection.extentOffset;
 
-    // Obtener el texto seleccionado
-    String selectedText =
-        currentController.selection.textInside(currentController.text);
-
-    if (selectedText.isNotEmpty) {
-      // Si hay texto seleccionado, solo formatear esa parte
-      String newText = _isCodeMode
-          ? _removeCodeBlock(selectedText)
-          : _addCodeBlock(selectedText);
-
-      // Reemplazar el texto seleccionado
-      final int start = currentController.selection.start;
-      final int end = currentController.selection.end;
-
-      String beforeSelection = currentController.text.substring(0, start);
-      String afterSelection = currentController.text.substring(end);
-
-      currentController.text = beforeSelection + newText + afterSelection;
-
-      // Mantener la selección
-      currentController.selection = TextSelection(
-        baseOffset: start,
-        extentOffset: start + newText.length,
-      );
-    } else {
-      // Si no hay selección, formatear todo el texto
-      setState(() {
+    setState(() {
+      if (isTextSelected) {
+        _handleSelectedTextFormat(selection);
+      } else {
         _isCodeMode = !_isCodeMode;
-        if (_isCodeMode) {
-          final formattedText = _formatAbapCode(widget.textController.text);
-          _formattedController.text = _addCodeBlock(formattedText);
-        } else {
-          widget.textController.text = _formattedController.text;
-        }
-      });
-    }
-  }
-
-  String _addCodeBlock(String text) {
-    if (!text.startsWith('```') && !text.endsWith('```')) {
-      return '```abap\n$text\n```';
-    }
-    return text;
-  }
-
-  String _removeCodeBlock(String text) {
-    if (text.startsWith('```') && text.endsWith('```')) {
-      return text.substring(3, text.length - 3).trim();
-    }
-    return text;
-  }
-
-  String _formatAbapCode(String code) {
-    if (code.trim().isEmpty) return '';
-
-    List<String> lines = code.split('\n');
-    int indentLevel = 0;
-    List<String> formattedLines = [];
-
-    for (String line in lines) {
-      String trimmedLine = line.trim().toUpperCase();
-
-      if (trimmedLine.startsWith('END') ||
-          trimmedLine.startsWith('ENDIF') ||
-          trimmedLine.startsWith('ENDLOOP') ||
-          trimmedLine.startsWith('ENDWHILE') ||
-          trimmedLine.startsWith('ENDCASE') ||
-          trimmedLine.startsWith('ENDTRY')) {
-        indentLevel = math.max(0, indentLevel - 1);
+        _fullTextFormatting();
       }
+    });
+  }
 
-      String formattedLine = '  ' * indentLevel + line.trim();
-      formattedLines.add(formattedLine);
+  TextSelection _getCurrentSelection() {
+    return _isCodeMode
+        ? _formattedController.selection
+        : widget.textController.selection;
+  }
 
-      if (trimmedLine.startsWith('IF ') ||
-          trimmedLine.startsWith('LOOP ') ||
-          trimmedLine.startsWith('DO ') ||
-          trimmedLine.startsWith('WHILE ') ||
-          trimmedLine.startsWith('CASE ') ||
-          trimmedLine.startsWith('CATCH ') ||
-          trimmedLine.startsWith('TRY')) {
-        indentLevel++;
-      }
+  void _handleSelectedTextFormat(TextSelection selection) {
+    final controller =
+        _isCodeMode ? _formattedController : widget.textController;
+    final text = controller.text;
+    final selectedText = text.substring(selection.start, selection.end);
+
+    final newText = _isCodeMode
+        ? _abapFormatter.unwrapCodeBlock(selectedText)
+        : _abapFormatter.wrapCodeBlock(_abapFormatter.formatCode(selectedText));
+
+    final newValue = text.replaceRange(selection.start, selection.end, newText);
+    controller.text = newValue;
+    controller.selection = TextSelection.collapsed(
+      offset: selection.start + newText.length,
+    );
+  }
+
+  void _fullTextFormatting() {
+    if (_isCodeMode) {
+      final rawText = widget.textController.text;
+      final formattedAbap = _abapFormatter.formatCode(rawText);
+      _formattedController.text = _abapFormatter.wrapCodeBlock(formattedAbap);
+    } else {
+      final wrappedCode = _formattedController.text;
+      widget.textController.text = _abapFormatter.unwrapCodeBlock(wrappedCode);
     }
-
-    return formattedLines.join('\n');
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          width: constraints.maxWidth,
-          constraints: BoxConstraints(
-            minWidth: constraints.maxWidth,
-            maxWidth: constraints.maxWidth,
-            minHeight: _minHeight,
-            maxHeight: _maxHeight,
-          ),
-          child: IntrinsicHeight(
-            child: Column(
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.dividerColor.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: _minHeight,
+              maxHeight: _maxHeight,
+            ),
+            child: Stack(
               children: [
-                Expanded(
-                  child: Card(
-                    elevation: AppStyles().getCardElevation(context),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppStyles().getTextFieldColor(context),
-                        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-                      ),
-                      child: Stack(
-                        children: [
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: _minHeight,
-                              maxHeight: _maxHeight,
-                            ),
-                            child: SingleChildScrollView(
-                              child: TextField(
-                                controller: _isCodeMode
-                                    ? _formattedController
-                                    : widget.textController,
-                                maxLines: null,
-                                keyboardType: TextInputType.multiline,
-                                style: TextStyle(
-                                  fontFamily: _isCodeMode ? 'monospace' : null,
-                                  fontSize: 12,
-                                  color:
-                                      _isDarkMode ? Colors.white : Colors.black,
-                                ),
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderSide: BorderSide.none,
-                                    borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-                                  ),
-                                  hintText: Texts.translate(
-                                      'escribeTuRespuesta', globalLanguage),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 18,
-                                    vertical: 8,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (_isCodeMode)
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue,
-                                  borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-                                ),
-                                child: const Text(
-                                  'ABAP',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+                TextField(
+                  controller: _isCodeMode
+                      ? _formattedController
+                      : widget.textController,
+                  focusNode: _focusNode,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  style: TextStyle(
+                    fontFamily: _isCodeMode ? 'RobotoMono' : null,
+                    fontSize: 14,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                    height: 1.4,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: Texts.translate(
+                        'escribeTuRespuesta', widget.globalLanguage),
+                    contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 50),
+                    hintStyle: TextStyle(
+                      color: theme.hintColor,
+                      fontSize: 14,
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.format_indent_increase),
-                        onPressed: _toggleCodeFormat,
-                        tooltip: Texts.translate(
-                            'formatearCodigoABAP', globalLanguage),
-                        color: _isCodeMode ? Colors.blue : null,
+                if (_isCodeMode)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.primaryColor,
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.copy),
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(
-                            text: _isCodeMode
-                                ? _formattedController.text
-                                : widget.textController.text,
-                          ));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(Texts.translate(
-                                  'copiarAlPortapapeles', globalLanguage)),
-                            ),
-                          );
-                        },
-                        tooltip: Texts.translate(
-                            'copiarAlPortapapeles', globalLanguage),
+                      child: Text(
+                        'ABAP',
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
-        );
-      },
+          _buildToolbar(theme),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolbar(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: theme.dividerColor))),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(
+              Icons.attach_file,
+              color: theme.primaryColor,
+              size: 22,
+            ),
+            onPressed: _handleFileSelection,
+            tooltip: Texts.translate('addAttachment', widget.globalLanguage),
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.code_rounded,
+              color: _isCodeMode ? theme.primaryColor : theme.iconTheme.color,
+              size: 22,
+            ),
+            onPressed: _toggleCodeFormat,
+            tooltip:
+                Texts.translate('formatearCodigoABAP', widget.globalLanguage),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: Icon(
+              Icons.copy_rounded,
+              color: theme.iconTheme.color,
+              size: 20,
+            ),
+            onPressed: _copyToClipboard,
+            tooltip:
+                Texts.translate('copiarAlPortapapeles', widget.globalLanguage),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _copyToClipboard() {
+    final text =
+        _isCodeMode ? _formattedController.text : widget.textController.text;
+
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            Texts.translate('copiarAlPortapapeles', widget.globalLanguage)),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
     );
   }
 
   @override
   void dispose() {
-    widget.textController.removeListener(_onTextChange);
-    _formattedController.removeListener(_onTextChange);
+    widget.textController.removeListener(_syncControllers);
+    _formattedController.removeListener(_syncControllers);
     _formattedController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 }

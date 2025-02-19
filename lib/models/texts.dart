@@ -63,6 +63,7 @@ class Texts {
       'tagsSeparadosPorComas': 'Tags',
       'crear': 'Crear',
       'projectsTab': 'Proyectos',
+      'separarConEspacios': 'Separar con espacios',
     },
     'en': {
       'addAttachment': 'Add attachment',
@@ -125,6 +126,7 @@ class Texts {
       'tagsSeparadosPorComas': 'Tags',
       'crear': 'Create',
       'projectsTab': 'Projects',
+      'separarConEspacios': 'Separate with spaces',
     },
   };
 

@@ -232,8 +232,8 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
                       size: 18,
                       color: Colors.black87,
                     )
-                  : SizedBox.shrink(),
-              SizedBox(width: 4),
+                  : const SizedBox.shrink(),
+              const SizedBox(width: 4),
             ],
           ),
         ),

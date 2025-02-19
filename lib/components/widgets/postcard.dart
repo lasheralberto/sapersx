@@ -101,7 +101,6 @@ class _PostCardState extends State<PostCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeaderPostInfo(),
-                  const SizedBox(height: 2),
                   const SizedBox(height: 8),
                   _buildPostContent(),
                   const SizedBox(height: 12),
@@ -200,12 +199,57 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
+  Widget _buildTag(String tag) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8, bottom: 8),
+      child: Chip(
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              tag,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+            ),
+          ],
+        ),
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
+            width: 1,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+    );
+  }
+
   Widget _buildPostContent() {
-    return Text(
-      widget.post.content,
-      style: AppStyles().getTextStyle(context),
-      maxLines: isExpanded ? null : 4,
-      overflow: isExpanded ? TextOverflow.visible : TextOverflow.fade,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.post.content,
+          style: AppStyles().getTextStyle(context),
+          maxLines: isExpanded ? null : 4,
+          overflow: isExpanded ? TextOverflow.visible : TextOverflow.fade,
+        ),
+        if (widget.post.tags.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: widget.post.tags.map((tag) => _buildTag(tag)).toList(),
+            ),
+          )
+      ],
     );
   }
 
@@ -268,80 +312,59 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Container(
-                  constraints: const BoxConstraints(maxHeight: 120),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: theme.dividerColor.withOpacity(0.2),
-                    ),
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16,
+          right: 16,
+          top: 16,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                maxLines: 10,
+                textCapitalization: TextCapitalization.sentences,
+                style: theme.textTheme.bodyLarge,
+                decoration: InputDecoration(
+                  hintText: widget.hintText ?? 'Escribe tu respuesta...',
+                  hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.hintColor,
                   ),
-                  child: TextField(
-                    controller: _controller,
-                    maxLines: null,
-                    textCapitalization: TextCapitalization.sentences,
-                    style: theme.textTheme.bodyLarge,
-                    decoration: InputDecoration(
-                      hintText: widget.hintText ?? 'Escribe tu respuesta...',
-                      hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.hintColor,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      border: InputBorder.none,
-                      isDense: true,
-                    ),
-                    onChanged: (text) {
-                      setState(() {
-                        _isComposing = text.trim().isNotEmpty;
-                      });
-                    },
-                    onSubmitted: _handleSubmitted,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+                onChanged: (text) {
+                  setState(() {
+                    _isComposing = text.trim().isNotEmpty;
+                  });
+                },
+                onSubmitted: _handleSubmitted,
+              ),
+            ),
+            const SizedBox(width: 8),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              child: IconButton(
+                onPressed: _isComposing
+                    ? () => _handleSubmitted(_controller.text)
+                    : null,
+                icon: Icon(
+                  Icons.send_rounded,
+                  color: _isComposing
+                      ? theme.colorScheme.primary
+                      : theme.disabledColor,
                 ),
               ),
-              const SizedBox(width: 8),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                child: IconButton(
-                  onPressed: _isComposing
-                      ? () => _handleSubmitted(_controller.text)
-                      : null,
-                  icon: Icon(
-                    Icons.send_rounded,
-                    color: _isComposing
-                        ? theme.colorScheme.primary
-                        : theme.disabledColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

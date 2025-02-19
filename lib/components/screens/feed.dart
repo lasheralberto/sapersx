@@ -46,6 +46,16 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   bool _isRefreshing = false;
   bool isPostExpanded = false;
   UserInfoPopUp? userinfo;
+  final List<String> hotTopics = [
+    '#FlutterDev',
+    '#AI',
+    '#Web3',
+    '#CyberSecurity',
+    '#CodingLife',
+    '#TechNews',
+    '#Programming',
+    '#MobileDev'
+  ];
 
   @override
   void initState() {
@@ -122,6 +132,102 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         _updateFutures();
       }
     }
+  }
+
+  Widget _buildHotTopicsPanel() {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.1,
+      minChildSize: 0.1,
+      maxChildSize: 0.6,
+      snap: true,
+      snapSizes: const [0.1, 0.3, 0.6],
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppStyles.borderRadiusValue)),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).shadowColor.withOpacity(0.1),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _buildPanelHandle(),
+              _buildPanelHeader(),
+              _buildTopicsGrid(scrollController),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPanelHandle() {
+    return Container(
+      height: 5,
+      width: 40,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).dividerColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+    );
+  }
+
+  Widget _buildPanelHeader() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Text(
+        Texts.translate('hotTopics', globalLanguage),
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+      ),
+    );
+  }
+
+  Widget _buildTopicsGrid(ScrollController scrollController) {
+    return Expanded(
+      child: GridView.builder(
+        controller: scrollController,
+        padding: const EdgeInsets.all(8),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 200,
+          childAspectRatio: 3,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+        ),
+        itemCount: hotTopics.length,
+        itemBuilder: (context, index) => _buildTopicBubble(hotTopics[index]),
+      ),
+    );
+  }
+
+  Widget _buildTopicBubble(String topic) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary,
+          width: 1,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        topic,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.w500,
+          fontSize: AppStyles.fontSize * 0.9,
+        ),
+      ),
+    );
   }
 
   Widget _buildPostsList(Future<List<SAPPost>> future, bool isMobile) {
@@ -212,6 +318,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     final isMobile = screenWidth < 600;
 
     return Scaffold(
+      //bottomSheet: _buildHotTopicsPanel(),
       body: NestedScrollView(
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return [

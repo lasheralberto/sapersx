@@ -310,6 +310,9 @@ class TwitterDimensions {
 class AppTheme {
   static ThemeData getLightTheme() {
     return ThemeData(
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppStyles.colorAvatarBorder,
+      ),
       useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: AppStyles.colorAvatarBorder,
@@ -451,7 +454,7 @@ class AppTheme {
       primaryColor: AppStyles.colorAvatarBorder,
       scaffoldBackgroundColor: AppStyles.scaffoldBackgroundColorDark,
 
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: AppStyles.colorAvatarBorder,
         secondary: AppStyles._orangeLight,
         surface: AppStyles._darkGray,

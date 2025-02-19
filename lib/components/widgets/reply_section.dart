@@ -132,11 +132,6 @@ class _ReplySectionState extends State<ReplySection> {
     return Container(
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: _replyCardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _borderColor, width: 1.5),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -190,31 +185,18 @@ class _ReplySectionState extends State<ReplySection> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: _sectionBackground,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildReplyInput(widget.postId, widget.replyId),
-          Divider(
-            height: 30,
-            thickness: 1,
-            color: _borderColor.withOpacity(0.5),
-            indent: 20,
-            endIndent: 20,
-          ),
-          _buildRepliesList(),
-        ],
-      ),
+    return Column(
+      children: [
+        _buildReplyInput(widget.postId, widget.replyId),
+        Divider(
+          height: 30,
+          thickness: 1,
+          color: _borderColor.withOpacity(0.5),
+          indent: 20,
+          endIndent: 20,
+        ),
+        _buildRepliesList(),
+      ],
     );
   }
 
@@ -247,11 +229,15 @@ class _ReplySectionState extends State<ReplySection> {
                 });
               } else {
                 // Muestra un mensaje si no hay imagen en el portapapeles
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content:
-                          Text('No se encontró imagen en el portapapeles')),
-                );
+                await Pasteboard.text.then((value) {
+                  _replyController.text = value.toString();
+                });
+                setState(() {});
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   const SnackBar(
+                //       content:
+                //           Text('No se encontró imagen en el portapapeles')),
+                // );
               }
               return null;
             },
@@ -259,28 +245,21 @@ class _ReplySectionState extends State<ReplySection> {
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: _accentOrange.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextEditorWithCode(
+                  textController: _replyController,
+                  globalLanguage: globalLanguage,
+                  onFilesSelected: (files) {
+                    setState(() => selectedFiles.addAll(files));
+                  },
                 ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: TextEditorWithCode(textController: _replyController),
-                ),
-                _buildAttachmentUploadedReply(),
-                _buildReplyControls(postId, replyId),
-              ],
-            ),
+              ),
+              _buildAttachmentUploadedReply(),
+              _buildReplyControls(postId, replyId),
+            ],
           ),
         ),
       ),
@@ -293,19 +272,6 @@ class _ReplySectionState extends State<ReplySection> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: const Icon(Icons.attach_file, color: _accentOrange),
-            onPressed: () async {
-              await UtilsSapers()
-                  .pickFiles(selectedFiles, context)
-                  .then((value) {
-                if (value != null) {
-                  setState(() => selectedFiles = value);
-                }
-              });
-            },
-            tooltip: Texts.translate('addAttachment', globalLanguage),
-          ),
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
