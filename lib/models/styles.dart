@@ -468,7 +468,7 @@ class AppTheme {
       ),
 
       // Dark theme specific overrides
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppStyles._darkGray,
         elevation: AppStyles.cardElevation,
         shape: RoundedRectangleBorder(
