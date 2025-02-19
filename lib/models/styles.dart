@@ -329,7 +329,7 @@ class AppTheme {
         onBackground: AppStyles.textColor,
         onError: AppStyles._pureWhite,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppStyles.cardBackgroundColor,
         elevation: AppStyles.cardElevation,
         shape: RoundedRectangleBorder(
