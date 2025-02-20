@@ -16,7 +16,7 @@ class StackedAvatars extends StatelessWidget {
     Key? key,
     required this.members,
     this.overlap = 0.25, // 25% overlap by default
-    this.maxDisplayed = 5,
+    this.maxDisplayed = 3,
     this.minAvatarSize = 24,
     this.maxAvatarSize = 40,
     this.showTooltips = true,
