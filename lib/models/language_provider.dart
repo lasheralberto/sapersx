@@ -14,12 +14,11 @@ class LanguageProvider with ChangeNotifier {
     notifyListeners(); // Notifica a los widgets que están escuchando este provider
   }
 
-  String getSystemLanguageWeb(){
-
+  String getSystemLanguageWeb() {
     return window.navigator.language;
   }
 
   String getSystemLanguageMobile() {
-    return PlatformDispatcher.instance.locale.toLanguageTag();
+    return PlatformDispatcher.instance.locale.languageCode;
   }
 }
