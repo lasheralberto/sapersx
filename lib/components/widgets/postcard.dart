@@ -330,7 +330,7 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
                 textCapitalization: TextCapitalization.sentences,
                 style: theme.textTheme.bodyLarge,
                 decoration: InputDecoration(
-                  hintText: widget.hintText ?? 'Escribe tu respuesta...',
+                  hintText: widget.hintText ?? Texts.translate('escribeRespuesta', globalLanguage),
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.hintColor,
                   ),

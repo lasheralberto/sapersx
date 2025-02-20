@@ -64,6 +64,10 @@ class Texts {
       'crear': 'Crear',
       'projectsTab': 'Proyectos',
       'separarConEspacios': 'Separar con espacios',
+      'escribeRespuesta': 'Escribe tu respuesta aquí...',
+      'projectChat': 'Chat del proyecto',
+      'projectDescr': 'Descripción del proyecto',
+      'notMember': 'No eres miembro de este proyecto',
     },
     'en': {
       'addAttachment': 'Add attachment',
@@ -127,6 +131,10 @@ class Texts {
       'crear': 'Create',
       'projectsTab': 'Projects',
       'separarConEspacios': 'Separate with spaces',
+      'escribeRespuesta': 'Write your answer here...',
+      'projectChat': 'Project chat',
+      'projectDescr': 'Project description',
+      'notMember': 'You are not a member of this project',
     },
   };
 

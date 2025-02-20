@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
+import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/project.dart';
 import 'package:sapers/models/styles.dart';
+import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
@@ -158,11 +160,11 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 if (isMember != false && currentUser != null)
                   _buildMessageInput(),
                 if (isMember == false && currentUser != null)
-                  const Padding(
-                    padding: EdgeInsets.all(50.0),
+                    Padding(
+                    padding:const EdgeInsets.all(50.0),
                     child: Center(
                       child: Text(
-                          'Necesitas ser miembro del proyecto para escribir'),
+                          Texts.translate('notMember', globalLanguage),)
                     ),
                   )
               ],
@@ -228,7 +230,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Descripción del Proyecto',
+              Texts.translate('projectDescr', globalLanguage),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 10),
@@ -247,7 +249,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Chat del Proyecto',
+         Texts.translate('projectChat', globalLanguage),
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 15),

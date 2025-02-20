@@ -7,6 +7,7 @@ import 'package:sapers/components/screens/feed.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/models/auth_utils.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/theme.dart';
 import 'package:sapers/models/user.dart';
@@ -21,9 +22,13 @@ String globalLanguage = 'es';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setPathUrlStrategy(); // Configura el modo path-based routing
+  LanguageProvider languageProvider = LanguageProvider();
 
   // Inicializar Firebase
   if (kIsWeb) {
+    globalLanguage = languageProvider.getSystemLanguageWeb();
+    debugPrint('language: $globalLanguage');
+
     await Firebase.initializeApp(
       options: FirebaseOptions(
         apiKey: DefaultFirebaseOptions.web.apiKey,
@@ -34,6 +39,7 @@ void main() async {
       ),
     );
   } else {
+    globalLanguage = languageProvider.getSystemLanguageMobile();
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
@@ -84,7 +90,6 @@ class _SAPSocialAppState extends State<SAPSocialApp> {
           darkTheme: AppTheme.getDarkTheme(),
           themeMode:
               themeNotifier.isDarkMode ? ThemeMode.dark : ThemeMode.light,
- 
         );
       },
     );
