@@ -44,6 +44,8 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
+  
+  globalLanguage = 'es';
 
   runApp(
     MultiProvider(
