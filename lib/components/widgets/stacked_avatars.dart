@@ -47,28 +47,31 @@ class StackedAvatars extends StatelessWidget {
         // Calculate total width needed
         final totalWidth = _calculateTotalWidth(avatarSize, totalAvatars);
 
-        return SizedBox(
-          height: avatarSize,
-          width: totalWidth,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              for (int i = 0; i < totalAvatars; i++)
-                Positioned(
-                  // Key positioning change: multiply by overlap factor
-                  left: i * (avatarSize * (1 - overlap)),
-                  child: _buildAvatar(
-                    context,
-                    index: i,
-                    avatarSize: avatarSize,
-                    member: i < effectiveMembers.length
-                        ? effectiveMembers[i]
-                        : effectiveMembers.last,
-                    isOverflow: hasOverflow && i == totalAvatars - 1,
-                    overflowCount: members.length - maxDisplayed,
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SizedBox(
+            height: avatarSize,
+            width: totalWidth,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                for (int i = 0; i < totalAvatars; i++)
+                  Positioned(
+                    // Key positioning change: multiply by overlap factor
+                    left: i * (avatarSize * (1 - overlap)),
+                    child: _buildAvatar(
+                      context,
+                      index: i,
+                      avatarSize: avatarSize,
+                      member: i < effectiveMembers.length
+                          ? effectiveMembers[i]
+                          : effectiveMembers.last,
+                      isOverflow: hasOverflow && i == totalAvatars - 1,
+                      overflowCount: members.length - maxDisplayed,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       },

@@ -200,31 +200,34 @@ class _PostCardState extends State<PostCard> {
   }
 
   Widget _buildTag(String tag) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8, bottom: 8),
-      child: Chip(
-        label: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              tag,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).cardColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
-            width: 1,
+    return InkWell(
+      onTap: () => print('Tag: $tag'),
+      child: Padding(
+        padding: const EdgeInsets.only(right: 8, bottom: 8),
+        child: Chip(
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                tag,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ],
           ),
+          backgroundColor: Theme.of(context).cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
+              width: 1,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }
@@ -330,7 +333,8 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
                 textCapitalization: TextCapitalization.sentences,
                 style: theme.textTheme.bodyLarge,
                 decoration: InputDecoration(
-                  hintText: widget.hintText ?? Texts.translate('escribeRespuesta', globalLanguage),
+                  hintText: widget.hintText ??
+                      Texts.translate('escribeRespuesta', globalLanguage),
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.hintColor,
                   ),

@@ -42,6 +42,10 @@ class FirebaseService {
   final CollectionReference messagesCollection =
       FirebaseFirestore.instance.collection('messages');
 
+  //projectchat collection
+  final CollectionReference projectChatCollection =
+      FirebaseFirestore.instance.collection('projectChat');
+
   // Constantes para paginación
   static const int postsPerPage = 10;
 
@@ -49,8 +53,7 @@ class FirebaseService {
   final Map<String, UserInfoPopUp> _userCache = {};
 
   Stream<QuerySnapshot> getProjectChatStream(String projectId) {
-    return FirebaseFirestore.instance
-        .collection('projects')
+    return projectChatCollection
         .doc(projectId)
         .collection('messages')
         .orderBy('timestamp', descending: true)
@@ -102,11 +105,7 @@ class FirebaseService {
   }) async {
     // Verificar membresía
 
-    await FirebaseFirestore.instance
-        .collection('projects')
-        .doc(projectId)
-        .collection('messages')
-        .add({
+    await projectChatCollection.doc(projectId).collection('messages').add({
       'text': text,
       'senderId': senderId,
       'senderName': senderName,

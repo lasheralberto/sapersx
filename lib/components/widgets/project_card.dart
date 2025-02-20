@@ -46,7 +46,6 @@ class ProjectCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(8 * scale),
             onTap: () {
               context.go('/project/${project.projectid}', extra: project);
- 
             },
             hoverColor: colorScheme.primary.withOpacity(0.05),
             splashColor: colorScheme.primary.withOpacity(0.1),
@@ -130,28 +129,34 @@ class ProjectCard extends StatelessWidget {
     required BuildContext context,
     required double scale,
   }) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 16 * scale,
-          color: Theme.of(context).colorScheme.outline,
-        ),
-        SizedBox(width: 8 * scale),
-        Expanded(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize:
-                      (Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14) *
-                          scale,
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-                ),
-            overflow: TextOverflow.ellipsis,
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 16 * scale,
+            color: Theme.of(context).colorScheme.outline,
           ),
-        ),
-      ],
+          SizedBox(width: 8 * scale),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize:
+                        (Theme.of(context).textTheme.bodyMedium?.fontSize ??
+                                14) *
+                            scale,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.8),
+                  ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
