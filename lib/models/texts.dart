@@ -68,6 +68,7 @@ class Texts {
       'projectChat': 'Chat del proyecto',
       'projectDescr': 'Descripción del proyecto',
       'notMember': 'No eres miembro de este proyecto',
+      'projectFiles':'Archivos'
     },
     'en': {
       'addAttachment': 'Add attachment',
@@ -135,6 +136,7 @@ class Texts {
       'projectChat': 'Project chat',
       'projectDescr': 'Project description',
       'notMember': 'You are not a member of this project',
+      'projectFiles':'Files'
     },
   };
 

@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -685,6 +686,144 @@ class FirebaseService {
             post.content.toLowerCase().contains(searchTerm.toLowerCase());
       }).toList();
     });
+  }
+
+  Future<List<Map<String, dynamic>>> getAttachments(String projectId) async {
+    var storage = FirebaseStorage.instance;
+    List<Map<String, dynamic>> attachmentsList = [];
+    try {
+      Reference ref = storage.ref().child('projects').child(projectId);
+      ListResult listFiles = await ref.listAll();
+      for (var fileRef in listFiles.items) {
+        final metadata = await fileRef.getMetadata();
+
+        // Obtener URL de descarga
+        final downloadUrl = await fileRef.getDownloadURL();
+
+        // Agregar a la lista con información relevante
+        attachmentsList.add({
+          'name': fileRef.name,
+          'url': downloadUrl,
+          'type': metadata.contentType ?? 'file', // Tipo MIME
+          'extension': metadata.name?.split('.').last ?? 'file' // Extensión
+        });
+      }
+      return attachmentsList;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> pickAndUploadFileProject(
+      String projectId, String username) async {
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      withData: kIsWeb,
+    );
+
+    final List<PlatformFile>? files = result?.files;
+    final List<Map<String, dynamic>> attachments = [];
+
+    if (files != null) {
+      await Future.forEach(files, (PlatformFile platformFile) async {
+        try {
+          final String fileName = platformFile.name;
+          final Uint8List? fileBytes = await _getFileBytes(platformFile);
+
+          if (fileBytes != null && fileBytes.isNotEmpty) {
+            final uploadedFile = await uploadAttachmentProject(
+              projectId: projectId,
+              fileBytes: fileBytes,
+              uploadedBy: username,
+              fileName: fileName,
+            );
+
+            if (uploadedFile != null) {
+              attachments.add(uploadedFile);
+            }
+          }
+        } catch (e) {
+          debugPrint('Error procesando archivo ${platformFile.name}: $e');
+        }
+      });
+    }
+    return attachments;
+  }
+
+  Future<Uint8List?> _getFileBytes(PlatformFile platformFile) async {
+    if (kIsWeb) {
+      return platformFile.bytes;
+    } else {
+      final File file = File(platformFile.path!);
+      return file.readAsBytes();
+    }
+  }
+
+  Future<Map<String, dynamic>?> uploadAttachmentProject({
+    required String projectId,
+    required String uploadedBy,
+    required Uint8List fileBytes,
+    required String fileName,
+  }) async {
+    try {
+      final storage = FirebaseStorage.instance;
+
+      // Crear referencia con la misma estructura
+      final Reference ref =
+          storage.ref().child('projects').child(projectId).child(fileName);
+
+      // Determinar tipo MIME
+      final String fileExtension = fileName.split('.').last.toLowerCase();
+      final String? mimeType = _getMimeType(fileExtension);
+
+      // Configurar metadata
+      final SettableMetadata metadata = SettableMetadata(
+        contentType: mimeType,
+        customMetadata: {
+          'uploadedBy': uploadedBy, // Agregar ID de usuario si es necesario
+          'uploadedAt': DateTime.now().toIso8601String(),
+        },
+      );
+
+      // Subir usando putData para compatibilidad multiplataforma
+      final UploadTask uploadTask = ref.putData(fileBytes, metadata);
+      final TaskSnapshot taskSnapshot = await uploadTask;
+
+      // Obtener URL pública
+      final String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+
+      return {
+        'name': fileName,
+        'url': downloadUrl,
+        'type': mimeType ?? 'file',
+        'extension': fileExtension,
+        'size': taskSnapshot.bytesTransferred,
+      };
+    } catch (e) {
+      debugPrint('Error subiendo archivo $fileName: $e');
+      return null;
+    }
+  }
+
+  String? _getMimeType(String extension) {
+    const mimeTypes = {
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'mp4': 'video/mp4',
+      'mov': 'video/quicktime',
+      'pdf': 'application/pdf',
+      'doc': 'application/msword',
+      'docx':
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'xls': 'application/vnd.ms-excel',
+      'xlsx':
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'txt': 'text/plain',
+      'zip': 'application/zip',
+    };
+    return mimeTypes[extension];
   }
 
   Future<List<Map<String, dynamic>>> addAttachments(String postId,
