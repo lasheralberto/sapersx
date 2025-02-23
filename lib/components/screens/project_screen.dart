@@ -231,7 +231,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                         setState(() {
                           _isUploading = false;
                         });
-                      }
+                      } else {
+                      setState(() {
+										   _isUploading = false;
+                       });
+                        
+                       }
                     },
                     child: Icon(Icons.upload),
                   )
