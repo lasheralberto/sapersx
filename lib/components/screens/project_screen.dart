@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:sapers/components/screens/feed.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
+import 'package:sapers/components/widgets/snackbar.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
@@ -139,26 +140,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                       body: TabBarView(controller: _tabController, children: [
                         _buildProjectDescription(context),
                         _buildChatSection(context),
-                        FutureBuilder<List<Map<String, dynamic>>>(
-                          future: FirebaseService()
-                              .getAttachments(widget.project.projectid),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: Center(
-                                      child: AppStyles()
-                                          .progressIndicatorButton()));
-                            }
-                            if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                              return _buildAttachments(snapshot.data!);
-                            }
-                            return const Center(
-                                child: Text('No hay archivos adjuntos'));
-                          },
-                        )
+                        _attachmentSection(),
                       ]),
                       headerSliverBuilder:
                           (BuildContext context, bool innerBoxIsScrolled) {
@@ -248,6 +230,24 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                 : const SizedBox.shrink());
   }
 
+  Widget _attachmentSection() {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: FirebaseService().getAttachments(widget.project.projectid),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return SizedBox(
+              height: 20,
+              width: 20,
+              child: Center(child: AppStyles().progressIndicatorButton()));
+        }
+        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+          return _buildAttachments(snapshot.data!);
+        }
+        return const Center(child: Text('No hay archivos adjuntos'));
+      },
+    );
+  }
+
   Widget uploadProgressIndicator(UploadTask task) {
     return StreamBuilder<TaskSnapshot>(
       stream: task.snapshotEvents,
@@ -311,7 +311,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
               final type = file['type']?.split('/').first ?? 'file';
               final extension =
                   (file['extension'] as String?)?.toLowerCase() ?? 'file';
-              final fileSize = file['size'] as int? ?? 0;
 
               return Card(
                 elevation: 2,
@@ -336,24 +335,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                           children: [
                             // Icono principal
                             _buildFileIcon(type, extension),
-                            // Badge de extensión
-                            // // Container(
-                            // //   padding: const EdgeInsets.symmetric(
-                            // //       horizontal: 6, vertical: 2),
-                            // //   decoration: BoxDecoration(
-                            // //     color: _getTypeColor(type),
-                            // //     borderRadius: BorderRadius.circular(4),
-                            // //   ),
-                            // //   child: Text(
-                            // //     extension.toUpperCase(),
-                            // //     style:
-                            // //         Theme.of(context).textTheme.labelSmall?.copyWith(
-                            // //               color: Colors.white,
-                            // //               fontSize: 10,
-                            // //               fontWeight: FontWeight.bold,
-                            // //             ),
-                            // //   ),
-                            // // ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -376,18 +357,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                         ),
                         const SizedBox(height: 4),
                         // Tamaño y tipo
-                        Text(
-                          _formatFileSize(fileSize),
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontSize: 11,
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.color
-                                        ?.withOpacity(0.7),
-                                  ),
-                        ),
                       ],
                     ),
                   ),
@@ -711,14 +680,20 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
             CrossAxisAlignment.end, // Alinea los elementos al final
         children: [
           IconButton(
-            icon: const Icon(Icons.attach_file, color: Colors.grey),
-            onPressed: () {
-              FirebaseService().pickAndUploadFileProject(
-                widget.project.projectid,
-                currentUser!.username.toString(),
-              );
-            },
-          ),
+              icon: const Icon(Icons.attach_file, color: Colors.grey),
+              onPressed: () async {
+                final filesUploaded =
+                    await FirebaseService().pickAndUploadFileProject(
+                  widget.project.projectid,
+                  currentUser!.username.toString(),
+                );
+                if (filesUploaded.isNotEmpty && mounted) {
+//showSnackBar('Archivo subido correctamente');
+//show snackbar
+                  SnackBarCustom()
+                      .showSuccessSnackBar(context, widget.project.projectid);
+                }
+              }),
           Expanded(
             child: TextField(
               controller: _messageController,
