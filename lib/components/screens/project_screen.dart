@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:sapers/components/screens/feed.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
+import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/project.dart';
@@ -192,7 +193,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                                   image: DecorationImage(
                                     alignment: Alignment.center,
                                     opacity: 0.8,
-                                    scale: 0.1,
+                                    scale: 1,
                                     image: AssetImage(AppStyles.tabMarkerImage),
                                     fit: BoxFit.scaleDown,
                                   ),
@@ -565,47 +566,54 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   }
 
   Widget _buildChatSection(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            Texts.translate('projectChat', globalLanguage),
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 15),
-          StreamBuilder<QuerySnapshot>(
-            stream:
-                _firebaseService.getProjectChatStream(widget.project.projectid),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return const Center(child: Text('No hay mensajes'));
-              }
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding:
+                  const EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0),
+              child: Text(
+                Texts.translate('projectChat', globalLanguage),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            const SizedBox(height: 15),
+            StreamBuilder<QuerySnapshot>(
+              stream: _firebaseService
+                  .getProjectChatStream(widget.project.projectid),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('No hay mensajes'));
+                }
 
-              final messages = snapshot.data!.docs;
-              return ListView.builder(
-                controller: _scrollController,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  final message = messages[index];
-                  final data = message.data() as Map<String, dynamic>;
-                  return _buildMessageItem(data, context);
-                },
-              );
-            },
-          ),
-          _buildChatInput()
-        ],
+                final messages = snapshot.data!.docs;
+                return ListView.builder(
+                  controller: _scrollController,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index];
+                    final data = message.data() as Map<String, dynamic>;
+                    return _buildMessageItem(data, context);
+                  },
+                );
+              },
+            ),
+            _buildChatInput(),
+          ],
+        ),
       ),
     );
   }
@@ -613,16 +621,17 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   Widget _buildMessageItem(Map<String, dynamic> data, BuildContext context) {
     final isCurrentUser = data['senderName'] == currentUser?.username;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.all(20.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment:
             isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isCurrentUser)
-            ProfileAvatar(
-              seed: data['senderName'],
-              size: 22,
+            UserProfileCardHover(
+              authorUsername: data['senderName'],
+              isExpert: false,
+              onProfileOpen: () {},
             ),
           Flexible(
             child: Container(
@@ -679,27 +688,42 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
 
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.all(20.0),
-      color: Theme.of(context).cardColor,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      color: Colors.white,
       child: Row(
         children: [
+          IconButton(
+            icon: const Icon(Icons.attach_file, color: Colors.grey),
+            onPressed: () {
+              // Lógica para adjuntar archivos
+            },
+          ),
           Expanded(
             child: TextField(
               controller: _messageController,
               decoration: InputDecoration(
                 hintText: 'Escribe un mensaje...',
                 border: OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppStyles.borderRadiusValue),
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                filled: true,
+                fillColor: Colors.grey[100],
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               ),
             ),
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: Icon(Icons.send, color: Theme.of(context).primaryColor),
-            onPressed: _sendMessage,
+            icon: Icon(
+              Icons.send,
+              color: _messageController.text.trim().isNotEmpty
+                  ? Colors.blue
+                  : Colors.grey,
+            ),
+            onPressed:
+                _messageController.text.trim().isNotEmpty ? _sendMessage : null,
           ),
         ],
       ),
