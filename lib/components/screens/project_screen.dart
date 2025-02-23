@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -41,11 +42,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   bool? isLoading = true;
   bool _isUploading = false;
   late TabController _tabController;
+  late Future<List<PlatformFile>?> _selectedFilesChat;
 
   @override
   void initState() {
     super.initState();
     isLoading = true;
+
     _tabController = TabController(length: 3, vsync: this);
 
     _tabController.addListener(() {
@@ -128,6 +131,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
             child: CircularProgressIndicator(),
           )
         : Scaffold(
+            backgroundColor: AppStyles.scaffoldColor,
             body: Column(
               children: [
                 Expanded(
@@ -151,7 +155,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                             if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                               return _buildAttachments(snapshot.data!);
                             }
-                            return Center(
+                            return const Center(
                                 child: Text('No hay archivos adjuntos'));
                           },
                         )
@@ -217,6 +221,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                 ),
               ],
             ),
+            bottomSheet: _buildChatInput(),
+            resizeToAvoidBottomInset: true,
             floatingActionButton: _tabController.index == 2
                 ? FloatingActionButton(
                     onPressed: () async {
@@ -232,13 +238,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                           _isUploading = false;
                         });
                       } else {
-                      setState(() {
-										   _isUploading = false;
-                       });
-                        
-                       }
+                        setState(() {
+                          _isUploading = false;
+                        });
+                      }
                     },
-                    child: Icon(Icons.upload),
+                    child: const Icon(Icons.upload),
                   )
                 : const SizedBox.shrink());
   }
@@ -280,7 +285,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -465,16 +470,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   }
 
   Widget _buildChatInput() {
-    if (isMember != false && currentUser != null) {
+    if (isMember != false && currentUser != null && _tabController.index == 1) {
       return _buildMessageInput();
     } else {
-      return Padding(
-        padding: const EdgeInsets.all(50.0),
-        child: Center(
-            child: Text(
-          Texts.translate('notMember', globalLanguage),
-        )),
-      );
+      return const SizedBox.shrink();
     }
   }
 
@@ -488,7 +487,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
           child: FittedBox(
               fit: BoxFit.scaleDown,
               child: text == true
-                  ? Text(texto)
+                  ? Text(texto, style: Theme.of(context).textTheme.bodySmall)
                   : Icon(
                       icon,
                       size: 20,
@@ -616,7 +615,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                 );
               },
             ),
-            _buildChatInput(),
           ],
         ),
       ),
@@ -694,41 +692,62 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   Widget _buildMessageInput() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      color: Colors.white,
+      margin: const EdgeInsets.all(8), // Margen externo para mejor espaciado
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: Row(
+        crossAxisAlignment:
+            CrossAxisAlignment.end, // Alinea los elementos al final
         children: [
           IconButton(
             icon: const Icon(Icons.attach_file, color: Colors.grey),
             onPressed: () {
-              // Lógica para adjuntar archivos
+              FirebaseService().pickAndUploadFileProject(
+                widget.project.projectid,
+                currentUser!.username.toString(),
+              );
             },
           ),
           Expanded(
             child: TextField(
               controller: _messageController,
+              maxLines: 5, // Máximo de líneas permitidas
+              minLines: 1, // Mínimo de líneas inicial
               decoration: InputDecoration(
                 hintText: 'Escribe un mensaje...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
-                ),
+                border:
+                    const UnderlineInputBorder(), // Sin bordes para un look limpio
                 filled: true,
+
                 fillColor: Colors.grey[100],
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
               ),
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            icon: Icon(
-              Icons.send,
-              color: _messageController.text.trim().isNotEmpty
-                  ? Colors.blue
-                  : Colors.grey,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: IconButton(
+              icon: const Icon(
+                Icons.send,
+              ),
+              onPressed: _sendMessage,
             ),
-            onPressed:
-                _messageController.text.trim().isNotEmpty ? _sendMessage : null,
           ),
         ],
       ),

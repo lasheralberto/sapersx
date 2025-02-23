@@ -37,6 +37,9 @@ class AppStyles {
   static const Color postCardColor = Colors.transparent;
   static const Color postCardReplyColor = _pureWhite;
 
+  //Scaffold color
+  static const Color scaffoldColor = _pureWhite;
+
   // Button colors
   static const Color sendButtonColor = _orangeDark;
   static const Color sendButtonColorDisabled = _mediumGray;
@@ -255,6 +258,8 @@ class AppStyles {
       return screenWidth * 0.85;
     }
   }
+
+
 
   Color getProjectCardColor(String projectId) {
     final colors = [
