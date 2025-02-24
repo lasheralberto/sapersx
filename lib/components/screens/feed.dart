@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:floating_menu_button/floating_menu_button.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -6,6 +7,7 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
+import 'package:sapers/components/screens/people_screen.dart';
 import 'package:sapers/components/screens/popup_create_post.dart';
 import 'package:sapers/components/screens/project_dialog.dart';
 import 'package:sapers/components/screens/project_screen.dart';
@@ -222,146 +224,163 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
     return Scaffold(
       //bottomSheet: _buildHotTopicsPanel(),
-      body: NestedScrollView(
-        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-          return [
-            SliverAppBar(
-              floating: true,
-              snap: true,
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              elevation: innerBoxIsScrolled ? 4 : 0,
-              shadowColor: Theme.of(context).shadowColor.withOpacity(0.1),
-              surfaceTintColor: Colors.transparent,
-              centerTitle: true,
-              title: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: Theme.of(context).scaffoldBackgroundColor,
+      body: FloatingMenuWidget(
+        menuTray: const MenuTray(
+            itemsSeparation: 30,
+            itemTextStyle: TextStyle(fontWeight: FontWeight.bold),
+            padding: EdgeInsets.all(20),
+            trayHeight: 200,
+            trayWidth: 200),
+        menuButton: MenuButton(
+          padding: const EdgeInsets.only(right: 30, left: 15),
+          textStyle: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: Theme.of(context).textTheme.bodySmall!.fontSize,
+          ),
+          iconSize: 20,
+          iconOnClose: Icons.add,
+          iconOnOpen: Icons.close,
+          iconColor: AppStyles.colorAvatarBorder,
+          textOnClose:
+              Texts.translate('open', LanguageProvider().currentLanguage),
+          textOnOpen:
+              Texts.translate('close', LanguageProvider().currentLanguage),
+        ),
+        menuItems: [
+          MenuItems(
+              id: "1",
+              value: Texts.translate(
+                  'crearPost', LanguageProvider().currentLanguage)),
+          MenuItems(
+              id: "2",
+              value: Texts.translate(
+                  'nuevoProyecto', LanguageProvider().currentLanguage)),
+        ],
+        onItemSelection: (menuItems) {
+          if (menuItems.id == "1") {
+            _showCreatePostDialog();
+          } else if (menuItems.id == "2") {
+            _showCreateProjectDialog();
+          } else if (menuItems.id == "3") {
+            print("Item 3");
+          }
+        },
+        child: NestedScrollView(
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                floating: true,
+                snap: true,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                elevation: innerBoxIsScrolled ? 4 : 0,
+                shadowColor: Theme.of(context).shadowColor.withOpacity(0.1),
+                surfaceTintColor: Colors.transparent,
+                centerTitle: true,
+                title: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                  ),
+                  child: Image.asset(
+                    AppStyles.logoImage,
+                    width: isMobile ? 80.0 : 100.0,
+                    height: isMobile ? 80.0 : 100.0,
+                  ),
                 ),
-                child: Image.asset(
-                  AppStyles.logoImage,
-                  width: isMobile ? 80.0 : 100.0,
-                  height: isMobile ? 80.0 : 100.0,
-                ),
+                actions: [
+                  Padding(
+                    padding: EdgeInsets.only(right: isMobile ? 8.0 : 16.0),
+                    child: UserAvatar(user: widget.user),
+                  ),
+                ],
               ),
-              actions: [
-                Padding(
-                  padding: EdgeInsets.only(right: isMobile ? 8.0 : 16.0),
-                  child: UserAvatar(user: widget.user),
-                ),
-              ],
-            ),
-            SliverPersistentHeader(
-              pinned: false,
-              floating: true,
-              delegate: SliverSearchBarDelegate(
-                minHeight: 80,
-                maxHeight: 80,
-                child: Container(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isMobile ? 8.0 : 16.0,
-                      vertical: 8.0,
-                    ),
-                    child: Center(
-                      child: SizedBox(
-                        width: screenWidth >= 600
-                            ? screenWidth / 2
-                            : screenWidth * 0.9,
-                        child: SearchBarCustom(
-                          controller: _searchController,
-                          onSearch: _performSearch,
-                          onModuleSelected: (module) {
-                            setState(() {
-                              _selectedModule = module;
-                              _updateFutures();
-                            });
-                          },
-                          modules: _modules,
-                          selectedModule: _selectedModule,
+              SliverPersistentHeader(
+                pinned: false,
+                floating: true,
+                delegate: SliverSearchBarDelegate(
+                  minHeight: 80,
+                  maxHeight: 80,
+                  child: Container(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 8.0 : 16.0,
+                        vertical: 8.0,
+                      ),
+                      child: Center(
+                        child: SizedBox(
+                          width: screenWidth >= 600
+                              ? screenWidth / 2
+                              : screenWidth * 0.9,
+                          child: SearchBarCustom(
+                            controller: _searchController,
+                            onSearch: _performSearch,
+                            onModuleSelected: (module) {
+                              setState(() {
+                                _selectedModule = module;
+                                _updateFutures();
+                              });
+                            },
+                            modules: _modules,
+                            selectedModule: _selectedModule,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: SliverTabBarDelegate(
-                TabBar(
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.center,
-                  indicatorPadding: EdgeInsets.all(isMobile ? 5.0 : 10.0),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  controller: _tabController,
-                  indicator: const BoxDecoration(
-                    image: DecorationImage(
-                      alignment: Alignment.center,
-                      opacity: 0.8,
-                      scale: 0.5,
-                      image: AssetImage(AppStyles.tabMarkerImage),
-                      fit: BoxFit.scaleDown,
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: SliverTabBarDelegate(
+                  TabBar(
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.center,
+                    indicatorPadding: EdgeInsets.all(isMobile ? 5.0 : 10.0),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    controller: _tabController,
+                    indicator: const BoxDecoration(
+                      image: DecorationImage(
+                        alignment: Alignment.center,
+                        opacity: 0.8,
+                        scale: 0.5,
+                        image: AssetImage(AppStyles.tabMarkerImage),
+                        fit: BoxFit.scaleDown,
+                      ),
                     ),
+                    labelColor: AppStyles.colorAvatarBorder,
+                    unselectedLabelColor: Theme.of(context).disabledColor,
+                    indicatorColor: AppStyles.colorAvatarBorder,
+                    dividerColor: Colors.transparent,
+                    tabs: [
+                      _buildTab('feedGeneralTab'),
+                      _buildTab('FollowingTab'),
+                      _buildTab('projectsTab'),
+                      // _buildTab('genteTab')
+                    ],
                   ),
-                  labelColor: AppStyles.colorAvatarBorder,
-                  unselectedLabelColor: Theme.of(context).disabledColor,
-                  indicatorColor: AppStyles.colorAvatarBorder,
-                  dividerColor: Colors.transparent,
-                  tabs: [
-                    _buildTab('feedGeneralTab'),
-                    _buildTab('FollowingTab'),
-                    _buildTab('projectsTab'),
-                  ],
                 ),
               ),
-            ),
-          ];
-        },
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildPostsList(_postsFutureGeneral!, isMobile),
-            _buildPostsList(_postsFutureFollowing!, isMobile),
-            ProjectListView(
-              future: _postsProjects!,
-              isMobile: isMobile,
-              onRefresh: () {},
-            ),
-          ],
+            ];
+          },
+          body: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildPostsList(_postsFutureGeneral!, isMobile),
+              _buildPostsList(_postsFutureFollowing!, isMobile),
+              ProjectListView(
+                future: _postsProjects!,
+                isMobile: isMobile,
+                onRefresh: () {
+                  _updateFutures();
+                },
+              ),
+              // UserSearchScreen()
+            ],
+          ),
         ),
       ),
-      floatingActionButton:
-          (_tabController.index == 0 || _tabController.index == 1)
-              ? Visibility(
-                  visible: MediaQuery.of(context).viewInsets.bottom == 0,
-                  child: FloatingActionButton(
-                    foregroundColor: Colors.white,
-                    backgroundColor: AppStyles.colorAvatarBorder,
-                    enableFeedback: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                    ),
-                    mini: false,
-                    onPressed: _showCreatePostDialog,
-                    child: const Icon(EvaIcons.plus_outline),
-                  ),
-                )
-              : Visibility(
-                  visible: MediaQuery.of(context).viewInsets.bottom == 0,
-                  child: FloatingActionButton(
-                    foregroundColor: Colors.white,
-                    backgroundColor: AppStyles.colorAvatarBorder,
-                    enableFeedback: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                    ),
-                    mini: false,
-                    onPressed: _showCreateProjectDialog,
-                    child: const Icon(EvaIcons.folder_add),
-                  ),
-                ),
     );
   }
 

@@ -1,4 +1,3 @@
-
 // Provider para manejar el estado de autenticación
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,14 +7,21 @@ import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/user.dart';
 
-class AuthProvider with ChangeNotifier {
+class AuthProviderSapers with ChangeNotifier {
   User? _user;
   UserInfoPopUp? _userInfo;
   bool _isLoading = false;
 
+  // 2. Getters públicos
   User? get user => _user;
-  UserInfoPopUp? get userInfo => _userInfo;
+  UserInfoPopUp? get userInfo => _userInfo; // Getter crítico
   bool get isLoading => _isLoading;
+
+  AuthProviderSapers() {
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      setUser(user);
+    });
+  }
 
   void setUser(User? user) {
     if (_user != user) {
@@ -83,7 +89,7 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
+    return Consumer<AuthProviderSapers>(
       builder: (context, authProvider, child) {
         if (authProvider.isLoading) {
           return const Center(child: CircularProgressIndicator());

@@ -5,18 +5,16 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:sapers/components/screens/feed.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
-import 'package:sapers/models/auth_utils.dart';
+import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/theme.dart';
 import 'package:sapers/models/user.dart';
 import 'firebase_options.dart';
-import 'package:sapers/models/auth_utils.dart' as zauth;
+import 'package:sapers/models/auth_provider.dart' as zauth;
 import 'package:sapers/models/router.dart';
 import 'package:url_strategy/url_strategy.dart';
-
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,7 +43,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeNotifier()),
-        ChangeNotifierProvider(create: (_) => zauth.AuthProvider()),
+        ChangeNotifierProvider(create: (_) => zauth.AuthProviderSapers()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()), // Añade esto
       ],
       child: const SAPSocialApp(),
@@ -81,14 +79,14 @@ class _SAPSocialAppState extends State<SAPSocialApp> {
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       if (!mounted) return;
       final authProvider =
-          Provider.of<zauth.AuthProvider>(context, listen: false);
+          Provider.of<zauth.AuthProviderSapers>(context, listen: false);
       authProvider.setUser(user);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<ThemeNotifier, zauth.AuthProvider, LanguageProvider>(
+    return Consumer3<ThemeNotifier, zauth.AuthProviderSapers, LanguageProvider>(
       builder: (context, themeNotifier, authProvider, langProvider, child) {
         return MaterialApp.router(
           routerConfig: router,

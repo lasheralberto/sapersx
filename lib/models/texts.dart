@@ -1,10 +1,10 @@
 class Texts {
-  
   static String defaultLanguageIfMissing = 'en';
   static Set<String> supportedLanguages = {'es', 'en'};
 
   static final Map<String, Map<String, String>> _texts = {
     'es': {
+      'crearPost': 'Crear post',
       'descripcionTab': 'Descripción',
       'chatTab': 'Chat',
       'filesTab': 'Archivos',
@@ -76,9 +76,16 @@ class Texts {
       'projectDescr': 'Descripción del proyecto',
       'notMember': 'No eres miembro de este proyecto',
       'projectFiles': 'Archivos',
-      'selectProject': 'Selecciona un proyecto'
+      'selectProject': 'Selecciona un proyecto',
+      'close': 'Cerrar',
+      'open': 'Crear',
+      'genteTab': 'Gente',
     },
     'en': {
+      'genteTab': 'People',
+      'close': 'Close',
+      'open': 'Create',
+      'crearPost': 'Create post',
       'descripcionTab': 'Description',
       'chatTab': 'Chat',
       'filesTab': 'Files',

@@ -14,6 +14,7 @@ class UserInfoPopUp {
   Timestamp? joinDate;
   bool? isAvailable;
   String? experience;
+  List<String>? following;
   List<Map<String, dynamic>>? reviews;
 
   UserInfoPopUp(
@@ -29,6 +30,7 @@ class UserInfoPopUp {
       this.isAvailable,
       this.joinDate,
       this.experience,
+      this.following,
       this.reviews});
 
   // Convertir objeto a Map para guardarlo en Firebase
@@ -43,6 +45,7 @@ class UserInfoPopUp {
       'isExpert': isExpert,
       'specialty': specialty,
       'hourlyRate': hourlyRate,
+      'following': following,
       'joinDate': joinDate,
       'isAvailable': isAvailable,
       'experience': experience,
@@ -63,7 +66,11 @@ class UserInfoPopUp {
       isExpert: map['isExpert'] ?? false,
       specialty: map['specialty'] ?? '',
       hourlyRate: (map['hourlyRate'] ?? 0.0).toDouble(),
-      joinDate: map['joinDate'] ?? DateTime.now().toString(),
+      following: (map['following'] as List<dynamic>?)
+              ?.map((following) => following as String)
+              .toList() ??
+          [],
+      joinDate: map['joinDate'] ?? null,
       isAvailable: map['isAvailable'] ?? false,
       reviews: (map['reviews'] as List<dynamic>?)
               ?.map((review) => review as Map<String, dynamic>)

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sapers/components/screens/feed.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/screens/user_profile.dart';
-import 'package:sapers/models/auth_utils.dart';
+import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/project.dart';
 import 'package:sapers/models/user.dart';

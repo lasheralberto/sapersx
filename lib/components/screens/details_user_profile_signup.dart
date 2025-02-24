@@ -10,7 +10,7 @@ import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
-import 'package:sapers/models/auth_utils.dart' as zauth;
+import 'package:sapers/models/auth_provider.dart' as zauth;
 
 class UserProfilePopup extends StatefulWidget {
   final String email;
@@ -122,7 +122,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
 
       if (mounted) {
         final authProvider =
-            Provider.of<zauth.AuthProvider>(context, listen: false);
+            Provider.of<zauth.AuthProviderSapers>(context, listen: false);
         await authProvider.refreshUserInfo();
         Navigator.pop(context, true);
       }

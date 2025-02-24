@@ -10,7 +10,7 @@ import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/texts.dart';
 import '../screens/login_dialog.dart';
-import 'package:sapers/models/auth_utils.dart' as zauth;
+import 'package:sapers/models/auth_provider.dart' as zauth;
 
 class UserAvatar extends StatelessWidget {
   final User? user;
@@ -41,7 +41,7 @@ class UserAvatar extends StatelessWidget {
   }
 
   Widget _buildUserAvatar(BuildContext context) {
-    return Consumer<zauth.AuthProvider>(
+    return Consumer<zauth.AuthProviderSapers>(
       builder: (context, authProvider, child) {
         // Si los datos del usuario están disponibles, mostramos el avatar
         if (authProvider.userInfo != null) {
@@ -67,8 +67,8 @@ class UserAvatar extends StatelessWidget {
               ),
               PopupMenuItem(
                 onTap: () => AuthService().signOut(),
-                child:
-                    Text(Texts.translate('cerrarSesion', LanguageProvider().currentLanguage)),
+                child: Text(Texts.translate(
+                    'cerrarSesion', LanguageProvider().currentLanguage)),
               ),
             ],
           );
