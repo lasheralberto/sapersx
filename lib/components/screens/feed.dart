@@ -16,6 +16,7 @@ import 'package:sapers/components/widgets/searchbar.dart';
 import 'package:sapers/components/widgets/user_avatar.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/project.dart';
 import 'package:sapers/models/styles.dart';
@@ -46,13 +47,19 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   bool _isRefreshing = false;
   bool isPostExpanded = false;
   UserInfoPopUp? userinfo;
+  LanguageProvider languageProvider = LanguageProvider();
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-
     _tabController.addListener(() {
       setState(() {});
     });
@@ -125,9 +132,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     }
   }
 
-  
-
-
   Widget _buildPostsList(Future<List<SAPPost>> future, bool isMobile) {
     return FutureBuilder<List<SAPPost>>(
       future: future,
@@ -143,7 +147,10 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         final posts = snapshot.data ?? [];
         if (posts.isEmpty) {
           return Center(
-              child: Text(Texts.translate('noposts', globalLanguage)));
+            child: Text(
+              Texts.translate('noposts', languageProvider.currentLanguage),
+            ),
+          );
         }
 
         return RefreshIndicator(
@@ -166,38 +173,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      return Container(
-                        margin: EdgeInsets.only(
-                          bottom: isMobile ? 8.0 : 16.0,
-                          left: isMobile ? 2.0 : 8.0,
-                          right: isMobile ? 2.0 : 8.0,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                              AppStyles.borderRadiusValue),
-                          color: Theme.of(context).colorScheme.surface,
-                          boxShadow: null,
-                          border: Border.all(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .outline
-                                .withOpacity(0.15),
-                            width: 0.5,
-                          ),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                              AppStyles.borderRadiusValue),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: PostCard(
-                              onExpandChanged: (p0) =>
-                                  setState(() => isPostExpanded = p0),
-                              post: posts[index],
-                            ),
-                          ),
-                        ),
-                      );
+                      return _buildPostCard(posts[index], isMobile);
                     },
                     childCount: posts.length,
                   ),
@@ -207,6 +183,35 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildPostCard(SAPPost post, bool isMobile) {
+    return Container(
+      margin: EdgeInsets.only(
+        bottom: isMobile ? 8.0 : 16.0,
+        left: isMobile ? 2.0 : 8.0,
+        right: isMobile ? 2.0 : 8.0,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: null,
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+          width: 0.5,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+        child: Material(
+          color: Colors.transparent,
+          child: PostCard(
+            onExpandChanged: (p0) => setState(() => isPostExpanded = p0),
+            post: post,
+          ),
+        ),
+      ),
     );
   }
 
@@ -368,7 +373,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
           padding: const EdgeInsets.symmetric(
               horizontal: 8), // Añadir padding horizontal
           child: Text(
-            Texts.translate(textKey, globalLanguage),
+            Texts.translate(textKey, languageProvider.currentLanguage),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: AppStyles.fontSize,

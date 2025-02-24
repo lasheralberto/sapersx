@@ -17,6 +17,7 @@ import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/components/widgets/like_button.dart';
 import 'package:sapers/components/widgets/mesmorphic_popup.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/project.dart';
 import 'package:sapers/models/texts.dart';
@@ -26,6 +27,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:pasteboard/pasteboard.dart';
 
 class FirebaseService {
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -1286,7 +1288,7 @@ class UtilsSapers {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
 
-    if (difference.inMinutes < 1) return Texts.translate('now', globalLanguage);
+    if (difference.inMinutes < 1) return Texts.translate('now', LanguageProvider().currentLanguage);
     if (difference.inHours < 1) return '${difference.inMinutes}m';
     if (difference.inDays < 1) return '${difference.inHours}h';
     if (difference.inDays < 7) return '${difference.inDays}d';

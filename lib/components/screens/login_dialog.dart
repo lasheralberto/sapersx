@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sapers/components/screens/details_user_profile_signup.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 
@@ -123,8 +124,8 @@ class _LoginDialogState extends State<LoginDialog> {
                   ),
                   Text(
                     _isSignUp
-                        ? Texts.translate('crearCuenta', globalLanguage)
-                        : Texts.translate('iniciarSesion', globalLanguage),
+                        ? Texts.translate('crearCuenta', LanguageProvider().currentLanguage)
+                        : Texts.translate('iniciarSesion', LanguageProvider().currentLanguage),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -135,13 +136,13 @@ class _LoginDialogState extends State<LoginDialog> {
                   const SizedBox(height: 32),
                   _buildTextField(
                     controller: _emailController,
-                    label: Texts.translate('emailField', globalLanguage),
+                    label: Texts.translate('emailField', LanguageProvider().currentLanguage),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return Texts.translate('emailValidate', globalLanguage);
+                        return Texts.translate('emailValidate', LanguageProvider().currentLanguage);
                       }
                       if (!value.contains('@')) {
-                        return Texts.translate('emailWrong', globalLanguage);
+                        return Texts.translate('emailWrong', LanguageProvider().currentLanguage);
                       }
                       return null;
                     },
@@ -149,14 +150,14 @@ class _LoginDialogState extends State<LoginDialog> {
                   const SizedBox(height: 16),
                   _buildTextField(
                     controller: _passwordController,
-                    label: Texts.translate('Password', globalLanguage),
+                    label: Texts.translate('Password', LanguageProvider().currentLanguage),
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return Texts.translate('passError', globalLanguage);
+                        return Texts.translate('passError', LanguageProvider().currentLanguage);
                       }
                       if (_isSignUp && value.length < 6) {
-                        return Texts.translate('passErrorLen', globalLanguage);
+                        return Texts.translate('passErrorLen', LanguageProvider().currentLanguage);
                       }
                       return null;
                     },
@@ -166,16 +167,16 @@ class _LoginDialogState extends State<LoginDialog> {
                     _buildTextField(
                       controller: _confirmPasswordController,
                       label: Texts.translate(
-                          'confirmarContraseña', globalLanguage),
+                          'confirmarContraseña', LanguageProvider().currentLanguage),
                       obscureText: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return Texts.translate(
-                              'porFavorConfirmaTuContraseña', globalLanguage);
+                              'porFavorConfirmaTuContraseña', LanguageProvider().currentLanguage);
                         }
                         if (value != _passwordController.text) {
                           return Texts.translate(
-                              'lasContraseñasNoCoinciden', globalLanguage);
+                              'lasContraseñasNoCoinciden', LanguageProvider().currentLanguage);
                         }
                         return null;
                       },
@@ -238,9 +239,9 @@ class _LoginDialogState extends State<LoginDialog> {
                           )
                         : Text(
                             _isSignUp
-                                ? Texts.translate('crearCuenta', globalLanguage)
+                                ? Texts.translate('crearCuenta', LanguageProvider().currentLanguage)
                                 : Texts.translate(
-                                    'iniciarSesion', globalLanguage),
+                                    'iniciarSesion', LanguageProvider().currentLanguage),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -257,8 +258,8 @@ class _LoginDialogState extends State<LoginDialog> {
                     ),
                     child: Text(
                       _isSignUp
-                          ? Texts.translate('iniciarSesion', globalLanguage)
-                          : Texts.translate('crearCuenta', globalLanguage),
+                          ? Texts.translate('iniciarSesion', LanguageProvider().currentLanguage)
+                          : Texts.translate('crearCuenta', LanguageProvider().currentLanguage),
                       style: const TextStyle(fontSize: 14),
                     ),
                   ),

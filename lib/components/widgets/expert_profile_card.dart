@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sapers/components/widgets/add_review.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
@@ -49,7 +50,7 @@ class SAPExpertProfile extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(Texts.translate('experiencia', globalLanguage),
+                Text(Texts.translate('experiencia', LanguageProvider().currentLanguage),
                     style: AppStyles().getTextStyle(context,
                         fontSize: 16, fontWeight: FontWeight.bold)),
               ],
@@ -83,7 +84,7 @@ class SAPExpertProfile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  Texts.translate('reviews', globalLanguage),
+                  Texts.translate('reviews', LanguageProvider().currentLanguage),
                   style: AppStyles().getTextStyle(context,
                       fontSize: 16, fontWeight: FontWeight.bold),
                 ),

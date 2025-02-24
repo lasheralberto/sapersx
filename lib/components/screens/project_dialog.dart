@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/project.dart';
 import 'package:sapers/models/user.dart';
 import 'package:sapers/models/styles.dart';
@@ -58,7 +59,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                   children: [
                     Flexible(
                       child: Text(
-                        Texts.translate('nuevoProyecto', globalLanguage),
+                        Texts.translate('nuevoProyecto', LanguageProvider().currentLanguage),
                         style: AppStyles().getTextStyle(
                           context,
                           fontWeight: FontWeight.bold,
@@ -76,7 +77,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                 TextField(
                   controller: _projectNameController,
                   decoration: styles.getInputDecoration(
-                    Texts.translate('nombreDelProyecto', globalLanguage),
+                    Texts.translate('nombreDelProyecto', LanguageProvider().currentLanguage),
                     null,
                     context,
                   ),
@@ -86,7 +87,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                 TextField(
                   controller: _descriptionController,
                   decoration: styles.getInputDecoration(
-                    Texts.translate('descripcion', globalLanguage),
+                    Texts.translate('descripcion', LanguageProvider().currentLanguage),
                     null,
                     context,
                   ),
@@ -97,7 +98,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                 TextField(
                   controller: _tagsController,
                   decoration: styles.getInputDecoration(
-                    Texts.translate('tagsSeparadosPorComas', globalLanguage),
+                    Texts.translate('tagsSeparadosPorComas', LanguageProvider().currentLanguage),
                     null,
                     context,
                   ),
@@ -110,7 +111,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       child: Text(
-                        Texts.translate('cancelar', globalLanguage),
+                        Texts.translate('cancelar', LanguageProvider().currentLanguage),
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ),
@@ -139,7 +140,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                         }
                       },
                       child: Text(
-                        Texts.translate('crear', globalLanguage).toUpperCase(),
+                        Texts.translate('crear', LanguageProvider().currentLanguage).toUpperCase(),
                       ),
                     ),
                   ],

@@ -8,6 +8,7 @@ import 'package:sapers/components/widgets/invitation_item.dart';
 import 'package:sapers/components/widgets/profile_header.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/project.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
@@ -145,7 +146,7 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
           child: isMessageSending
               ? AppStyles().progressIndicatorButton()
               : Text(
-                  Texts.translate('send_project_invitation', globalLanguage),
+                  Texts.translate('send_project_invitation', LanguageProvider().currentLanguage),
                   style: AppStyles().getTextStyle(
                     context,
                     fontSize: 20,
@@ -193,7 +194,7 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                     isExpanded: true,
                     value: selectedProject,
                     hint: Text(
-                      Texts.translate('selectProject', globalLanguage),
+                      Texts.translate('selectProject', LanguageProvider().currentLanguage),
                       style: AppStyles().getTextStyle(context),
                     ),
                     items: projects.map((project) {
@@ -221,7 +222,7 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
               TextField(
                 controller: messageController,
                 decoration: InputDecoration(
-                  hintText: Texts.translate('writeYourMessage', globalLanguage),
+                  hintText: Texts.translate('writeYourMessage', LanguageProvider().currentLanguage),
                   hintStyle: AppStyles().getTextStyle(context,
                       fontSize: 14, fontWeight: FontWeight.w300),
                   border: InputBorder.none,
@@ -297,7 +298,7 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  Texts.translate('projects', globalLanguage),
+                  Texts.translate('projects', LanguageProvider().currentLanguage),
                   style: AppStyles().getTextStyle(
                     context,
                     fontSize: 16,
@@ -323,7 +324,7 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return Center(
                       child: Text(
-                        Texts.translate('noMessages', globalLanguage),
+                        Texts.translate('noMessages', LanguageProvider().currentLanguage),
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.grey,

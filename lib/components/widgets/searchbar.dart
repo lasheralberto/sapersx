@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 
@@ -35,7 +36,7 @@ class SearchBarCustom extends StatelessWidget {
             decoration: InputDecoration(
               contentPadding:
                   const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-              hintText: Texts.translate('buscar', globalLanguage),
+              hintText: Texts.translate('buscar', LanguageProvider().currentLanguage),
               hintStyle: TextStyle(
                   color: Colors.grey[600],
                   fontSize: AppStyles.fontSize), // Hints más suaves
@@ -74,7 +75,7 @@ class SearchBarCustom extends StatelessWidget {
                       ],
                     ),
                     tooltip:
-                        Texts.translate('filtrarPorModulo', globalLanguage),
+                        Texts.translate('filtrarPorModulo', LanguageProvider().currentLanguage),
                     shape: RoundedRectangleBorder(
                       borderRadius:
                           BorderRadius.circular(AppStyles.borderRadiusValue),

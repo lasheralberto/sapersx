@@ -5,6 +5,7 @@ import 'package:sapers/components/widgets/mesmorphic_popup.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sapers/models/texts.dart';
@@ -46,8 +47,8 @@ class _InvitationItemState extends State<InvitationItem> {
         children: [
           Tooltip(
             message: isToggled
-                ? Texts.translate('reject', globalLanguage)
-                : Texts.translate('accept', globalLanguage),
+                ? Texts.translate('reject', LanguageProvider().currentLanguage)
+                : Texts.translate('accept', LanguageProvider().currentLanguage),
             child: Focus(
               child: Switch(
                 value: isToggled,

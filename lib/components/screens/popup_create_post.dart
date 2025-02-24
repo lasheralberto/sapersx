@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
@@ -165,7 +166,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 children: [
                   Flexible(
                     child: Text(
-                        Texts.translate('crearNuevoPost', globalLanguage),
+                        Texts.translate('crearNuevoPost', LanguageProvider().currentLanguage),
                         style: AppStyles().getTextStyle(context,
                             fontSize: AppStyles.fontSizeMedium,
                             fontWeight: FontWeight.bold)),
@@ -180,7 +181,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               TextField(
                   controller: _titleController,
                   decoration: styles.getInputDecoration(
-                      Texts.translate('titulo', globalLanguage),
+                      Texts.translate('titulo', LanguageProvider().currentLanguage),
                       null,
                       context)),
               const SizedBox(height: 16),
@@ -188,7 +189,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 textAlign: TextAlign.start,
                 controller: _descriptionController,
                 decoration: styles.getInputDecoration(
-                    Texts.translate('descripcion', globalLanguage),
+                    Texts.translate('descripcion', LanguageProvider().currentLanguage),
                     null,
                     context),
                 maxLines: (mediaQuery.height * 0.4 / 24).round(),
@@ -197,7 +198,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               TextField(
                 controller: _tagsController,
                 decoration: styles.getInputDecoration(
-                  '${Texts.translate('tags', globalLanguage)} (${Texts.translate('separarConEspacios', globalLanguage)})',
+                  '${Texts.translate('tags', LanguageProvider().currentLanguage)} (${Texts.translate('separarConEspacios', LanguageProvider().currentLanguage)})',
                   null,
                   context,
                 ),
@@ -214,7 +215,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 child: DropdownButtonFormField<String>(
                   value: _selectedModule,
                   decoration: styles.getInputDecoration(
-                      Texts.translate('moduloSAP', globalLanguage),
+                      Texts.translate('moduloSAP', LanguageProvider().currentLanguage),
                       null,
                       context),
                   items: _modules.map((String module) {
@@ -246,7 +247,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                         selectedFiles = files!;
                       });
                     },
-                    tooltip: Texts.translate('addAttachment', globalLanguage),
+                    tooltip: Texts.translate('addAttachment', LanguageProvider().currentLanguage),
                   ),
                   _buildAttachmentUploadedReply(),
                   const SizedBox(width: 5),
@@ -314,7 +315,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                       },
                       child: isLoadingPost == true
                           ? AppStyles().progressIndicatorCreatePostButton()
-                          : Text(Texts.translate('publicar', globalLanguage)),
+                          : Text(Texts.translate('publicar', LanguageProvider().currentLanguage)),
                     ),
                   ),
                 ],

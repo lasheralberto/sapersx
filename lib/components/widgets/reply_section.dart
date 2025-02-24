@@ -15,6 +15,7 @@ import 'package:sapers/components/widgets/user_hover_card.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
@@ -30,7 +31,6 @@ class ReplySection extends StatefulWidget {
 
   final String postAuthor;
   final FirebaseService firebaseService;
-  final String globalLanguage;
 
   const ReplySection({
     Key? key,
@@ -41,7 +41,6 @@ class ReplySection extends StatefulWidget {
     required this.replyCount,
     required this.postAuthor,
     required this.firebaseService,
-    required this.globalLanguage,
   }) : super(key: key);
 
   @override
@@ -116,7 +115,7 @@ class _ReplySectionState extends State<ReplySection> {
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(Texts.translate('passError', globalLanguage))),
+          SnackBar(content: Text(Texts.translate('passError', LanguageProvider().currentLanguage))),
         );
         setState(() {
           isUploading = false;
@@ -251,7 +250,7 @@ class _ReplySectionState extends State<ReplySection> {
                 padding: const EdgeInsets.all(12.0),
                 child: TextEditorWithCode(
                   textController: _replyController,
-                  globalLanguage: globalLanguage,
+                  globalLanguage: LanguageProvider().currentLanguage,
                   onFilesSelected: (files) {
                     setState(() => selectedFiles.addAll(files));
                   },
@@ -304,7 +303,7 @@ class _ReplySectionState extends State<ReplySection> {
                     ),
                     onPressed: () => _handleReply(postId, replyId),
                     child: Text(
-                      Texts.translate('responder', globalLanguage),
+                      Texts.translate('responder', LanguageProvider().currentLanguage),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -521,14 +520,14 @@ class _ReplySectionState extends State<ReplySection> {
                 SnackBar(
                   content: Text(
                     Texts.translate(
-                        'copiarAlPortapapeles', widget.globalLanguage),
+                        'copiarAlPortapapeles', LanguageProvider().currentLanguage),
                   ),
                   duration: const Duration(seconds: 2),
                 ),
               );
             },
             tooltip:
-                Texts.translate('copiarAlPortapapeles', widget.globalLanguage),
+                Texts.translate('copiarAlPortapapeles', LanguageProvider().currentLanguage),
           ),
         ],
       ),
@@ -540,7 +539,7 @@ class _ReplySectionState extends State<ReplySection> {
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Text(
-          Texts.translate('passError', widget.globalLanguage),
+          Texts.translate('passError', LanguageProvider().currentLanguage),
           style: AppStyles().getTextStyle(context),
         ),
       ),
@@ -561,7 +560,7 @@ class _ReplySectionState extends State<ReplySection> {
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Text(
-          Texts.translate('serElPrimeroEnResponder', widget.globalLanguage),
+          Texts.translate('serElPrimeroEnResponder', LanguageProvider().currentLanguage),
           style: TextStyle(
             color: Colors.grey.shade600,
             fontSize: 16,

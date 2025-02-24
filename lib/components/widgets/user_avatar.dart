@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/user_profile.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/main.dart' as main;
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/texts.dart';
@@ -67,7 +68,7 @@ class UserAvatar extends StatelessWidget {
               PopupMenuItem(
                 onTap: () => AuthService().signOut(),
                 child:
-                    Text(Texts.translate('cerrarSesion', main.globalLanguage)),
+                    Text(Texts.translate('cerrarSesion', LanguageProvider().currentLanguage)),
               ),
             ],
           );

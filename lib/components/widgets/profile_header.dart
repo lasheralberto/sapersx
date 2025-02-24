@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:random_avatar/random_avatar.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/user.dart';
 import '../../main.dart';
@@ -115,7 +116,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
             onPressed: onPressedAction,
             style: AppStyles().getButtonStyle(context),
             child: Text(
-              Texts.translate(buttonText, globalLanguage),
+              Texts.translate(buttonText, LanguageProvider().currentLanguage),
               style: AppStyles().getButtontTextStyle(context),
             ),
           );

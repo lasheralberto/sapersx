@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/main.dart' as main;
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
@@ -144,17 +145,20 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
       return await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-              title: Text(Texts.translate('confirmExit', main.globalLanguage)),
-              content: Text(
-                  Texts.translate('confirmExitMessage', main.globalLanguage)),
+              title: Text(Texts.translate(
+                  'confirmExit', LanguageProvider().currentLanguage)),
+              content: Text(Texts.translate(
+                  'confirmExitMessage', LanguageProvider().currentLanguage)),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: Text(Texts.translate('cancel', main.globalLanguage)),
+                  child: Text(Texts.translate(
+                      'cancel', LanguageProvider().currentLanguage)),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: Text(Texts.translate('exit', main.globalLanguage)),
+                  child: Text(Texts.translate(
+                      'exit', LanguageProvider().currentLanguage)),
                 ),
               ],
             ),
@@ -199,7 +203,8 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
           Expanded(
             child: Center(
               child: Text(
-                Texts.translate('editarPerfil', main.globalLanguage),
+                Texts.translate(
+                    'editarPerfil', LanguageProvider().currentLanguage),
                 style: AppStyles().getTextStyle(context,
                     fontSize: AppStyles.fontSizeLarge,
                     fontWeight: FontWeight.bold),
@@ -231,7 +236,8 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
                       ),
                     )
                   : Text(
-                      Texts.translate('guardar', main.globalLanguage),
+                      Texts.translate(
+                          'guardar', LanguageProvider().currentLanguage),
                       style: AppStyles()
                           .getTextStyle(context)
                           .copyWith(fontSize: 14),
@@ -322,11 +328,13 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
         children: [
           _buildTextField(
             controller: _nameController,
-            label: Texts.translate('nombreField', main.globalLanguage),
+            label: Texts.translate(
+                'nombreField', LanguageProvider().currentLanguage),
             maxLength: 50,
             validator: (value) {
               if (value?.isEmpty ?? true) {
-                return Texts.translate('fieldRequired', main.globalLanguage);
+                return Texts.translate(
+                    'fieldRequired', LanguageProvider().currentLanguage);
               }
               return null;
             },
@@ -334,12 +342,14 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
           const SizedBox(height: 20),
           _buildTextField(
             controller: _bioController,
-            label: Texts.translate('bioField', main.globalLanguage),
+            label:
+                Texts.translate('bioField', LanguageProvider().currentLanguage),
             maxLength: _charLimit,
             maxLines: 3,
             validator: (value) {
               if (value?.isEmpty ?? true) {
-                return Texts.translate('fieldRequired', main.globalLanguage);
+                return Texts.translate(
+                    'fieldRequired', LanguageProvider().currentLanguage);
               }
               return null;
             },
@@ -347,11 +357,13 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
           const SizedBox(height: 20),
           _buildTextField(
             controller: _locationController,
-            label: Texts.translate('locationField', main.globalLanguage),
+            label: Texts.translate(
+                'locationField', LanguageProvider().currentLanguage),
             prefixIcon: Icons.location_on_outlined,
             validator: (value) {
               if (value?.isEmpty ?? true) {
-                return Texts.translate('fieldRequired', main.globalLanguage);
+                return Texts.translate(
+                    'fieldRequired', LanguageProvider().currentLanguage);
               }
               return null;
             },
@@ -359,11 +371,13 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
           const SizedBox(height: 20),
           _buildTextField(
             controller: _websiteController,
-            label: Texts.translate('websiteField', main.globalLanguage),
+            label: Texts.translate(
+                'websiteField', LanguageProvider().currentLanguage),
             prefixIcon: Icons.link,
             validator: (value) {
               if (value?.isEmpty ?? true) {
-                return Texts.translate('fieldRequired', main.globalLanguage);
+                return Texts.translate(
+                    'fieldRequired', LanguageProvider().currentLanguage);
               }
               return null;
             },
@@ -377,7 +391,8 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
               hint: 'Ej: ABAP, FI, SD, MM, etc.',
               validator: (value) {
                 if (_isExpertMode && (value?.isEmpty ?? true)) {
-                  return Texts.translate('fieldRequired', main.globalLanguage);
+                  return Texts.translate(
+                      'fieldRequired', LanguageProvider().currentLanguage);
                 }
                 return null;
               },
@@ -391,7 +406,8 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
               hint: 'Ej: 5 años de experiencia en...',
               validator: (value) {
                 if (_isExpertMode && (value?.isEmpty ?? true)) {
-                  return Texts.translate('fieldRequired', main.globalLanguage);
+                  return Texts.translate(
+                      'fieldRequired', LanguageProvider().currentLanguage);
                 }
                 return null;
               },
@@ -409,7 +425,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
                 if (_isExpertMode) {
                   if (value?.isEmpty ?? true) {
                     return Texts.translate(
-                        'fieldRequired', main.globalLanguage);
+                        'fieldRequired', LanguageProvider().currentLanguage);
                   }
                   final rate = double.tryParse(value!);
                   if (rate == null || rate <= 0) {

@@ -1,6 +1,13 @@
 class Texts {
+  
+  static String defaultLanguageIfMissing = 'en';
+  static Set<String> supportedLanguages = {'es', 'en'};
+
   static final Map<String, Map<String, String>> _texts = {
     'es': {
+      'descripcionTab': 'Descripción',
+      'chatTab': 'Chat',
+      'filesTab': 'Archivos',
       'addAttachment': 'Añadir adjunto',
       'buscar': 'Buscar...',
       'filtrarPorModulo': 'Filtrar por módulo',
@@ -68,9 +75,13 @@ class Texts {
       'projectChat': 'Chat del proyecto',
       'projectDescr': 'Descripción del proyecto',
       'notMember': 'No eres miembro de este proyecto',
-      'projectFiles':'Archivos'
+      'projectFiles': 'Archivos',
+      'selectProject': 'Selecciona un proyecto'
     },
     'en': {
+      'descripcionTab': 'Description',
+      'chatTab': 'Chat',
+      'filesTab': 'Files',
       'addAttachment': 'Add attachment',
       'attachments': 'Attachments',
       'givestar': 'Recognize',
@@ -136,7 +147,8 @@ class Texts {
       'projectChat': 'Project chat',
       'projectDescr': 'Project description',
       'notMember': 'You are not a member of this project',
-      'projectFiles':'Files'
+      'projectFiles': 'Files',
+      'selectProject': 'Select a project'
     },
   };
 

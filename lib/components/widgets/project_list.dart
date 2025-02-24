@@ -7,6 +7,7 @@ import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/project.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
@@ -229,7 +230,7 @@ class _ProjectListViewState extends State<ProjectListView> {
           Icon(Icons.folder_open, size: 48, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            Texts.translate('noprojects', globalLanguage),
+            Texts.translate('noprojects', LanguageProvider().currentLanguage),
             style: TextStyle(color: Colors.grey[600]),
           ),
           const SizedBox(height: 16),

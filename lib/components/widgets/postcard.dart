@@ -16,6 +16,7 @@ import 'package:sapers/components/widgets/reply_section.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:flutter_highlighting/flutter_highlighting.dart';
@@ -73,7 +74,7 @@ class _PostCardState extends State<PostCard> {
                   replyCount: widget.post.replyCount,
                   firebaseService:
                       FirebaseService(), // Asegúrate de inyectar el servicio
-                  globalLanguage: 'es', // O obtén el lenguaje del contexto
+               
                 ),
               const SizedBox(height: 4),
             ],
@@ -334,7 +335,7 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
                 style: theme.textTheme.bodyLarge,
                 decoration: InputDecoration(
                   hintText: widget.hintText ??
-                      Texts.translate('escribeRespuesta', globalLanguage),
+                      Texts.translate('escribeRespuesta', LanguageProvider().currentLanguage),
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.hintColor,
                   ),

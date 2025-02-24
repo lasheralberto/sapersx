@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart'; // Modelo de SAPReply
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
@@ -126,7 +127,7 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
                                       children: [
                                         Text(
                                           Texts.translate(
-                                              'attachments', globalLanguage),
+                                              'attachments', LanguageProvider().currentLanguage),
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleSmall,

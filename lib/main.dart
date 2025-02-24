@@ -16,19 +16,14 @@ import 'package:sapers/models/auth_utils.dart' as zauth;
 import 'package:sapers/models/router.dart';
 import 'package:url_strategy/url_strategy.dart';
 
-// Variables globales
-String globalLanguage = 'es';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setPathUrlStrategy(); // Configura el modo path-based routing
-  LanguageProvider languageProvider = LanguageProvider();
 
   // Inicializar Firebase
   if (kIsWeb) {
-    globalLanguage = languageProvider.getSystemLanguageWeb();
-    debugPrint('language: $globalLanguage');
-
     await Firebase.initializeApp(
       options: FirebaseOptions(
         apiKey: DefaultFirebaseOptions.web.apiKey,
@@ -39,19 +34,19 @@ void main() async {
       ),
     );
   } else {
-    globalLanguage = languageProvider.getSystemLanguageMobile();
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
-  
-  globalLanguage = 'es';
+
+  //globalLanguage = 'es';
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeNotifier()),
         ChangeNotifierProvider(create: (_) => zauth.AuthProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()), // Añade esto
       ],
       child: const SAPSocialApp(),
     ),
@@ -66,10 +61,20 @@ class SAPSocialApp extends StatefulWidget {
 }
 
 class _SAPSocialAppState extends State<SAPSocialApp> {
+  LanguageProvider languageProvider = LanguageProvider();
+
   @override
   void initState() {
     super.initState();
     _setupAuthListener();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _setupLanguage());
+  }
+
+  void _setupLanguage() {
+    final langProvider = context.read<LanguageProvider>();
+    final systemLanguage =
+        langProvider.getSystemLanguage(); // Método interno del provider
+    langProvider.setLanguage(systemLanguage);
   }
 
   void _setupAuthListener() {
@@ -83,8 +88,8 @@ class _SAPSocialAppState extends State<SAPSocialApp> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<ThemeNotifier, zauth.AuthProvider>(
-      builder: (context, themeNotifier, authProvider, child) {
+    return Consumer3<ThemeNotifier, zauth.AuthProvider, LanguageProvider>(
+      builder: (context, themeNotifier, authProvider, langProvider, child) {
         return MaterialApp.router(
           routerConfig: router,
           debugShowCheckedModeBanner: false,
