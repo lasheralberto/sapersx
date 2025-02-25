@@ -33,7 +33,7 @@ class _LikeButtonState extends State<LikeButton>
   void initState() {
     super.initState();
     _likeCount = widget.initialLikeCount;
-    _hasLikedFuture = _likeService.hasUserLiked(widget.postId, widget.replyId);
+    _hasLikedFuture = _likeService.hasUserLiked(widget.postId, widget.replyId, context);
 
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1),
@@ -72,7 +72,7 @@ class _LikeButtonState extends State<LikeButton>
 
     try {
       bool currentLikeState = await _hasLikedFuture;
-      await _likeService.toggleLike(widget.postId, widget.replyId);
+      await _likeService.toggleLike(widget.postId, widget.replyId, context);
       _controller.forward().then((_) => _controller.reset());
 
       setState(() {

@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:sapers/components/widgets/mesmorphic_popup.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
@@ -53,8 +55,10 @@ class _InvitationItemState extends State<InvitationItem> {
               child: Switch(
                 value: isToggled,
                 onChanged: (bool value) async {
-                  var currentUser = await FirebaseService().getUserInfoByEmail(
-                      FirebaseAuth.instance.currentUser!.email!);
+                  var currentUser =
+                      Provider.of<AuthProviderSapers>(context, listen: false)
+                          .userInfo;
+                  ;
 
                   if (currentUser?.username != widget.message['to']) {
                   } else {

@@ -17,6 +17,7 @@ import 'package:sapers/components/widgets/project_list.dart';
 import 'package:sapers/components/widgets/searchbar.dart';
 import 'package:sapers/components/widgets/user_avatar.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
@@ -50,6 +51,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   bool isPostExpanded = false;
   UserInfoPopUp? userinfo;
   LanguageProvider languageProvider = LanguageProvider();
+  String? tagPressed;
 
   @override
   void dispose() {
@@ -77,12 +79,23 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   }
 
   Future<void> _updateFutures() async {
-    final generalPosts = _selectedModule.isEmpty
-        ? _firebaseService.getPostsFuture()
-        : _firebaseService.getPostsByModuleFuture(_selectedModule);
+    // Determinar qué posts cargar basado en los filtros seleccionados
+    final Future<List<SAPPost>> generalPosts;
+    if (tagPressed != null) {
+      // Si se ha pulsado un tag, obtener los posts por tag
+      generalPosts = _firebaseService.getPostsbyTag(tagPressed!);
+    } else if (_selectedModule.isNotEmpty) {
+      // Si no se ha pulsado un tag pero hay un módulo seleccionado, obtener los posts por módulo
+      generalPosts = _firebaseService.getPostsByModuleFuture(_selectedModule);
+    } else {
+      // Si no se ha pulsado un tag y no hay ningún módulo seleccionado, obtener todos los posts
+      generalPosts = _firebaseService.getPostsFuture();
+    }
+    // Cargar posts de seguidos y proyectos en paralelo
     final followingPosts = _firebaseService.getPostsFollowingFuture();
     final projectsPosts = _firebaseService.getProjectsFuture();
 
+    // Actualizar el estado con los nuevos futures
     setState(() {
       _postsFutureGeneral = generalPosts;
       _postsFutureFollowing = followingPosts;
@@ -120,8 +133,9 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     if (FirebaseAuth.instance.currentUser == null) {
       showDialog(context: context, builder: (context) => const LoginDialog());
     } else {
-      UserInfoPopUp? user = await FirebaseService()
-          .getUserInfoByEmail(FirebaseAuth.instance.currentUser!.email!);
+      UserInfoPopUp? user =
+          Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+      ;
       final result = await showDialog<Project>(
         context: context,
         builder: (context) => CreateProjectDialog(user: user),
@@ -132,6 +146,41 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         _updateFutures();
       }
     }
+  }
+
+  Widget tagBubble({
+    required String tag,
+    required VoidCallback onDelete,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: const EdgeInsets.only(right: 8),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            tag,
+            style: const TextStyle(
+              color: Colors.blue,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: onDelete,
+            child: const Icon(
+              Icons.close,
+              size: 16,
+              color: Colors.blue,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildPostsList(Future<List<SAPPost>> future, bool isMobile) {
@@ -210,6 +259,12 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
           color: Colors.transparent,
           child: PostCard(
             onExpandChanged: (p0) => setState(() => isPostExpanded = p0),
+            tagPressed: (p0) {
+              setState(() {
+                tagPressed = p0;
+                _updateFutures();
+              });
+            },
             post: post,
           ),
         ),
@@ -314,6 +369,13 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                               ? screenWidth / 2
                               : screenWidth * 0.9,
                           child: SearchBarCustom(
+                            onDeleteTag: () {
+                              setState(() {
+                                tagPressed = null;
+                                _updateFutures();
+                              });
+                            },
+                            tag: tagPressed.toString(),
                             controller: _searchController,
                             onSearch: _performSearch,
                             onModuleSelected: (module) {

@@ -13,10 +13,12 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/components/widgets/like_button.dart';
 import 'package:sapers/components/widgets/mesmorphic_popup.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/project.dart';
@@ -27,7 +29,6 @@ import 'package:rxdart/rxdart.dart';
 import 'package:pasteboard/pasteboard.dart';
 
 class FirebaseService {
-
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -54,6 +55,8 @@ class FirebaseService {
 
   // Cache para información de usuarios
   final Map<String, UserInfoPopUp> _userCache = {};
+
+
 
   Stream<QuerySnapshot> getProjectChatStream(String projectId) {
     return projectChatCollection
@@ -635,6 +638,34 @@ class FirebaseService {
         .toList();
   }
 
+  Future<List<SAPPost>> getPostsbyTag(String tag) async {
+    final snapshot = await postsCollection
+        .where('tags', arrayContains: tag)
+        .orderBy('timestamp', descending: true)
+        .get();
+
+    if (snapshot.docs.isEmpty) {
+      // Si no hay documentos, retornar una lista vacía
+      return [];
+    }
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return SAPPost(
+        id: doc.id,
+        title: data['title'] ?? '',
+        isExpert: data['isExpert'] ?? false,
+        content: data['content'] ?? '',
+        author: data['author'] ?? '',
+        timestamp: (data['timestamp'] as Timestamp).toDate(),
+        module: data['module'] ?? '',
+        isQuestion: data['isQuestion'] ?? false,
+        tags: List<String>.from(data['tags'] ?? []),
+        replyCount: data['replyCount'] ?? 0,
+      );
+    }).toList();
+  }
+
   // Método para filtrar posts por módulo (consulta única)
   Future<List<SAPPost>> getPostsByModuleFuture(String module) async {
     final snapshot = await postsCollection
@@ -978,10 +1009,10 @@ class FirebaseService {
   }
 
   // Verifica si el usuario actual ha dado like
-  Future<bool> hasUserLiked(String postId, String replyId) async {
+  Future<bool> hasUserLiked(String postId, String replyId, context) async {
     try {
-      final userInfo = await getUserInfoByEmail(
-          FirebaseAuth.instance.currentUser?.email ?? '');
+      final userInfo =
+          Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
       if (userInfo == null) return false;
 
       final doc = await _firestore
@@ -1002,10 +1033,11 @@ class FirebaseService {
   }
 
   // Toggle like
-  Future<void> toggleLike(String postId, String replyId) async {
+  Future<void> toggleLike(String postId, String replyId, context) async {
     try {
-      final userInfo = await getUserInfoByEmail(
-          FirebaseAuth.instance.currentUser?.email ?? '');
+      final userInfo =
+          Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+      ;
       if (userInfo == null) throw Exception('Usuario no autenticado');
 
       final replyRef = _firestore
@@ -1288,7 +1320,8 @@ class UtilsSapers {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
 
-    if (difference.inMinutes < 1) return Texts.translate('now', LanguageProvider().currentLanguage);
+    if (difference.inMinutes < 1)
+      return Texts.translate('now', LanguageProvider().currentLanguage);
     if (difference.inHours < 1) return '${difference.inMinutes}m';
     if (difference.inDays < 1) return '${difference.inHours}h';
     if (difference.inDays < 7) return '${difference.inDays}d';

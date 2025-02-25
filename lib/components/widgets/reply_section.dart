@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_highlighting/flutter_highlighting.dart';
 import 'package:flutter_highlighting/themes/github.dart';
 import 'package:pasteboard/pasteboard.dart';
+import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/components/widgets/attachmentsviewer.dart';
 import 'package:sapers/components/widgets/custombutton.dart';
@@ -14,6 +15,7 @@ import 'package:sapers/components/widgets/text_editor.dart';
 import 'package:sapers/components/widgets/user_hover_card.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
@@ -86,8 +88,7 @@ class _ReplySectionState extends State<ReplySection> {
         setState(() => isUploading = true);
 
         List<Map<String, dynamic>> attachmentsList = [];
-        UserInfoPopUp? userInfo = await FirebaseService()
-            .getUserInfoByEmail(FirebaseAuth.instance.currentUser!.email!);
+        UserInfoPopUp? userInfo =   Provider.of<AuthProviderSapers>(context, listen: false).userInfo;;
         if (selectedFiles.isNotEmpty) {
           attachmentsList = await _firebaseService.addAttachments(
               postId, replyId, userInfo!.username, selectedFiles);

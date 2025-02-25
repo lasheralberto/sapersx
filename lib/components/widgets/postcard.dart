@@ -30,10 +30,12 @@ import 'package:url_launcher/url_launcher.dart';
 class PostCard extends StatefulWidget {
   final SAPPost post;
   final Function(bool) onExpandChanged; // Callback para devolver el valor
+  final Function(String?) tagPressed;
 
   const PostCard({
     super.key,
     required this.onExpandChanged,
+    required this.tagPressed,
     required this.post,
   });
 
@@ -43,6 +45,7 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   bool isExpanded = false;
+  
 
   int counter = 0;
 
@@ -74,7 +77,6 @@ class _PostCardState extends State<PostCard> {
                   replyCount: widget.post.replyCount,
                   firebaseService:
                       FirebaseService(), // Asegúrate de inyectar el servicio
-               
                 ),
               const SizedBox(height: 4),
             ],
@@ -186,15 +188,20 @@ class _PostCardState extends State<PostCard> {
         Row(
           children: [
             const SizedBox(width: 10),
-            Text(widget.post.author,
-                style: AppStyles().getTextStyle(context,
-                    fontSize: AppStyles.fontSize, fontWeight: FontWeight.w100)),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(widget.post.author,
+                  style: AppStyles().getTextStyle(context,
+                      fontSize: AppStyles.fontSize,
+                      fontWeight: FontWeight.w100)),
+            ),
             const SizedBox(width: 10),
             _buildTimestamp(widget.post),
           ],
         ),
         const Divider(
           thickness: 0.0,
+          color: Colors.grey,
         )
       ],
     );
@@ -202,7 +209,11 @@ class _PostCardState extends State<PostCard> {
 
   Widget _buildTag(String tag) {
     return InkWell(
-      onTap: () => print('Tag: $tag'),
+      onTap: () {
+        // Opcional: Añade aquí lógica adicional cuando se hace clic en una etiqueta
+        widget.tagPressed(tag);
+
+      },
       child: Padding(
         padding: const EdgeInsets.only(right: 8, bottom: 8),
         child: Chip(
@@ -335,7 +346,8 @@ class _ReplyBottomSheetState extends State<ReplyBottomSheet> {
                 style: theme.textTheme.bodyLarge,
                 decoration: InputDecoration(
                   hintText: widget.hintText ??
-                      Texts.translate('escribeRespuesta', LanguageProvider().currentLanguage),
+                      Texts.translate('escribeRespuesta',
+                          LanguageProvider().currentLanguage),
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.hintColor,
                   ),

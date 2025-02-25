@@ -76,7 +76,7 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
     if (user != null) {
       try {
         final userInfo =
-            await FirebaseService().getUserInfoByEmail(user.email!);
+              Provider.of<zauth.AuthProviderSapers>(context, listen: false).userInfo;
         if (userInfo != null && mounted) {
           setState(() {
             _nameController.text = userInfo.username;

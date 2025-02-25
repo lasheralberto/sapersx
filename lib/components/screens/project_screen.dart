@@ -7,12 +7,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/feed.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/snackbar.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/project.dart';
@@ -77,7 +79,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
       }
 
       final user =
-          await _firebaseService.getUserInfoByEmail(firebaseUser.email!);
+          Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+      ;
       setState(() => currentUser = user);
     } catch (e) {
       setState(() => currentUser = null);
@@ -192,10 +195,21 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                                 indicatorColor: AppStyles.colorAvatarBorder,
                                 dividerColor: Colors.transparent,
                                 tabs: [
-                                  _buildTab(true, Texts.translate('descripcionTab', LanguageProvider().currentLanguage), Icons.abc),
-                                  _buildTab(true, Texts.translate('chatTab', LanguageProvider().currentLanguage), Icons.chat),
                                   _buildTab(
-                                      true,Texts.translate('filesTab', LanguageProvider().currentLanguage), Icons.file_copy_sharp),
+                                      true,
+                                      Texts.translate('descripcionTab',
+                                          LanguageProvider().currentLanguage),
+                                      Icons.abc),
+                                  _buildTab(
+                                      true,
+                                      Texts.translate('chatTab',
+                                          LanguageProvider().currentLanguage),
+                                      Icons.chat),
+                                  _buildTab(
+                                      true,
+                                      Texts.translate('filesTab',
+                                          LanguageProvider().currentLanguage),
+                                      Icons.file_copy_sharp),
                                 ],
                               ),
                             ),
@@ -526,7 +540,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              Texts.translate('projectDescr', _languageProvider.currentLanguage),
+              Texts.translate(
+                  'projectDescr', _languageProvider.currentLanguage),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 10),
@@ -553,7 +568,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
               padding:
                   const EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0),
               child: Text(
-                Texts.translate('projectChat', _languageProvider.currentLanguage),
+                Texts.translate(
+                    'projectChat', _languageProvider.currentLanguage),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
@@ -569,7 +585,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return   Center(child:Text(Texts.translate('error', LanguageProvider().currentLanguage)));
+                  return Center(
+                      child: Text(Texts.translate(
+                          'error', LanguageProvider().currentLanguage)));
                 }
 
                 final messages = snapshot.data!.docs;
@@ -702,7 +720,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
               maxLines: 5, // Máximo de líneas permitidas
               minLines: 1, // Mínimo de líneas inicial
               decoration: InputDecoration(
-                hintText: Texts.translate('writeYourMessage', LanguageProvider().currentLanguage),
+                hintText: Texts.translate(
+                    'writeYourMessage', LanguageProvider().currentLanguage),
                 border:
                     const UnderlineInputBorder(), // Sin bordes para un look limpio
                 filled: true,

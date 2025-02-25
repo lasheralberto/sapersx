@@ -3,10 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:sapers/components/widgets/expert_profile_card.dart';
 import 'package:sapers/components/widgets/invitation_item.dart';
 import 'package:sapers/components/widgets/profile_header.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/project.dart';
@@ -38,7 +40,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Future<UserInfoPopUp?> _loadUserProfileData() async {
-    return await _firebaseService.getUserInfoByEmail(widget.userinfo!.email);
+    return Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
   }
 
   @override
@@ -121,8 +123,9 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
   }
 
   Future<void> _getUserFrom() async {
-    final user = await FirebaseService()
-        .getUserInfoByEmail(FirebaseAuth.instance.currentUser!.email!);
+    final user =
+        Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+    ;
     setState(() {
       userFrom = user;
     });
@@ -146,7 +149,8 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
           child: isMessageSending
               ? AppStyles().progressIndicatorButton()
               : Text(
-                  Texts.translate('send_project_invitation', LanguageProvider().currentLanguage),
+                  Texts.translate('send_project_invitation',
+                      LanguageProvider().currentLanguage),
                   style: AppStyles().getTextStyle(
                     context,
                     fontSize: 20,
@@ -194,7 +198,8 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                     isExpanded: true,
                     value: selectedProject,
                     hint: Text(
-                      Texts.translate('selectProject', LanguageProvider().currentLanguage),
+                      Texts.translate(
+                          'selectProject', LanguageProvider().currentLanguage),
                       style: AppStyles().getTextStyle(context),
                     ),
                     items: projects.map((project) {
@@ -222,7 +227,8 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
               TextField(
                 controller: messageController,
                 decoration: InputDecoration(
-                  hintText: Texts.translate('writeYourMessage', LanguageProvider().currentLanguage),
+                  hintText: Texts.translate(
+                      'writeYourMessage', LanguageProvider().currentLanguage),
                   hintStyle: AppStyles().getTextStyle(context,
                       fontSize: 14, fontWeight: FontWeight.w300),
                   border: InputBorder.none,
@@ -298,7 +304,8 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  Texts.translate('projects', LanguageProvider().currentLanguage),
+                  Texts.translate(
+                      'projects', LanguageProvider().currentLanguage),
                   style: AppStyles().getTextStyle(
                     context,
                     fontSize: 16,
@@ -324,7 +331,8 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return Center(
                       child: Text(
-                        Texts.translate('noMessages', LanguageProvider().currentLanguage),
+                        Texts.translate(
+                            'noMessages', LanguageProvider().currentLanguage),
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
