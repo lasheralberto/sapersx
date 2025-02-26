@@ -40,7 +40,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Future<UserInfoPopUp?> _loadUserProfileData() async {
-    return Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+    return widget.userinfo;
   }
 
   @override

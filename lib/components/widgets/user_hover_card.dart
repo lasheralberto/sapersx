@@ -53,6 +53,7 @@ class UserHoverCard extends StatelessWidget {
           seed: userprofile.email,
           size: AppStyles.avatarSize - 10,
           showBorder: userprofile.isExpert as bool,
+          userInfoPopUp: userprofile,
         ),
         const SizedBox(width: TwitterDimensions.spacingSmall),
         Expanded(

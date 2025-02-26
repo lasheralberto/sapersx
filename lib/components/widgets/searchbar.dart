@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/language_provider.dart';
@@ -164,7 +166,7 @@ class TagBubble extends StatelessWidget {
         children: [
           Text(
             tag,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white, // Color del texto
               fontSize: 12, // Tamaño de fuente aumentado
               fontWeight: FontWeight.w500, // Peso de la fuente
@@ -176,7 +178,7 @@ class TagBubble extends StatelessWidget {
             child: const Icon(
               Icons.close,
               size: 16,
-              color: Colors.white, // Color del ícono
+              color: Color.fromARGB(255, 255, 198, 113), // Color del ícono
             ),
           ),
         ],

@@ -63,7 +63,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
       setState(() {});
     });
@@ -419,7 +419,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                       _buildTab('feedGeneralTab'),
                       _buildTab('FollowingTab'),
                       _buildTab('projectsTab'),
-                      // _buildTab('genteTab')
+                      _buildTab('genteTab')
                     ],
                   ),
                 ),
@@ -438,7 +438,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   _updateFutures();
                 },
               ),
-              // UserSearchScreen()
+              UserSearchScreen()
             ],
           ),
         ),

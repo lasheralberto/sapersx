@@ -54,29 +54,42 @@ class UserInfoPopUp {
   }
 
   // Crear un objeto UserInfo desde un documento de Firebase
-// Crear un objeto UserInfoPopUp desde un documento de Firebase
   factory UserInfoPopUp.fromMap(Map<String, dynamic> map) {
     return UserInfoPopUp(
-      uid: map['uid'] ?? '',
-      username: map['username'] ?? '',
-      email: map['email'] ?? '',
-      bio: map['bio'] ?? '',
-      location: map['location'] ?? '',
-      website: map['website'] ?? '',
-      isExpert: map['isExpert'] ?? false,
-      specialty: map['specialty'] ?? '',
-      hourlyRate: (map['hourlyRate'] ?? 0.0).toDouble(),
-      following: (map['following'] as List<dynamic>?)
-              ?.map((following) => following as String)
-              .toList() ??
-          [],
-      joinDate: map['joinDate'] ?? null,
-      isAvailable: map['isAvailable'] ?? false,
-      reviews: (map['reviews'] as List<dynamic>?)
-              ?.map((review) => review as Map<String, dynamic>)
-              .toList() ??
-          [],
-      experience: map['experience'] ?? '',
+      uid: map['uid'] as String? ?? '', // Manejo seguro de nulos
+      username: map['username'] as String? ?? 'Usuario anónimo',
+      email: map['email'] as String? ?? '',
+      bio: map['bio'] as String?,
+      location: map['location'] as String?,
+      website: map['website'] as String?,
+      isExpert: map['isExpert'] as bool? ?? false,
+      specialty: map['specialty'] as String?,
+      hourlyRate: _parseDouble(map['hourlyRate']), // Función auxiliar
+      following: _parseStringList(map['following']), // Función auxiliar
+      // joinDate: map['joinDate'] as Timestamp?,
+      isAvailable: map['isAvailable'] as bool? ?? false,
+      reviews: _parseReviews(map['reviews']), // Función auxiliar
+      experience: map['experience'] as String?,
     );
+  }
+
+// Añade estas funciones auxiliares al final de tu clase
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0.0;
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) return value.cast<String>().toList();
+    return [];
+  }
+
+  static List<Map<String, dynamic>> _parseReviews(dynamic value) {
+    if (value == null) return [];
+    if (value is List) return value.cast<Map<String, dynamic>>().toList();
+    return [];
   }
 }

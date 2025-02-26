@@ -27,7 +27,8 @@ class ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary( // Añadido RepaintBoundary principal
+    return RepaintBoundary(
+      // Añadido RepaintBoundary principal
       child: Container(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
@@ -55,7 +56,8 @@ class ProfileAvatar extends StatelessWidget {
   }
 
   Widget _buildTextAvatar(BuildContext context) {
-    return RepaintBoundary( // RepaintBoundary para el contenido estático
+    return RepaintBoundary(
+      // RepaintBoundary para el contenido estático
       child: CircleAvatar(
         backgroundColor: Colors.white,
         child: _buildTextContent(context),
@@ -64,7 +66,8 @@ class ProfileAvatar extends StatelessWidget {
   }
 
   Widget _buildClickableAvatar(BuildContext context) {
-    return RepaintBoundary( // RepaintBoundary para el contenido interactivo
+    return RepaintBoundary(
+      // RepaintBoundary para el contenido interactivo
       child: InkWell(
         onTap: () async {
           if (userInfoPopUp != null) {
@@ -84,10 +87,11 @@ class ProfileAvatar extends StatelessWidget {
 
   Widget _buildTextContent(BuildContext context) {
     final textContent = seed.substring(0, 2).toUpperCase();
-    
-    return childBuilder != null 
+
+    return childBuilder != null
         ? childBuilder!(context, textContent)
-        : FittedBox( // FittedBox para escalado dinámico
+        : FittedBox(
+            // FittedBox para escalado dinámico
             fit: BoxFit.scaleDown,
             child: Padding(
               padding: EdgeInsets.all(size * 0.1),
