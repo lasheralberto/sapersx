@@ -70,9 +70,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
         child: Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
+            left: 1,
+            right: 1,
+            top: 1,
           ),
           child: Column(
             children: [
