@@ -363,7 +363,7 @@ class _UserListItemState extends State<_UserListItem> {
         onTap: () {},
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         child: Padding(
-          padding: const EdgeInsets.all(50.0),
+          padding: const EdgeInsets.all(30.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
