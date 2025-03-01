@@ -54,16 +54,15 @@ class SearchBarCustom extends StatelessWidget {
                         const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                     hintText: Texts.translate(
                         'buscar', LanguageProvider().currentLanguage),
-                    hintStyle: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: AppStyles.fontSize), // Hints más suaves
-                    border: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppStyles.borderRadiusValue),
-                        borderSide: BorderSide.none),
+                    // Eliminar todos los bordes
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
                     filled: true,
-                    fillColor:
-                        Theme.of(context).cardColor, // Color de fondo más sutil
+                    fillColor: Theme.of(context).cardColor,
+                    isDense: true, // Reducir altura intern
                     suffixIcon: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
