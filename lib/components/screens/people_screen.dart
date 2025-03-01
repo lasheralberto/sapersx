@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'package:sapers/components/widgets/mustbeloggedsection.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/models/auth_provider.dart';
@@ -65,32 +66,55 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: currentUser == null
-                ? const Center(child: CircularProgressIndicator())
-                : StreamBuilder<QuerySnapshot>(
-                    stream: _usersStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return _buildErrorState(snapshot.error!);
-                      }
-
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return _buildLoadingState();
-                      }
-
-                      final users = _parseUsers(snapshot.data!.docs);
-                      final filteredUsers = _filterUsers(users);
-
-                      return filteredUsers.isEmpty
-                          ? _buildEmptyState()
-                          : _buildUserList(filteredUsers);
-                    },
-                  ),
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
           ),
-        ],
+          child: Column(
+            children: [
+              Expanded(
+                child: currentUser == null
+                    ? LoginRequiredWidget(
+                        onTap: () {
+                          AuthService().isUserLoggedIn(context);
+                        },
+                      )
+                    : StreamBuilder<QuerySnapshot>(
+                        stream: _usersStream,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            return _buildErrorState(snapshot.error!);
+                          }
+
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return _buildLoadingState();
+                          } else if (snapshot.connectionState ==
+                              ConnectionState.none) {
+                            return _buildErrorState(
+                                'No se pudo cargar los datos');
+                          }
+
+                          if (snapshot.hasData) {
+                            final users = _parseUsers(snapshot.data!.docs);
+                            final filteredUsers = _filterUsers(users);
+
+                            return filteredUsers.isEmpty
+                                ? _buildEmptyState()
+                                : _buildUserList(filteredUsers);
+                          } else {
+                            return const SizedBox();
+                          }
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -329,16 +353,17 @@ class _UserListItemState extends State<_UserListItem> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+      elevation: 0,
+      color: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
       ),
       child: InkWell(
         onTap: () {},
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(50.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

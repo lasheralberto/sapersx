@@ -80,8 +80,10 @@ class Texts {
       'close': 'Cerrar',
       'open': 'Crear',
       'genteTab': 'Gente',
+      'mustBeLogged': 'Debes iniciar sesión para acceder a esta sección',
     },
     'en': {
+      'mustBeLogged': 'You must be logged in to access this section',
       'genteTab': 'People',
       'close': 'Close',
       'open': 'Create',

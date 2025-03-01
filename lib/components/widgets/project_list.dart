@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/project_screen.dart';
+import 'package:sapers/components/widgets/mustbeloggedsection.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/project.dart';
@@ -32,54 +35,70 @@ class ProjectListView extends StatefulWidget {
 }
 
 class _ProjectListViewState extends State<ProjectListView> {
+  UserInfoPopUp? currentUser;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    currentUser =
+        Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Project>>(
-      future: widget.future,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return _buildErrorState(snapshot.error.toString());
-        }
+    return currentUser == null
+        ? LoginRequiredWidget(
+            onTap: () {
+              AuthService().isUserLoggedIn(context);
+            },
+          )
+        : FutureBuilder<List<Project>>(
+            future: widget.future,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return _buildErrorState(snapshot.error.toString());
+              }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildLoadingState();
-        }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return _buildLoadingState();
+              }
 
-        final projects = snapshot.data ?? [];
-        if (projects.isEmpty) {
-          return _buildEmptyState();
-        }
+              final projects = snapshot.data ?? [];
+              if (projects.isEmpty) {
+                return _buildEmptyState();
+              }
 
-        return RefreshIndicator(
-          onRefresh: () async => widget.onRefresh(),
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              if (widget.isRefreshing)
-                SliverToBoxAdapter(
-                  child: Container(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: const Center(
-                      child: LinearProgressIndicator(
-                        backgroundColor: Colors.transparent,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+              return RefreshIndicator(
+                onRefresh: () async => widget.onRefresh(),
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    if (widget.isRefreshing)
+                      SliverToBoxAdapter(
+                        child: Container(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: const Center(
+                            child: LinearProgressIndicator(
+                              backgroundColor: Colors.transparent,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.blue),
+                            ),
+                          ),
+                        ),
                       ),
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: widget.isMobile ? 12.0 : 24.0,
+                        vertical: 8.0,
+                      ),
+                      sliver: _buildListView(projects),
                     ),
-                  ),
+                    const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+                  ],
                 ),
-              SliverPadding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: widget.isMobile ? 12.0 : 24.0,
-                  vertical: 8.0,
-                ),
-                sliver: _buildListView(projects),
-              ),
-              const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-            ],
-          ),
-        );
-      },
-    );
+              );
+            },
+          );
   }
 
   Widget _buildListView(List<Project> projects) {

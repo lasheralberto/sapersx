@@ -37,7 +37,7 @@ class SAPExpertProfile extends StatelessWidget {
 
   Widget _buildExperienceSection(context) {
     return Card(
-      color: AppStyles().getCardColor(context),
+      color: Theme.of(context).cardColor,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),

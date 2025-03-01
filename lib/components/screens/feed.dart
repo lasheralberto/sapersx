@@ -219,7 +219,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
               SliverPadding(
                 padding: EdgeInsets.symmetric(
                   horizontal: isMobile ? 4.0 : 16.0,
-                  vertical: 8.0,
+                  vertical: 0.0,
                 ),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
