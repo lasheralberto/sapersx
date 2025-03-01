@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:floating_menu_button/floating_menu_button.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
@@ -52,6 +53,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   UserInfoPopUp? userinfo;
   LanguageProvider languageProvider = LanguageProvider();
   String? tagPressed;
+  bool searchPressed = false;
 
   @override
   void dispose() {
@@ -331,17 +333,31 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                 elevation: innerBoxIsScrolled ? 4 : 0,
                 shadowColor: Theme.of(context).shadowColor.withOpacity(0.1),
                 surfaceTintColor: Colors.transparent,
-                centerTitle: true,
-                title: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                  ),
-                  child: Image.asset(
-                    AppStyles.logoImage,
-                    width: isMobile ? 80.0 : 100.0,
-                    height: isMobile ? 80.0 : 100.0,
-                  ),
+                centerTitle: false,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                      ),
+                      child: Image.asset(
+                        AppStyles.logoImage,
+                        width: isMobile ? 80.0 : 100.0,
+                        height: isMobile ? 80.0 : 100.0,
+                      ),
+                    ),
+                    // Modifica el InkWell del icono de búsqueda
+                    InkWell(
+                      child: const Icon(Icons.search),
+                      onTap: () {
+                        setState(() {
+                          searchPressed = !searchPressed;
+                        });
+                      },
+                    )
+                  ],
                 ),
                 actions: [
                   Padding(
@@ -353,9 +369,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
               SliverPersistentHeader(
                 pinned: false,
                 floating: true,
-                delegate: SliverSearchBarDelegate(
-                  minHeight: 80,
-                  maxHeight: 80,
+                delegate: AnimatedSliverHeaderDelegate(
+                  visible: searchPressed,
                   child: Container(
                     color: Theme.of(context).scaffoldBackgroundColor,
                     child: Padding(
@@ -527,4 +542,55 @@ class SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(SliverTabBarDelegate oldDelegate) {
     return tabBar != oldDelegate.tabBar;
   }
+}
+
+// Agrega esta clase personalizada para el delegate animado
+class AnimatedSliverHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final bool visible;
+  final Widget child;
+  final Animation<double> _animation;
+
+  AnimatedSliverHeaderDelegate({
+    required this.visible,
+    required this.child,
+  }) : _animation = CurvedAnimation(
+          parent: kAlwaysCompleteAnimation,
+          curve: Curves.easeInOut,
+        ) {
+    _animation.addListener(() {});
+  }
+
+  @override
+  double get minExtent => visible ? 80 : 0;
+  @override
+  double get maxExtent => visible ? 80 : 0;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 1600),
+      opacity: visible ? 1.0 : 0.0,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 1300),
+        curve: Curves.easeInOut,
+        height: visible ? 80 : 0,
+        child: OverflowBox(
+          alignment: Alignment.topCenter,
+          maxHeight: 80,
+          child: visible ? child : const SizedBox.shrink(),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(AnimatedSliverHeaderDelegate oldDelegate) {
+    return visible != oldDelegate.visible || child != oldDelegate.child;
+  }
+
+  @override
+  FloatingHeaderSnapConfiguration? get snapConfiguration => null;
+  @override
+  OverScrollHeaderStretchConfiguration? get stretchConfiguration => null;
 }
