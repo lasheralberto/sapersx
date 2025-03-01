@@ -70,9 +70,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
         child: Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
+            left: 1,
+            right: 1,
+            top: 1,
           ),
           child: Column(
             children: [
@@ -353,7 +353,7 @@ class _UserListItemState extends State<_UserListItem> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
       elevation: 0,
       color: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(
@@ -363,7 +363,7 @@ class _UserListItemState extends State<_UserListItem> {
         onTap: () {},
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         child: Padding(
-          padding: const EdgeInsets.all(50.0),
+          padding: const EdgeInsets.all(30.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
