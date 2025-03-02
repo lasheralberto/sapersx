@@ -288,6 +288,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                           setState(() {
                             newPost = SAPPost(
                                 id: postId,
+                                lang: LanguageProvider().currentLanguage,
                                 title: _titleController.text,
                                 content: _descriptionController.text,
                                 author: user!.username.toString(),
@@ -302,6 +303,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                         } else {
                           setState(() {
                             newPost = SAPPost(
+                                lang: LanguageProvider().currentLanguage,
                                 id: postId,
                                 title: _titleController.text,
                                 content: _descriptionController.text,

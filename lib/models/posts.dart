@@ -10,6 +10,7 @@ class SAPPost {
   final bool isQuestion;
   final int replyCount;
   final List<String> tags;
+  final String lang;
   final bool isExpert;
   final List<Map<String, dynamic>>? attachments;
 
@@ -20,6 +21,7 @@ class SAPPost {
       required this.author,
       required this.timestamp,
       required this.module,
+      this.lang = 'en',
       required this.isExpert,
       this.isQuestion = false,
       required this.replyCount, // Ya no tiene valor por defecto
@@ -34,6 +36,7 @@ class SAPPost {
       content: map['content'] ?? '',
       isExpert: map['isExpert'] ?? false,
       author: map['author'] ?? '',
+      lang: map['lang'] ?? 'en',
       timestamp: map['timestamp'] != null
           ? map['timestamp'] is String
               ? DateTime.parse(
@@ -57,6 +60,7 @@ class SAPPost {
     return {
       'title': title,
       'content': content,
+      'lang': lang,
       'author': author,
       'timestamp': timestamp.toIso8601String(),
       'module': module,

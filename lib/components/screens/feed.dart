@@ -282,10 +282,12 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
     return Scaffold(
       //bottomSheet: _buildHotTopicsPanel(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.miniCenterFloat,
       floatingActionButton: (tagPressed != "null" && tagPressed != null)
           ? tagBubblePressed(
-              tag: tagPressed.toString(),
+              tag: tagPressed.toString().toUpperCase(),
               onDelete: () {
                 setState(() {
                   tagPressed = null;
@@ -297,9 +299,9 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         menuTray: const MenuTray(
             itemsSeparation: 30,
             itemTextStyle: TextStyle(fontWeight: FontWeight.bold),
-            padding: EdgeInsets.all(20),
-            trayHeight: 200,
-            trayWidth: 200),
+            padding: EdgeInsets.all(10),
+            trayHeight: 150,
+            trayWidth: 150),
         menuButton: MenuButton(
           padding: const EdgeInsets.only(right: 30, left: 15),
           textStyle: TextStyle(

@@ -467,6 +467,7 @@ class FirebaseService {
 // Método para obtener todos los posts una sola vez
   Future<List<SAPPost>> getPostsFuture() async {
     final snapshot = await postsCollection
+        .where('lang', isEqualTo: LanguageProvider().currentLanguage)
         .orderBy('timestamp', descending: true)
         //.limit(morePosts)
         .get();
