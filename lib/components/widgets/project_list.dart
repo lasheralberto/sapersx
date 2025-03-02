@@ -126,7 +126,7 @@ class _ProjectListViewState extends State<ProjectListView> {
 
   Widget _buildProjectListCard(Project project, context) {
     return Card(
-      color: AppStyles().getCardColor(context),
+      color: Theme.of(context).cardColor,
       elevation: AppStyles().getCardElevation(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
@@ -171,6 +171,16 @@ class _ProjectListViewState extends State<ProjectListView> {
                         ),
                       ],
                     ),
+                    const SizedBox(
+                      height: 14,
+                    ),
+                    StackedAvatars(
+                      maxAvatarSize: 30,
+                      members: project.members,
+                    ),
+                    const SizedBox(
+                      height: 14,
+                    ),
                     Row(
                       children: [
                         Icon(
@@ -186,13 +196,6 @@ class _ProjectListViewState extends State<ProjectListView> {
                         const Spacer(),
                       ],
                     ),
-                    const SizedBox(
-                      height: 14,
-                    ),
-                    StackedAvatars(
-                      maxAvatarSize: 30,
-                      members: project.members,
-                    )
                   ],
                 ),
               ),

@@ -145,7 +145,7 @@ class AppStyles {
   }
 
   double getCardElevation(context) {
-    return 2.0;
+    return 1.0;
   }
 
   Color getButtonColor(context) {
