@@ -150,7 +150,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     }
   }
 
-  Widget tagBubble({
+  Widget tagBubblePressed({
     required String tag,
     required VoidCallback onDelete,
   }) {
@@ -158,8 +158,9 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       margin: const EdgeInsets.only(right: 8),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withOpacity(0.2),
+        border: Border.all(color: AppStyles.colorAvatarBorder, width: 1),
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -167,7 +168,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
           Text(
             tag,
             style: const TextStyle(
-              color: Colors.blue,
+              color: Colors.black,
               fontSize: 14,
             ),
           ),
@@ -281,16 +282,17 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
     return Scaffold(
       //bottomSheet: _buildHotTopicsPanel(),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.startDocked,
-      // floatingActionButton: tagPressed != "null"
-      //     ? tagBubble(
-      //         tag: tagPressed.toString(),
-      //         onDelete: () {
-      //           setState(() {
-      //             _updateFutures();
-      //           });
-      //         })
-      //     : SizedBox.shrink(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      floatingActionButton: (tagPressed != "null" && tagPressed != null)
+          ? tagBubblePressed(
+              tag: tagPressed.toString(),
+              onDelete: () {
+                setState(() {
+                  tagPressed = null;
+                  _updateFutures();
+                });
+              })
+          : const SizedBox.shrink(),
       body: FloatingMenuWidget(
         menuTray: const MenuTray(
             itemsSeparation: 30,

@@ -45,7 +45,6 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   bool isExpanded = false;
-  
 
   int counter = 0;
 
@@ -212,7 +211,6 @@ class _PostCardState extends State<PostCard> {
       onTap: () {
         // Opcional: Añade aquí lógica adicional cuando se hace clic en una etiqueta
         widget.tagPressed(tag);
-
       },
       child: Padding(
         padding: const EdgeInsets.only(right: 8, bottom: 8),
@@ -221,7 +219,7 @@ class _PostCardState extends State<PostCard> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                tag,
+                tag.toUpperCase(),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.black,
                       fontWeight: FontWeight.w500,
@@ -231,7 +229,7 @@ class _PostCardState extends State<PostCard> {
           ),
           backgroundColor: Theme.of(context).cardColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
             side: BorderSide(
               color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
               width: 1,
