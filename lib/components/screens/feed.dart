@@ -579,10 +579,10 @@ class AnimatedSliverHeaderDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return AnimatedOpacity(
-      duration: const Duration(milliseconds: 1600),
+      duration: const Duration(milliseconds: 600),
       opacity: visible ? 1.0 : 0.0,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 1300),
+        duration: const Duration(milliseconds: 600),
         curve: Curves.easeInOut,
         height: visible ? 80 : 0,
         child: OverflowBox(

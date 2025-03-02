@@ -33,7 +33,7 @@ class SearchBarCustom extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
         child: SizedBox(
           height:
               MediaQuery.of(context).size.height / 19, // Altura más compacta
