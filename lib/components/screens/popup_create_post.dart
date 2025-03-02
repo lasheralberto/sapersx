@@ -11,14 +11,14 @@ import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
 
-class CreatePostDialog extends StatefulWidget {
-  const CreatePostDialog({super.key});
+class CreatePostScreen extends StatefulWidget {
+  const CreatePostScreen({super.key});
 
   @override
-  State<CreatePostDialog> createState() => _CreatePostDialogState();
+  State<CreatePostScreen> createState() => _CreatePostScreenState();
 }
 
-class _CreatePostDialogState extends State<CreatePostDialog> {
+class _CreatePostScreenState extends State<CreatePostScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _tagsController = TextEditingController();
@@ -30,7 +30,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   String postId = '';
   String replyId = '';
   late SAPPost newPost;
-  bool? isLoadingPost = false;
+  bool isLoadingPost = false;
 
   final List<String> _modules = Modules.modules;
 
@@ -147,193 +147,223 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
     }
   }
 
+  Future<void> _createPost() async {
+    setState(() {
+      isLoadingPost = true;
+    });
+
+    final UserInfoPopUp? user =
+        Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+
+    setState(() {
+      postId = UtilsSapers().generateSimpleUID();
+      replyId = UtilsSapers().getReplyId(context);
+    });
+
+    if (selectedFiles.isNotEmpty) {
+      var filesNewPost = await FirebaseService().addAttachments(
+        postId,
+        replyId,
+        user!.username,
+        selectedFiles,
+      );
+
+      setState(() {
+        newPost = SAPPost(
+            id: postId,
+            lang: LanguageProvider().currentLanguage,
+            title: _titleController.text,
+            content: _descriptionController.text,
+            author: user.username.toString(),
+            timestamp: DateTime.now(),
+            module: _selectedModule,
+            isQuestion: _isQuestion,
+            tags: _tags,
+            isExpert: user.isExpert as bool,
+            attachments: filesNewPost,
+            replyCount: 0);
+      });
+    } else {
+      setState(() {
+        newPost = SAPPost(
+            lang: LanguageProvider().currentLanguage,
+            id: postId,
+            title: _titleController.text,
+            content: _descriptionController.text,
+            author: user!.username.toString(),
+            timestamp: DateTime.now(),
+            module: _selectedModule,
+            isExpert: user.isExpert as bool,
+            isQuestion: _isQuestion,
+            tags: _tags,
+            replyCount: 0);
+      });
+    }
+
+    setState(() {
+      isLoadingPost = false;
+    });
+
+    Navigator.pop(context, newPost);
+  }
+
   @override
   Widget build(BuildContext context) {
-    double dialogWidth = AppStyles().getMaxWidthDialog(context);
     var mediaQuery = MediaQuery.of(context).size;
 
-    return Dialog(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        constraints: BoxConstraints(
-          maxWidth: dialogWidth,
-          maxHeight: mediaQuery.height,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    child: Text(
-                        Texts.translate('crearNuevoPost',
-                            LanguageProvider().currentLanguage),
-                        style: AppStyles().getTextStyle(context,
-                            fontSize: AppStyles.fontSizeMedium,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                  controller: _titleController,
-                  decoration: styles.getInputDecoration(
-                      Texts.translate(
-                          'titulo', LanguageProvider().currentLanguage),
-                      null,
-                      context)),
-              const SizedBox(height: 16),
-              TextField(
-                textAlign: TextAlign.start,
-                controller: _descriptionController,
-                decoration: styles.getInputDecoration(
-                    Texts.translate(
-                        'descripcion', LanguageProvider().currentLanguage),
-                    null,
-                    context),
-                maxLines: (mediaQuery.height * 0.4 / 24).round(),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _tagsController,
-                decoration: styles.getInputDecoration(
-                  '${Texts.translate('tags', LanguageProvider().currentLanguage)} (${Texts.translate('separarConEspacios', LanguageProvider().currentLanguage)})',
-                  null,
-                  context,
-                ),
-                onChanged: _handleTagsInput,
-              ),
-              const SizedBox(height: 8),
-              _buildTagChips(),
-              const SizedBox(height: 16),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: dialogWidth - 32,
-                  minWidth: 10,
-                ),
-                child: DropdownButtonFormField<String>(
-                  value: _selectedModule,
-                  decoration: styles.getInputDecoration(
-                      Texts.translate(
-                          'moduloSAP', LanguageProvider().currentLanguage),
-                      null,
-                      context),
-                  items: _modules.map((String module) {
-                    return DropdownMenuItem<String>(
-                      value: module,
-                      child: Text(module),
-                    );
-                  }).toList(),
-                  onChanged: (String? value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedModule = value;
-                      });
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                alignment: WrapAlignment.end,
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.attach_file),
-                    onPressed: () async {
-                      var files = await UtilsSapers().pickFiles(context);
-                      setState(() {
-                        selectedFiles = files!;
-                      });
-                    },
-                    tooltip: Texts.translate(
-                        'addAttachment', LanguageProvider().currentLanguage),
-                  ),
-                  _buildAttachmentUploadedReply(),
-                  const SizedBox(width: 5),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: FilledButton(
-                      style: AppStyles().getButtonStyle(context),
-                      onPressed: () async {
-                        setState(() {
-                          isLoadingPost = true;
-                        });
-                        final UserInfoPopUp? user =
-                            Provider.of<AuthProviderSapers>(context,
-                                    listen: false)
-                                .userInfo;
-
-                        setState(() {
-                          postId = UtilsSapers().generateSimpleUID();
-                          replyId = UtilsSapers().getReplyId(context);
-                        });
-
-                        if (selectedFiles.isNotEmpty) {
-                          var filesNewPost =
-                              await FirebaseService().addAttachments(
-                            postId,
-                            replyId,
-                            user!.username,
-                            selectedFiles,
-                          );
-
-                          setState(() {
-                            newPost = SAPPost(
-                                id: postId,
-                                lang: LanguageProvider().currentLanguage,
-                                title: _titleController.text,
-                                content: _descriptionController.text,
-                                author: user!.username.toString(),
-                                timestamp: DateTime.now(),
-                                module: _selectedModule,
-                                isQuestion: _isQuestion,
-                                tags: _tags,
-                                isExpert: user.isExpert as bool,
-                                attachments: filesNewPost,
-                                replyCount: 0);
-                          });
-                        } else {
-                          setState(() {
-                            newPost = SAPPost(
-                                lang: LanguageProvider().currentLanguage,
-                                id: postId,
-                                title: _titleController.text,
-                                content: _descriptionController.text,
-                                author: user!.username.toString(),
-                                timestamp: DateTime.now(),
-                                module: _selectedModule,
-                                isExpert: user.isExpert as bool,
-                                isQuestion: _isQuestion,
-                                tags: _tags,
-                                replyCount: 0);
-                          });
-                        }
-
-                        setState(() {
-                          isLoadingPost = false;
-                        });
-                        Navigator.pop(context, newPost);
-                      },
-                      child: isLoadingPost == true
-                          ? AppStyles().progressIndicatorCreatePostButton()
-                          : Text(Texts.translate(
-                              'publicar', LanguageProvider().currentLanguage)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          Texts.translate('crearNuevoPost', LanguageProvider().currentLanguage),
+          style: AppStyles().getTextStyle(
+            context,
+            fontSize: AppStyles.fontSizeMedium,
+            fontWeight: FontWeight.bold,
           ),
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: isLoadingPost
+                ? Center(child: AppStyles().progressIndicatorCreatePostButton())
+                : FilledButton(
+                    style: AppStyles().getButtonStyle(context),
+                    onPressed: _createPost,
+                    child: Text(Texts.translate(
+                        'publicar', LanguageProvider().currentLanguage)),
+                  ),
+          ),
+        ],
       ),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints viewportConstraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: viewportConstraints.maxHeight,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(
+                    child: Container(
+                      constraints: BoxConstraints(
+                        maxWidth: 800, // Ancho máximo para tablets y desktop
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextField(
+                            controller: _titleController,
+                            decoration: styles.getInputDecoration(
+                              Texts.translate(
+                                  'titulo', LanguageProvider().currentLanguage),
+                              null,
+                              context,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            textAlign: TextAlign.start,
+                            controller: _descriptionController,
+                            decoration: styles.getInputDecoration(
+                              Texts.translate('descripcion',
+                                  LanguageProvider().currentLanguage),
+                              null,
+                              context,
+                            ),
+                            maxLines: (mediaQuery.height * 0.3 / 24).round(),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _tagsController,
+                            decoration: styles.getInputDecoration(
+                              '${Texts.translate('tags', LanguageProvider().currentLanguage)} (${Texts.translate('separarConEspacios', LanguageProvider().currentLanguage)})',
+                              null,
+                              context,
+                            ),
+                            onChanged: _handleTagsInput,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildTagChips(),
+                          const SizedBox(height: 16),
+                          DropdownButtonFormField<String>(
+                            value: _selectedModule,
+                            decoration: styles.getInputDecoration(
+                              Texts.translate('moduloSAP',
+                                  LanguageProvider().currentLanguage),
+                              null,
+                              context,
+                            ),
+                            items: _modules.map((String module) {
+                              return DropdownMenuItem<String>(
+                                value: module,
+                                child: Text(module),
+                              );
+                            }).toList(),
+                            onChanged: (String? value) {
+                              if (value != null) {
+                                setState(() {
+                                  _selectedModule = value;
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.attach_file),
+                                onPressed: () async {
+                                  var files =
+                                      await UtilsSapers().pickFiles(context);
+                                  if (files != null) {
+                                    setState(() {
+                                      selectedFiles = files;
+                                    });
+                                  }
+                                },
+                                tooltip: Texts.translate('addAttachment',
+                                    LanguageProvider().currentLanguage),
+                              ),
+                              Expanded(child: _buildAttachmentUploadedReply()),
+                            ],
+                          ),
+                          const SizedBox(
+                              height:
+                                  50), // Espacio adicional al final para mejor UX
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+      // Botón flotante para dispositivos móviles
+      floatingActionButton: MediaQuery.of(context).size.width < 600
+          ? FloatingActionButton.extended(
+              onPressed: _createPost,
+              icon: isLoadingPost
+                  ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.send),
+              label: Text(Texts.translate(
+                  'publicar', LanguageProvider().currentLanguage)),
+            )
+          : null,
     );
   }
 }

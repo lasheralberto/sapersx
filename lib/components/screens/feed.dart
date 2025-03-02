@@ -121,7 +121,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     } else {
       final result = await showDialog<SAPPost>(
         context: context,
-        builder: (context) => const CreatePostDialog(),
+        builder: (context) => const CreatePostScreen(),
       );
 
       if (result != null) {
@@ -140,7 +140,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       ;
       final result = await showDialog<Project>(
         context: context,
-        builder: (context) => CreateProjectDialog(user: user),
+        builder: (context) => CreateProjectScreen(user: user),
       );
 
       if (result != null) {
