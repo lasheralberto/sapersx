@@ -81,8 +81,10 @@ class Texts {
       'open': 'Crear',
       'genteTab': 'Gente',
       'mustBeLogged': 'Debes iniciar sesión para acceder a esta sección',
+      'trendingTags': 'Tags populares',
     },
     'en': {
+      'trendingTags': 'Trending tags',
       'mustBeLogged': 'You must be logged in to access this section',
       'genteTab': 'People',
       'close': 'Close',

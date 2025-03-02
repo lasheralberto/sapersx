@@ -13,6 +13,7 @@ import 'package:sapers/components/screens/popup_create_post.dart';
 import 'package:sapers/components/screens/project_dialog.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/widgets/postcard.dart';
+import 'package:sapers/components/widgets/posts_list.dart';
 import 'package:sapers/components/widgets/project_card.dart';
 import 'package:sapers/components/widgets/project_list.dart';
 import 'package:sapers/components/widgets/searchbar.dart';
@@ -47,13 +48,16 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   String _selectedModule = '';
   Future<List<SAPPost>>? _postsFutureGeneral;
   Future<List<SAPPost>>? _postsFutureFollowing;
+  Future<List<String>>? _futureTags;
   Future<List<Project>>? _postsProjects;
   bool _isRefreshing = false;
   bool isPostExpanded = false;
   UserInfoPopUp? userinfo;
   LanguageProvider languageProvider = LanguageProvider();
   String? tagPressed;
+  bool trendsPressed = false;
   bool searchPressed = false;
+  final SidebarController _sidebarController = SidebarController();
 
   @override
   void dispose() {
@@ -96,12 +100,14 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     // Cargar posts de seguidos y proyectos en paralelo
     final followingPosts = _firebaseService.getPostsFollowingFuture();
     final projectsPosts = _firebaseService.getProjectsFuture();
+    final tags = _firebaseService.getAllTags();
 
     // Actualizar el estado con los nuevos futures
     setState(() {
       _postsFutureGeneral = generalPosts;
       _postsFutureFollowing = followingPosts;
       _postsProjects = projectsPosts;
+      _futureTags = tags;
     });
   }
 
@@ -226,6 +232,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                 ),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
+                    addAutomaticKeepAlives: false,
                     (context, index) {
                       return _buildPostCard(posts[index], isMobile);
                     },
@@ -261,6 +268,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         child: Material(
           color: Colors.transparent,
           child: PostCard(
+            key: ValueKey(post.id),
             onExpandChanged: (p0) => setState(() => isPostExpanded = p0),
             tagPressed: (p0) {
               setState(() {
@@ -363,13 +371,37 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                       ),
                     ),
                     // Modifica el InkWell del icono de búsqueda
-                    InkWell(
-                      child: const Icon(Icons.search),
-                      onTap: () {
-                        setState(() {
-                          searchPressed = !searchPressed;
-                        });
-                      },
+                    Row(
+                      children: [
+                        FloatingActionButton(
+                          elevation: 1,
+                          backgroundColor: Colors.white,
+                          mini: true,
+                          onPressed: () {
+                            _sidebarController.toggle();
+                          },
+                          child: AnimatedBuilder(
+                            animation: _sidebarController,
+                            builder: (context, _) {
+                              return Icon(
+                                _sidebarController.isOpen
+                                    ? Icons.close
+                                    : Icons.tag,
+                                color: AppStyles.colorAvatarBorder,
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 18),
+                        InkWell(
+                          child: const Icon(Icons.search),
+                          onTap: () {
+                            setState(() {
+                              searchPressed = !searchPressed;
+                            });
+                          },
+                        ),
+                      ],
                     )
                   ],
                 ),
@@ -458,8 +490,35 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
           body: TabBarView(
             controller: _tabController,
             children: [
-              _buildPostsList(_postsFutureGeneral!, isMobile),
-              _buildPostsList(_postsFutureFollowing!, isMobile),
+              FutureBuilder<List<String>>(
+                future: _futureTags,
+                builder: (context, snapshot) {
+                  List<String> trendingTags = ['PP']; // Valor por defecto
+
+                  if (snapshot.hasData) {
+                    trendingTags = snapshot.data!;
+                  }
+
+                  return PostsListWithSidebar(
+                      sidebarController: _sidebarController,
+                      onPostExpanded: (p0) {
+                        setState(() {
+                          isPostExpanded = p0;
+                        });
+                      },
+                      future: _postsFutureGeneral!,
+                      isMobile: isMobile,
+                      trendingTags: trendingTags,
+                      onTagSelected: (tag) {
+                        setState(() {
+                          tagPressed = tag;
+                          _updateFutures();
+                        });
+                      });
+                },
+              ),
+              // _buildPostsList(_postsFutureGeneral!, isMobile),
+              //_buildPostsList(_postsFutureFollowing!, isMobile),
               ProjectListView(
                 future: _postsProjects!,
                 isMobile: isMobile,

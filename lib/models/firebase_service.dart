@@ -464,6 +464,19 @@ class FirebaseService {
     return chunks;
   }
 
+  //Método para obtener todos los tags de todos los posts
+  Future<List<String>> getAllTags() async {
+    final snapshot = await postsCollection
+        .where('lang', isEqualTo: LanguageProvider().currentLanguage)
+        .get();
+    final tags = snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return List<String>.from(data['tags'] ?? []);
+    }).toList();
+
+    return tags.expand((element) => element).toSet().toList();
+  }
+
 // Método para obtener todos los posts una sola vez
   Future<List<SAPPost>> getPostsFuture() async {
     final snapshot = await postsCollection
