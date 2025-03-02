@@ -281,6 +281,16 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
     return Scaffold(
       //bottomSheet: _buildHotTopicsPanel(),
+      // floatingActionButtonLocation: FloatingActionButtonLocation.startDocked,
+      // floatingActionButton: tagPressed != "null"
+      //     ? tagBubble(
+      //         tag: tagPressed.toString(),
+      //         onDelete: () {
+      //           setState(() {
+      //             _updateFutures();
+      //           });
+      //         })
+      //     : SizedBox.shrink(),
       body: FloatingMenuWidget(
         menuTray: const MenuTray(
             itemsSeparation: 30,

@@ -48,7 +48,11 @@ class SearchBarCustom extends StatelessWidget {
               // Expande el TextField para ocupar el espacio restante
               Expanded(
                 child: TextField(
+                  textAlignVertical:
+                      TextAlignVertical.center, // Centrado vertical
+                  textAlign: TextAlign.start, // Centrado horizontal
                   controller: controller,
+                  style: AppStyles().getTextStyle(context),
                   decoration: InputDecoration(
                     contentPadding:
                         const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
@@ -61,6 +65,7 @@ class SearchBarCustom extends StatelessWidget {
                     errorBorder: InputBorder.none,
                     disabledBorder: InputBorder.none,
                     filled: true,
+                    alignLabelWithHint: true,
                     fillColor: Theme.of(context).cardColor,
                     isDense: true, // Reducir altura intern
                     suffixIcon: Row(

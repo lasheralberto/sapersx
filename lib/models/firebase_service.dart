@@ -56,8 +56,6 @@ class FirebaseService {
   // Cache para información de usuarios
   final Map<String, UserInfoPopUp> _userCache = {};
 
-
-
   Stream<QuerySnapshot> getProjectChatStream(String projectId) {
     return projectChatCollection
         .doc(projectId)
@@ -512,6 +510,9 @@ class FirebaseService {
           location: data['location'] ?? '',
           email: data['email'] ?? '',
           website: data['website'] ?? '',
+          hourlyRate: data['hourlyRate'] ?? 0.0,
+          joinDate: data['joinDate'] ?? Timestamp.fromDate(DateTime.now()),
+          experience: data['experience'] ?? '',
           isExpert: data['isExpert'] ?? false,
         );
 

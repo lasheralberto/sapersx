@@ -1,6 +1,7 @@
 // GoRouter configuration
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/feed.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/screens/user_profile.dart';
@@ -31,6 +32,7 @@ final router = GoRouter(
       builder: (context, state) {
         final username =
             state.pathParameters['username']; // Obtener el parámetro
+
         return FutureBuilder<UserInfoPopUp?>(
           future: FirebaseService().getUserInfoByUsername(username ?? ''),
           builder: (context, snapshot) {
