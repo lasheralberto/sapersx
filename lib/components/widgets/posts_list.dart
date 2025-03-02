@@ -20,7 +20,7 @@ class TrendingTagsSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: MediaQuery.of(context).size.width * 0.1,
+      width: MediaQuery.of(context).size.width * 0.3,
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(15),
@@ -252,10 +252,15 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
               curve: Curves.easeInOut,
               right: widget.sidebarController.isOpen
                   ? 0
-                  : -MediaQuery.of(context).size.width * 0.1,
+                  : -MediaQuery.of(context).size.width *
+                      (widget.isMobile ? 0.5 : 0.33),
               top: 0,
               bottom: 0,
-              width: MediaQuery.of(context).size.width * 0.1,
+              width: widget.isMobile
+                  ? MediaQuery.of(context).size.width *
+                      0.5 // 1/2 de pantalla en móvil
+                  : MediaQuery.of(context).size.width *
+                      0.33, // 1/3 de pantalla en escritorio
               child: GestureDetector(
                 onTap: () {}, // Evita que los clics pasen a través del sidebar
                 child: TrendingTagsSidebar(
