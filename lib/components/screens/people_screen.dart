@@ -353,7 +353,7 @@ class _UserListItemState extends State<_UserListItem> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+      margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 0),
       elevation: 0,
       color: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(
