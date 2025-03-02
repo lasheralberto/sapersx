@@ -517,6 +517,33 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                       });
                 },
               ),
+              FutureBuilder<List<String>>(
+                future: _futureTags,
+                builder: (context, snapshot) {
+                  List<String> trendingTags = ['PP']; // Valor por defecto
+
+                  if (snapshot.hasData) {
+                    trendingTags = snapshot.data!;
+                  }
+
+                  return PostsListWithSidebar(
+                      sidebarController: _sidebarController,
+                      onPostExpanded: (p0) {
+                        setState(() {
+                          isPostExpanded = p0;
+                        });
+                      },
+                      future: _postsFutureFollowing!,
+                      isMobile: isMobile,
+                      trendingTags: trendingTags,
+                      onTagSelected: (tag) {
+                        setState(() {
+                          tagPressed = tag;
+                          _updateFutures();
+                        });
+                      });
+                },
+              ),
               // _buildPostsList(_postsFutureGeneral!, isMobile),
               //_buildPostsList(_postsFutureFollowing!, isMobile),
               ProjectListView(
