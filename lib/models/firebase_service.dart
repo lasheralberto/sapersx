@@ -627,7 +627,7 @@ class FirebaseService {
       'timestamp': Timestamp.fromDate(post.timestamp),
       'module': post.module,
       'isQuestion': post.isQuestion,
-      'lang': post.lang,
+      'lang': LanguageProvider().currentLanguage,
       'tags': post.tags,
       'attachments': post.attachments,
     });
