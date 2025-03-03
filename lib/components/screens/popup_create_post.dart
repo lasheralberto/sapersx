@@ -347,23 +347,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         ),
       ),
       // Botón flotante para dispositivos móviles
-      floatingActionButton: MediaQuery.of(context).size.width < 600
-          ? FloatingActionButton.extended(
-              onPressed: _createPost,
-              icon: isLoadingPost
-                  ? SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Icon(Icons.send),
-              label: Text(Texts.translate(
-                  'publicar', LanguageProvider().currentLanguage)),
-            )
-          : null,
+     
     );
   }
 }
