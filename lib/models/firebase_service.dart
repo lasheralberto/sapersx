@@ -490,6 +490,7 @@ class FirebaseService {
       return SAPPost(
         id: doc.id,
         title: data['title'] ?? '',
+        lang: data['lang'] ?? 'en',
         isExpert: data['isExpert'] ?? false,
         content: data['content'] ?? '',
         author: data['author'] ?? '',
