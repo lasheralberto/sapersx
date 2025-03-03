@@ -490,6 +490,7 @@ class FirebaseService {
       return SAPPost(
         id: doc.id,
         title: data['title'] ?? '',
+        lang: data['lang'] ?? 'en',
         isExpert: data['isExpert'] ?? false,
         content: data['content'] ?? '',
         author: data['author'] ?? '',
@@ -626,6 +627,7 @@ class FirebaseService {
       'timestamp': Timestamp.fromDate(post.timestamp),
       'module': post.module,
       'isQuestion': post.isQuestion,
+      'lang': post.lang,
       'tags': post.tags,
       'attachments': post.attachments,
     });
@@ -685,6 +687,7 @@ class FirebaseService {
   Future<List<SAPPost>> getPostsByModuleFuture(String module) async {
     final snapshot = await postsCollection
         .where('module', isEqualTo: module)
+        .where('lang', isEqualTo: LanguageProvider().currentLanguage)
         .orderBy('timestamp', descending: true)
         .get();
 
@@ -713,6 +716,7 @@ class FirebaseService {
   // Método para buscar posts
   Stream<List<SAPPost>> searchPosts(String searchTerm) {
     return postsCollection
+        .where('lang', isEqualTo: LanguageProvider().currentLanguage)
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
