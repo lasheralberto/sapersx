@@ -31,6 +31,7 @@ dependencies:
   url_strategy: ^0.3.0
   web: ^1.1.0
   floating_menu_button: ^0.0.2
+  liquid_pull_to_refresh: ^3.0.1
 
  
  

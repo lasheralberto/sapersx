@@ -3,6 +3,7 @@ import 'package:sapers/components/widgets/postcard.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:sapers/models/texts.dart';
 
 class TrendingTagsSidebar extends StatelessWidget {
@@ -199,7 +200,8 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
               );
             }
 
-            return RefreshIndicator(
+            return LiquidPullToRefresh(
+              backgroundColor: AppStyles.colorAvatarBorder,
               onRefresh: _handleRefresh,
               child: Row(
                 children: [
