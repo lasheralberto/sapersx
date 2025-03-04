@@ -7,28 +7,23 @@ import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 
-class LoginDialog extends StatefulWidget {
-  const LoginDialog({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State createState() => _LoginDialogState();
+  State createState() => _LoginScreenState();
 }
 
-class _LoginDialogState extends State<LoginDialog> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _authService = AuthService();
-  final _styles = AppStyles();
+
   String? _errorMessage;
   bool _isLoading = false;
   bool _isSignUp = false;
-
-  static const _mesoBorder = BorderSide(
-    color: Color(0x44FFFFFF),
-    width: 2,
-  );
 
   @override
   void dispose() {
@@ -47,8 +42,6 @@ class _LoginDialogState extends State<LoginDialog> {
 
       try {
         if (_isSignUp) {
-          // await _authService.signUp(email, pass);
-          // await FirebaseAuth.instance.authStateChanges().first;
           bool? islogued = await UserProfilePopup.show(context, email);
           if (islogued == true) {
             await _authService.signUp(email, pass);
@@ -91,179 +84,189 @@ class _LoginDialogState extends State<LoginDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-      ),
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-          boxShadow: null,
-          border:
-              Border.all(color: _mesoBorder.color, width: _mesoBorder.width),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          _isSignUp
+              ? Texts.translate(
+                  'crearCuenta', LanguageProvider().currentLanguage)
+              : Texts.translate(
+                  'iniciarSesion', LanguageProvider().currentLanguage),
+          style: TextStyle(
+            color: AppStyles().getButtonColor(context),
+          ),
         ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: SafeArea(
         child: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-            constraints: BoxConstraints(
-                maxWidth: AppStyles().getMaxWidthDialog(context)),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Image.asset(
-                    AppStyles.tabMarkerImage,
-                    height: 80,
-                    width: 80,
-                    fit: BoxFit.contain,
-                  ),
-                  Text(
-                    _isSignUp
-                        ? Texts.translate('crearCuenta', LanguageProvider().currentLanguage)
-                        : Texts.translate('iniciarSesion', LanguageProvider().currentLanguage),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppStyles().getButtonColor(context),
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width < 500
+                  ? double.infinity
+                  : MediaQuery.of(context).size.width * 0.4,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Image.asset(
+                        AppStyles.tabMarkerImage,
+                        height: 120,
+                        width: 120,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 32),
-                  _buildTextField(
-                    controller: _emailController,
-                    label: Texts.translate('emailField', LanguageProvider().currentLanguage),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return Texts.translate('emailValidate', LanguageProvider().currentLanguage);
-                      }
-                      if (!value.contains('@')) {
-                        return Texts.translate('emailWrong', LanguageProvider().currentLanguage);
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _passwordController,
-                    label: Texts.translate('Password', LanguageProvider().currentLanguage),
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return Texts.translate('passError', LanguageProvider().currentLanguage);
-                      }
-                      if (_isSignUp && value.length < 6) {
-                        return Texts.translate('passErrorLen', LanguageProvider().currentLanguage);
-                      }
-                      return null;
-                    },
-                  ),
-                  if (_isSignUp) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 32),
                     _buildTextField(
-                      controller: _confirmPasswordController,
+                      controller: _emailController,
                       label: Texts.translate(
-                          'confirmarContraseña', LanguageProvider().currentLanguage),
-                      obscureText: true,
+                          'emailField', LanguageProvider().currentLanguage),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return Texts.translate(
-                              'porFavorConfirmaTuContraseña', LanguageProvider().currentLanguage);
+                          return Texts.translate('emailValidate',
+                              LanguageProvider().currentLanguage);
                         }
-                        if (value != _passwordController.text) {
+                        if (!value.contains('@')) {
                           return Texts.translate(
-                              'lasContraseñasNoCoinciden', LanguageProvider().currentLanguage);
+                              'emailWrong', LanguageProvider().currentLanguage);
                         }
                         return null;
                       },
                     ),
-                  ],
-                  if (_errorMessage != null) ...[
                     const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                    _buildTextField(
+                      controller: _passwordController,
+                      label: Texts.translate(
+                          'Password', LanguageProvider().currentLanguage),
+                      obscureText: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return Texts.translate(
+                              'passError', LanguageProvider().currentLanguage);
+                        }
+                        if (_isSignUp && value.length < 6) {
+                          return Texts.translate('passErrorLen',
+                              LanguageProvider().currentLanguage);
+                        }
+                        return null;
+                      },
+                    ),
+                    if (_isSignUp) ...[
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _confirmPasswordController,
+                        label: Texts.translate('confirmarContraseña',
+                            LanguageProvider().currentLanguage),
+                        obscureText: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return Texts.translate(
+                                'porFavorConfirmaTuContraseña',
+                                LanguageProvider().currentLanguage);
+                          }
+                          if (value != _passwordController.text) {
+                            return Texts.translate('lasContraseñasNoCoinciden',
+                                LanguageProvider().currentLanguage);
+                          }
+                          return null;
+                        },
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        borderRadius: BorderRadius.circular(12),
+                    ],
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Colors.red[700],
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (_isLoading == false) {
+                          var isLogued = await _submitForm(
+                            _emailController.text,
+                            _passwordController.text,
+                          );
+
+                          if (isLogued == true) {
+                            Navigator.pop(context, true);
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppStyles().getButtonColor(context),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              AppStyles.borderRadiusValue),
+                        ),
+                        elevation: 4,
+                        shadowColor: Colors.black.withOpacity(0.2),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text(
+                              _isSignUp
+                                  ? Texts.translate('crearCuenta',
+                                      LanguageProvider().currentLanguage)
+                                  : Texts.translate('iniciarSesion',
+                                      LanguageProvider().currentLanguage),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: _isLoading ? null : _toggleMode,
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       child: Text(
-                        _errorMessage!,
-                        style: TextStyle(
-                          color: Colors.red[700],
-                          fontSize: 13,
-                        ),
-                        textAlign: TextAlign.center,
+                        _isSignUp
+                            ? Texts.translate('iniciarSesion',
+                                LanguageProvider().currentLanguage)
+                            : Texts.translate('crearCuenta',
+                                LanguageProvider().currentLanguage),
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ),
                   ],
-                  const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (_isLoading == false) {
-                        var isLogued = await _submitForm(
-                          _emailController.text,
-                          _passwordController.text,
-                        );
-
-                        if (isLogued == true) {
-                          Navigator.pop(context, true);
-                        }
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppStyles().getButtonColor(context),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppStyles.borderRadiusValue),
-                      ),
-                      elevation: 4,
-                      shadowColor: Colors.black.withOpacity(0.2),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : Text(
-                            _isSignUp
-                                ? Texts.translate('crearCuenta', LanguageProvider().currentLanguage)
-                                : Texts.translate(
-                                    'iniciarSesion', LanguageProvider().currentLanguage),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: _isLoading ? null : _toggleMode,
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: Text(
-                      _isSignUp
-                          ? Texts.translate('iniciarSesion', LanguageProvider().currentLanguage)
-                          : Texts.translate('crearCuenta', LanguageProvider().currentLanguage),
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

@@ -33,7 +33,8 @@ class _LikeButtonState extends State<LikeButton>
   void initState() {
     super.initState();
     _likeCount = widget.initialLikeCount;
-    _hasLikedFuture = _likeService.hasUserLiked(widget.postId, widget.replyId, context);
+    _hasLikedFuture =
+        _likeService.hasUserLiked(widget.postId, widget.replyId, context);
 
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1),
@@ -55,10 +56,13 @@ class _LikeButtonState extends State<LikeButton>
   }
 
   void _showLoginDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const LoginDialog(),
-    );
+       Navigator.push(
+  context,
+  MaterialPageRoute(
+    fullscreenDialog: true,
+    builder: (context) => const LoginScreen(),
+  ),
+);
   }
 
   Future<void> _handleLikePress() async {

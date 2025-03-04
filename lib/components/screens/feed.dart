@@ -58,6 +58,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   bool trendsPressed = false;
   bool searchPressed = false;
   final SidebarController _sidebarController = SidebarController();
+  int takenTags = 10;
 
   @override
   void dispose() {
@@ -100,7 +101,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     // Cargar posts de seguidos y proyectos en paralelo
     final followingPosts = _firebaseService.getPostsFollowingFuture();
     final projectsPosts = _firebaseService.getProjectsFuture();
-    final tags = _firebaseService.getAllTags();
+    final tags = _firebaseService.getAllTags(takenTags);
 
     // Actualizar el estado con los nuevos futures
     setState(() {
@@ -123,7 +124,13 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
   void _showCreatePostDialog() async {
     if (FirebaseAuth.instance.currentUser == null) {
-      showDialog(context: context, builder: (context) => const LoginDialog());
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => const LoginScreen(),
+        ),
+      );
     } else {
       final result = await showDialog<SAPPost>(
         context: context,
@@ -139,11 +146,17 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
   void _showCreateProjectDialog() async {
     if (FirebaseAuth.instance.currentUser == null) {
-      showDialog(context: context, builder: (context) => const LoginDialog());
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => const LoginScreen(),
+        ),
+      );
     } else {
       UserInfoPopUp? user =
           Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
-      ;
+
       final result = await showDialog<Project>(
         context: context,
         builder: (context) => CreateProjectScreen(user: user),
@@ -192,8 +205,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     );
   }
 
-   
-   
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;

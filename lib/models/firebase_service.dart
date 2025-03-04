@@ -465,16 +465,29 @@ class FirebaseService {
   }
 
   //Método para obtener todos los tags de todos los posts
-  Future<List<String>> getAllTags() async {
+  Future<List<String>> getAllTags(int take) async {
     final snapshot = await postsCollection
         .where('lang', isEqualTo: LanguageProvider().currentLanguage)
         .get();
-    final tags = snapshot.docs.map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
-      return List<String>.from(data['tags'] ?? []);
-    }).toList();
 
-    return tags.expand((element) => element).toSet().toList();
+    // Flatten tags from all documents
+    final allTags = snapshot.docs
+        .expand((doc) => List<String>.from(
+            (doc.data() as Map<String, dynamic>)['tags'] ?? []))
+        .toList();
+
+    // Count tag occurrences
+    final tagCount = allTags.fold<Map<String, int>>({}, (map, tag) {
+      map[tag] = (map[tag] ?? 0) + 1;
+      return map;
+    });
+    List<dynamic> entries = tagCount.entries
+        .map((entry) => {'tag': entry.key, 'count': entry.value})
+        .toList();
+
+    entries.sort((a, b) => b['count'].compareTo(a['count']));
+    entries.take(take);
+    return entries.map((entry) => entry['tag'].toString()).toList();
   }
 
 // Método para obtener todos los posts una sola vez
@@ -1150,9 +1163,12 @@ class AuthService {
   bool isUserLoggedIn(context) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      showDialog(
-        context: context,
-        builder: (context) => const LoginDialog(),
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => const LoginScreen(),
+        ),
       );
       return false;
     } else {

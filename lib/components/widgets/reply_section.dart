@@ -70,13 +70,7 @@ class _ReplySectionState extends State<ReplySection> {
     _scrollController.dispose();
     super.dispose();
   }
-
-  void _showLoginDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const LoginDialog(),
-    );
-  }
+ 
 
   Future<void> _handleReply(String postId, String replyId) async {
     if (_replyController.text.isEmpty && selectedFiles.isEmpty) return;

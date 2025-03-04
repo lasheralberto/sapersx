@@ -34,10 +34,13 @@ class UserAvatar extends StatelessWidget {
   }
 
   void _showLoginDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const LoginDialog(),
-    );
+     Navigator.push(
+  context,
+  MaterialPageRoute(
+    fullscreenDialog: true,
+    builder: (context) => const LoginScreen(),
+  ),
+);
   }
 
   Widget _buildUserAvatar(BuildContext context) {

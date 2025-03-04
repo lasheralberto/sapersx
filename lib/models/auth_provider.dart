@@ -80,11 +80,13 @@ class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
   Future<void> _showLoginDialog(BuildContext context) async {
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const LoginDialog(),
-    );
+     Navigator.push(
+  context,
+  MaterialPageRoute(
+    fullscreenDialog: true,
+    builder: (context) => const LoginScreen(),
+  ),
+);
   }
 
   @override
