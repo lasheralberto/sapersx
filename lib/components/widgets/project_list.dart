@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/widgets/mustbeloggedsection.dart';
@@ -68,7 +69,8 @@ class _ProjectListViewState extends State<ProjectListView> {
                 return _buildEmptyState();
               }
 
-              return RefreshIndicator(
+              return LiquidPullToRefresh(
+                backgroundColor: AppStyles.colorAvatarBorder,
                 onRefresh: () async => widget.onRefresh(),
                 child: CustomScrollView(
                   physics: const BouncingScrollPhysics(),
