@@ -26,6 +26,9 @@ class TrendingTagsSidebar extends StatelessWidget {
         .replaceAll('"', '')
         .replaceAll('´', '') // Elimina acentos agudos
         .replaceAll('`', '')
+        .replaceAll('`', '') // Elimina acentos graves
+        .replaceAll('¨', '') // Elimina diéresis
+        .replaceAll(',', '')
         .trim(); // Elimina espacios al inicio y final
   }
 
@@ -73,13 +76,22 @@ class TrendingTagsSidebar extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.tag, size: 16),
-                        const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            cleanText(trendingTags[index]).toUpperCase(),
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            overflow: TextOverflow.ellipsis,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.trending_up_rounded,
+                                color: index < 2
+                                    ? AppStyles.colorAvatarBorder
+                                    : Colors.white,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                cleanText(trendingTags[index]).toUpperCase(),
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
                       ],

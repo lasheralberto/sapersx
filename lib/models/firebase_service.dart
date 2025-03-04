@@ -486,8 +486,8 @@ class FirebaseService {
         .toList();
 
     entries.sort((a, b) => b['count'].compareTo(a['count']));
-    entries.take(take);
-    return entries.map((entry) => entry['tag'].toString()).toList();
+    final result = entries.take(take);
+    return result.map((entry) => entry['tag'].toString()).toList();
   }
 
 // Método para obtener todos los posts una sola vez
