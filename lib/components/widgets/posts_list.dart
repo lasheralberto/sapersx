@@ -12,11 +12,22 @@ class TrendingTagsSidebar extends StatelessWidget {
   final SidebarController sidebarController;
 
   const TrendingTagsSidebar({
-    Key? key,
+    super.key,
     required this.trendingTags,
     required this.onTagSelected,
     required this.sidebarController,
-  }) : super(key: key);
+  });
+
+  String cleanText(String text) {
+    return text
+        .replaceAll('"', '') // Elimina comillas dobles
+        .replaceAll("'", '') // Elimina comillas simples
+        .replaceAll('"', '') // Elimina comillas tipográficas
+        .replaceAll('"', '')
+        .replaceAll('´', '') // Elimina acentos agudos
+        .replaceAll('`', '')
+        .trim(); // Elimina espacios al inicio y final
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,11 +51,12 @@ class TrendingTagsSidebar extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
+              selectionColor: AppStyles.colorAvatarBorder,
               Texts.translate(
                   'trendingTags', LanguageProvider().currentLanguage),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  fontWeight: FontWeight.bold,
+                  color: AppStyles.colorAvatarBorder),
             ),
           ),
           const Divider(),
@@ -65,7 +77,7 @@ class TrendingTagsSidebar extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            trendingTags[index].toUpperCase(),
+                            cleanText(trendingTags[index]).toUpperCase(),
                             style: Theme.of(context).textTheme.bodyMedium,
                             overflow: TextOverflow.ellipsis,
                           ),

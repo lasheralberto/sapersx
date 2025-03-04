@@ -464,7 +464,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   _updateFutures();
                 },
               ),
-              UserSearchScreen()
+              const UserSearchScreen()
             ],
           ),
         ),
