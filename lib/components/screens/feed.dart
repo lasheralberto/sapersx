@@ -90,7 +90,11 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     final Future<List<SAPPost>> generalPosts;
     if (tagPressed != null) {
       // Si se ha pulsado un tag, obtener los posts por tag
-      generalPosts = _firebaseService.getPostsbyTag(tagPressed!);
+      if (tagPressed == 'null') {
+        generalPosts = _firebaseService.getPostsFuture();
+      } else {
+        generalPosts = _firebaseService.getPostsbyTag(tagPressed!);
+      }
     } else if (_selectedModule.isNotEmpty) {
       // Si no se ha pulsado un tag pero hay un módulo seleccionado, obtener los posts por módulo
       generalPosts = _firebaseService.getPostsByModuleFuture(_selectedModule);
@@ -211,20 +215,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     final isMobile = screenWidth < 600;
 
     return Scaffold(
-      //bottomSheet: _buildHotTopicsPanel(),
-      floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.miniCenterFloat,
-      floatingActionButton: (tagPressed != "null" && tagPressed != null)
-          ? tagBubblePressed(
-              tag: tagPressed.toString().toUpperCase(),
-              onDelete: () {
-                setState(() {
-                  tagPressed = null;
-                  _updateFutures();
-                });
-              })
-          : const SizedBox.shrink(),
       body: FloatingMenuWidget(
         menuTray: const MenuTray(
             itemsSeparation: 30,
@@ -263,9 +253,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
             _showCreatePostDialog();
           } else if (menuItems.id == "2") {
             _showCreateProjectDialog();
-          } else if (menuItems.id == "3") {
-            print("Item 3");
-          }
+          } else if (menuItems.id == "3") {}
         },
         child: NestedScrollView(
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {

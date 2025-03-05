@@ -6,7 +6,7 @@ import 'package:sapers/models/styles.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:sapers/models/texts.dart';
 
-class TrendingTagsSidebar extends StatelessWidget {
+class TrendingTagsSidebar extends StatefulWidget {
   final List<String> trendingTags;
   final Function(String) onTagSelected;
   final SidebarController sidebarController;
@@ -17,6 +17,13 @@ class TrendingTagsSidebar extends StatelessWidget {
     required this.onTagSelected,
     required this.sidebarController,
   });
+
+  @override
+  State<TrendingTagsSidebar> createState() => _TrendingTagsSidebarState();
+}
+
+class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
+  int tagSelected = 1;
 
   String cleanText(String text) {
     return text
@@ -62,13 +69,17 @@ class TrendingTagsSidebar extends StatelessWidget {
                   color: AppStyles.colorAvatarBorder),
             ),
           ),
-          const Divider(),
           Expanded(
             child: ListView.builder(
-              itemCount: trendingTags.length,
+              itemCount: widget.trendingTags.length,
               itemBuilder: (context, index) {
                 return InkWell(
-                  onTap: () => onTagSelected(trendingTags[index]),
+                  onTap: () {
+                    setState(() {
+                      tagSelected = index;
+                    });
+                    widget.onTagSelected(widget.trendingTags[index]);
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -87,8 +98,16 @@ class TrendingTagsSidebar extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                cleanText(trendingTags[index]).toUpperCase(),
-                                style: Theme.of(context).textTheme.bodyMedium,
+                                cleanText(widget.trendingTags[index])
+                                    .toUpperCase(),
+                                style: TextStyle(
+                                  color: tagSelected == index
+                                      ? AppStyles.colorAvatarBorder
+                                      : Colors.black,
+                                  fontWeight: tagSelected == index
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],
@@ -101,6 +120,21 @@ class TrendingTagsSidebar extends StatelessWidget {
               },
             ),
           ),
+         TextButton(
+            onPressed: () {
+              widget.onTagSelected("null");
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Icon(Icons.close),
+                  const SizedBox(width: 8),
+                  Text(widget.trendingTags[tagSelected]),
+                ],
+              ),
+            ),
+          )
         ],
       ),
     );
