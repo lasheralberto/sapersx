@@ -24,6 +24,7 @@ class TrendingTagsSidebar extends StatefulWidget {
 
 class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
   int tagSelected = 1;
+  bool _closeTagSelected = false;
 
   String cleanText(String text) {
     return text
@@ -77,6 +78,7 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
                   onTap: () {
                     setState(() {
                       tagSelected = index;
+                      _closeTagSelected = false;
                     });
                     widget.onTagSelected(widget.trendingTags[index]);
                   },
@@ -90,6 +92,18 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
                         Expanded(
                           child: Row(
                             children: [
+                              index == tagSelected
+                                  ? _closeTagSelected == false
+                                      ? IconButton(
+                                          icon: const Icon(Icons.close),
+                                          onPressed: () {
+                                            setState(() {
+                                              _closeTagSelected = true;
+                                            });
+                                            widget.onTagSelected('null');
+                                          })
+                                      : const SizedBox.shrink()
+                                  : const SizedBox.shrink(),
                               Icon(
                                 Icons.trending_up_rounded,
                                 color: index < 2
@@ -101,10 +115,12 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
                                 cleanText(widget.trendingTags[index])
                                     .toUpperCase(),
                                 style: TextStyle(
-                                  color: tagSelected == index
+                                  color: (tagSelected == index &&
+                                          _closeTagSelected == false)
                                       ? AppStyles.colorAvatarBorder
                                       : Colors.black,
-                                  fontWeight: tagSelected == index
+                                  fontWeight: (tagSelected == index &&
+                                          _closeTagSelected == false)
                                       ? FontWeight.bold
                                       : FontWeight.normal,
                                 ),
@@ -120,21 +136,6 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
               },
             ),
           ),
-         TextButton(
-            onPressed: () {
-              widget.onTagSelected("null");
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Icon(Icons.close),
-                  const SizedBox(width: 8),
-                  Text(widget.trendingTags[tagSelected]),
-                ],
-              ),
-            ),
-          )
         ],
       ),
     );

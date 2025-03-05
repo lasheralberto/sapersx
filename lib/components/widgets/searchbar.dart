@@ -162,7 +162,7 @@ class TagBubble extends StatelessWidget {
           horizontal: 12, vertical: 6), // Padding ajustado
       margin: const EdgeInsets.only(right: 8),
       decoration: BoxDecoration(
-        color: AppStyles.colorAvatarBorder.withOpacity(0.5), // Color de fondo
+        color: AppStyles.colorAvatarBorder, // Color de fondo
         borderRadius: BorderRadius.circular(20), // Bordes redondeados
       ),
       child: Row(
@@ -182,7 +182,7 @@ class TagBubble extends StatelessWidget {
             child: const Icon(
               Icons.close,
               size: 16,
-              color: Color.fromARGB(255, 255, 198, 113), // Color del ícono
+              color: Colors.black, // Color del ícono
             ),
           ),
         ],

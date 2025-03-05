@@ -352,6 +352,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                             onModuleSelected: (module) {
                               setState(() {
                                 _selectedModule = module;
+                                searchPressed = !searchPressed;
                                 _updateFutures();
                               });
                             },
