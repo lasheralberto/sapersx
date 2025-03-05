@@ -42,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       try {
         if (_isSignUp) {
-          bool? islogued = await UserProfilePopup.show(context, email);
+          bool? islogued = await UserProfileFullScreenPage.show(context, email);
           if (islogued == true) {
             await _authService.signUp(email, pass);
             await FirebaseAuth.instance.authStateChanges().first;

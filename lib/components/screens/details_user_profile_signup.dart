@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
-import 'package:sapers/main.dart' as main;
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
@@ -12,23 +11,24 @@ import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
 import 'package:sapers/models/auth_provider.dart' as zauth;
 
-class UserProfilePopup extends StatefulWidget {
+class UserProfileFullScreenPage extends StatefulWidget {
   final String email;
-  const UserProfilePopup({super.key, required this.email});
+  const UserProfileFullScreenPage({super.key, required this.email});
 
   static Future<bool?> show(BuildContext context, email) async {
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => UserProfilePopup(email: email),
+    return Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => UserProfileFullScreenPage(email: email),
+      ),
     );
   }
 
   @override
-  State<UserProfilePopup> createState() => _UserProfilePopupState();
+  State<UserProfileFullScreenPage> createState() => _UserProfileFullScreenPageState();
 }
 
-class _UserProfilePopupState extends State<UserProfilePopup> {
+class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _bioController;
@@ -179,73 +179,51 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
                 _experienceController.text.isNotEmpty));
   }
 
-  Widget _buildHeader(email) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.grey.withOpacity(0.2),
-            width: 1,
-          ),
-        ),
+  PreferredSizeWidget _buildAppBar(email) {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.close),
+        onPressed: () async {
+          if (await _confirmExit()) {
+            Navigator.pop(context, false);
+          }
+        },
       ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.black87),
-            onPressed: () async {
-              if (await _confirmExit()) {
-                Navigator.pop(context, false);
-              }
-            },
-          ),
-          Expanded(
-            child: Center(
-              child: Text(
-                Texts.translate(
-                    'editarPerfil', LanguageProvider().currentLanguage),
-                style: AppStyles().getTextStyle(context,
-                    fontSize: AppStyles.fontSizeLarge,
-                    fontWeight: FontWeight.bold),
-              ),
+      title: Text(
+        Texts.translate('editarPerfil', LanguageProvider().currentLanguage),
+        style: AppStyles().getTextStyle(context,
+            fontSize: AppStyles.fontSizeLarge, fontWeight: FontWeight.bold),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () async {
+            _isSaving ? null : await _saveProfile(email);
+          },
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: AppStyles().getButtonColor(context),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
             ),
           ),
-          SizedBox(
-            width: 100,
-            child: TextButton(
-              onPressed: () async {
-                _isSaving ? null : await _saveProfile(email);
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: AppStyles().getButtonColor(context),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppStyles.borderRadiusValue),
+          child: _isSaving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Text(
+                  Texts.translate('guardar', LanguageProvider().currentLanguage),
+                  style: AppStyles()
+                      .getTextStyle(context)
+                      .copyWith(fontSize: 14, color: Colors.white),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              ),
-              child: _isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : Text(
-                      Texts.translate(
-                          'guardar', LanguageProvider().currentLanguage),
-                      style: AppStyles()
-                          .getTextStyle(context)
-                          .copyWith(fontSize: 14),
-                    ),
-            ),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 8),
+      ],
     );
   }
 
@@ -519,48 +497,24 @@ class _UserProfilePopupState extends State<UserProfilePopup> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _confirmExit,
-      child: Dialog(
-        insetPadding: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-        ),
-        child: Form(
-          // MOVER EL FORM AQUÍ
+      child: Scaffold(
+        appBar: _buildAppBar(widget.email),
+        body: Form(
           key: _formKey,
-          child: Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.9,
-              maxWidth: 600,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 16,
+              right: 16,
             ),
-            child: Stack(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: _buildHeader(widget.email),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 60),
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).viewInsets.bottom,
-                      left: 16,
-                      right: 16,
-                    ),
-                    child: Column(
-                      // QUITAR EL FORM DE AQUÍ
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildProfilePicture(_isExpertMode, widget.email),
-                        const SizedBox(height: 20),
-                        _buildExpertModeToggle(),
-                        _buildFormFields(),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  ),
-                ),
+                _buildProfilePicture(_isExpertMode, widget.email),
+                const SizedBox(height: 20),
+                _buildExpertModeToggle(),
+                _buildFormFields(),
+                const SizedBox(height: 20),
               ],
             ),
           ),
