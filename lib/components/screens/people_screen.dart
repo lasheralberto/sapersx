@@ -6,6 +6,7 @@ import 'package:sapers/components/widgets/mustbeloggedsection.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/models/auth_provider.dart';
+import 'package:sapers/models/auth_service.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/texts.dart';

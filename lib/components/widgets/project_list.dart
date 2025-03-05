@@ -10,6 +10,7 @@ import 'package:sapers/components/widgets/mustbeloggedsection.dart';
 import 'package:sapers/components/widgets/stacked_avatars.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/auth_provider.dart';
+import 'package:sapers/models/auth_service.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/project.dart';

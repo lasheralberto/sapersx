@@ -8,6 +8,7 @@ import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
+import 'package:sapers/models/make_api.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/theme.dart';
 import 'package:sapers/models/user.dart';
@@ -36,6 +37,11 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
+
+  makePostRequest(
+      'https://hook.eu2.make.com/cudppako45cwb99ovmhuuyyy63i6ssr6', {
+    "user": "Entró en la app",
+  });
 
   //globalLanguage = 'es';
 

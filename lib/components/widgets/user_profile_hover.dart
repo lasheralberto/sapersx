@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/user_hover_card.dart';
+import 'package:sapers/models/auth_service.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/user.dart';
