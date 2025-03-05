@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
@@ -9,6 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:location/location.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:sapers/components/widgets/mesmorphic_popup.dart';
 import 'package:sapers/models/language_provider.dart';
@@ -22,6 +22,13 @@ class UtilsSapers {
               text: message,
               onClose: () => Navigator.pop(context),
             ));
+  }
+
+  Future<List<double>> getLocationOfUser() async {
+    LocationData location = await Location().getLocation();
+    double lat = location.latitude ?? 0.0;
+    double long = location.longitude ?? 0.0;
+    return [lat, long];
   }
 
   String generateSimpleUID() {

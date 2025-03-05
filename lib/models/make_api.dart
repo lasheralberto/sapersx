@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-Future<void> makePostRequest(
-    String urlParam, Map<String, dynamic> payloadParam) async {
+void makePostRequest(String urlParam, Map<String, dynamic> payloadParam) {
   // URL a la que se enviará la solicitud
   final url = Uri.parse(urlParam);
 
@@ -11,7 +10,7 @@ Future<void> makePostRequest(
 
   try {
     // Realizar la solicitud POST
-    await http.post(
+    http.post(
       url,
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',

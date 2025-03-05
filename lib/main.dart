@@ -16,6 +16,7 @@ import 'firebase_options.dart';
 import 'package:sapers/models/auth_provider.dart' as zauth;
 import 'package:sapers/models/router.dart';
 import 'package:url_strategy/url_strategy.dart';
+import 'package:location/location.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +41,7 @@ void main() async {
 
   makePostRequest(
       'https://hook.eu2.make.com/cudppako45cwb99ovmhuuyyy63i6ssr6', {
-    "user": "Entró en la app",
+    "user": "Inició la app",
   });
 
   //globalLanguage = 'es';

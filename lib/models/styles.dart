@@ -68,7 +68,7 @@ class AppStyles {
 
   Widget progressIndicatorCreatePostButton() {
     return const CircularProgressIndicator(
-      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      valueColor: AlwaysStoppedAnimation<Color>(AppStyles._orangeDark),
     );
   }
 
@@ -258,8 +258,6 @@ class AppStyles {
       return screenWidth * 0.85;
     }
   }
-
-
 
   Color getProjectCardColor(String projectId) {
     final colors = [

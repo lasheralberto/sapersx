@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
+import 'package:sapers/models/location_service.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
@@ -26,7 +27,8 @@ class UserProfileFullScreenPage extends StatefulWidget {
   }
 
   @override
-  State<UserProfileFullScreenPage> createState() => _UserProfileFullScreenPageState();
+  State<UserProfileFullScreenPage> createState() =>
+      _UserProfileFullScreenPageState();
 }
 
 class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
@@ -40,6 +42,7 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
   late final TextEditingController _experienceController;
 
   bool _isExpertMode = false;
+  bool _isLoadingLocation = false;
   bool _isSaving = false;
   static const int _charLimit = 160;
 
@@ -77,7 +80,8 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
     if (user != null) {
       try {
         final userInfo =
-              Provider.of<zauth.AuthProviderSapers>(context, listen: false).userInfo;
+            Provider.of<zauth.AuthProviderSapers>(context, listen: false)
+                .userInfo;
         if (userInfo != null && mounted) {
           setState(() {
             _nameController.text = userInfo.username;
@@ -217,7 +221,8 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
                   ),
                 )
               : Text(
-                  Texts.translate('guardar', LanguageProvider().currentLanguage),
+                  Texts.translate(
+                      'guardar', LanguageProvider().currentLanguage),
                   style: AppStyles()
                       .getTextStyle(context)
                       .copyWith(fontSize: 14, color: Colors.white),
@@ -270,7 +275,8 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Modo Experto SAP',
+                    Texts.translate(
+                        'expertMode', LanguageProvider().currentLanguage),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -279,7 +285,8 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Activa para ofrecer servicios de consultoría SAP',
+                    Texts.translate('activateExpertMode',
+                        LanguageProvider().currentLanguage),
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -336,8 +343,10 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
           const SizedBox(height: 20),
           _buildTextField(
             controller: _locationController,
+            hint: Texts.translate(
+                'pressLocation', LanguageProvider().currentLanguage),
             label: Texts.translate(
-                'locationField', LanguageProvider().currentLanguage),
+                'pressLocation', LanguageProvider().currentLanguage),
             prefixIcon: Icons.location_on_outlined,
             validator: (value) {
               if (value?.isEmpty ?? true) {
@@ -423,6 +432,7 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
+    bool? locationIndicator,
     IconData? prefixIcon,
     int? maxLength,
     int maxLines = 1,
@@ -439,56 +449,100 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
           minWidth: 200, // Ancho mínimo para pantallas pequeñas
           maxWidth: 500, // Ancho máximo para pantallas grandes
         ),
-        child: TextFormField(
-          controller: controller,
-          maxLength: maxLength,
-          maxLines: maxLines,
-          keyboardType: keyboardType,
-          inputFormatters: inputFormatters,
-          validator: validator,
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: hint,
-            isDense: true,
-            prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
-            suffix: suffix,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-              borderSide: BorderSide(
-                color: Colors.grey.withOpacity(0.3),
+        child: Row(
+          children: [
+            if (prefixIcon == Icons.location_on_outlined)
+              IconButton(
+                style: ButtonStyle(
+                  padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                    EdgeInsets.all(10.0),
+                  ),
+                ),
+                tooltip: hint,
+                onPressed: () async {
+                  setState(() {
+                    _isLoadingLocation = true;
+                  });
+                  List<double> location =
+                      await UtilsSapers().getLocationOfUser();
+                  if (location != null && location.length >= 2) {
+                    String? city = await LocationService.getCityFromLatLng(
+                        location[0], location[1]);
+                    if (city != null) {
+                      controller.text = city;
+                    }
+                  }
+
+                  setState(() {
+                    _isLoadingLocation = false;
+                  });
+                },
+                icon: _isLoadingLocation == true
+                    ? AppStyles().progressIndicatorCreatePostButton()
+                    : const Icon(Icons.location_on),
+              ),
+            Expanded(
+              child: TextFormField(
+                controller: controller,
+                maxLength: maxLength,
+                maxLines: maxLines,
+                keyboardType: keyboardType,
+                inputFormatters: inputFormatters,
+                validator: validator,
+                decoration: InputDecoration(
+                  labelText: label,
+                  hintText: hint,
+                  isDense: true,
+                  prefixIcon: prefixIcon != null &&
+                          prefixIcon != Icons.location_on_outlined
+                      ? Icon(prefixIcon)
+                      : null,
+                  suffix: suffix,
+                  border: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppStyles.borderRadiusValue),
+                    borderSide: BorderSide(
+                      color: Colors.grey.withOpacity(0.3),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppStyles.borderRadiusValue),
+                    borderSide: BorderSide(
+                      color: Colors.grey.withOpacity(0.3),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppStyles.borderRadiusValue),
+                    borderSide: const BorderSide(
+                      color: Colors.blue,
+                      width: 2,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppStyles.borderRadiusValue),
+                    borderSide: BorderSide(
+                      color: Colors.red.withOpacity(0.5),
+                    ),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppStyles.borderRadiusValue),
+                    borderSide: const BorderSide(
+                      color: Colors.red,
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
               ),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-              borderSide: BorderSide(
-                color: Colors.grey.withOpacity(0.3),
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-              borderSide: const BorderSide(
-                color: Colors.blue,
-                width: 2,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-              borderSide: BorderSide(
-                color: Colors.red.withOpacity(0.5),
-              ),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-              borderSide: const BorderSide(
-                color: Colors.red,
-                width: 2,
-              ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-          ),
+          ],
         ),
       ),
     );

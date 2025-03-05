@@ -4,6 +4,7 @@ class Texts {
 
   static final Map<String, Map<String, String>> _texts = {
     'es': {
+      'expertMode': 'Modo experto',
       'crearPost': 'Crear post',
       'descripcionTab': 'Descripción',
       'chatTab': 'Chat',
@@ -82,8 +83,13 @@ class Texts {
       'genteTab': 'Gente',
       'mustBeLogged': 'Debes iniciar sesión para acceder a esta sección',
       'trendingTags': 'Tags populares',
+      'activateExpertMode': 'Activa para ofrecer servicios de consultoría SAP',
+      'pressLocation': 'Pulsa para obtener tu ubicación',
     },
     'en': {
+      'pressLocation': 'Press to get your location',
+      'expertMode': 'Expert mode',
+      'activateExpertMode': 'Activate to offer SAP consulting services',
       'trendingTags': 'Trending tags',
       'mustBeLogged': 'You must be logged in to access this section',
       'genteTab': 'People',
