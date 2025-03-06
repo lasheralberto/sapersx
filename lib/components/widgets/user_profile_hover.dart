@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
-import 'package:sapers/components/widgets/user_hover_card.dart';
+
 import 'package:sapers/models/auth_service.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
+import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
 
 // 1. Caché global para todos los usuarios
@@ -37,7 +39,7 @@ class UserProfileCardHover extends StatefulWidget {
 class _UserProfileCardHoverState extends State<UserProfileCardHover> {
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
-  bool _isHovering = false;
+
   bool _isLoggedIn = false;
 
   // 2. Acceso al usuario en caché
@@ -92,21 +94,141 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
     _removeOverlay();
 
     _overlayEntry = OverlayEntry(
-        builder: (context) => Positioned(
-              width: 300,
-              child: CompositedTransformFollower(
-                link: _layerLink,
-                offset: const Offset(0, 60),
-                child: Material(
-                  elevation: 8,
-                  borderRadius:
-                      BorderRadius.circular(AppStyles.borderRadiusValue),
-                  child: UserHoverCard(profile: _cachedUser!),
-                ),
-              ),
-            ));
+      builder: (context) => Positioned(
+        width: 300,
+        child: CompositedTransformFollower(
+          link: _layerLink,
+          offset: const Offset(0, 60),
+          child: Material(
+            elevation: 8,
+            borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+            child: _buildUserInfoCard(),
+          ),
+        ),
+      ),
+    );
 
     if (mounted) Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  Widget _buildUserInfoCard() {
+    final user = _cachedUser!;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              ProfileAvatar(
+                userInfoPopUp: user,
+                showBorder: user.isExpert as bool,
+                seed: user.email,
+                size: 60,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.username,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '@${user.username}',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (user.isExpert as bool)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[100],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          Texts.translate(
+                              'expert', LanguageProvider().currentLanguage),
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (user.bio != null && user.bio!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                user.bio!,
+                style: const TextStyle(fontSize: 14),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            spacing: 20,
+            children: [
+              //  _buildStatItem('Publicaciones', user.postsCount ?? 0),
+              _buildStatItem(
+                  Texts.translate(
+                      'FollowingTab', LanguageProvider().currentLanguage),
+                  user.following?.length ?? 0),
+
+              _buildStatItem(
+                  Texts.translate(
+                      'FollowersTab', LanguageProvider().currentLanguage),
+                  user.followers?.length ?? 0),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, int count) {
+    return Column(
+      children: [
+        Text(
+          count.toString(),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -121,6 +243,7 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
             _isLoggedIn = AuthService().isUserLoggedIn(context);
             if (_isLoggedIn && _cachedUser != null) {
               context.push('/profile/${_cachedUser!.username}');
+              widget.onProfileOpen();
             }
           },
           child: _cachedUser == null

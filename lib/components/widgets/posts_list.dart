@@ -23,7 +23,7 @@ class TrendingTagsSidebar extends StatefulWidget {
 }
 
 class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
-  int tagSelected = 1;
+  int tagSelected = -1;
   bool _closeTagSelected = false;
 
   String cleanText(String text) {

@@ -364,25 +364,74 @@ class FirebaseService {
     }
   }
 
-  //Function to follow the user
-  Future<bool> followOrUnfollowUser(String uid, String username) async {
-    try {
-      final userExists = await checkIfUserExistsInFollowers(uid, username);
-      if (userExists) {
-        await userCollection.doc(uid).update({
-          'following': FieldValue.arrayRemove([username])
-        });
-        return false; // Unfollow
-      } else {
-        await userCollection.doc(uid).update({
-          'following': FieldValue.arrayUnion([username])
-        });
-        return true; // Follow
-      }
-    } catch (e) {
-      rethrow;
+Future<bool> followOrUnfollowUser(String uid, String username, context) async {
+  try {
+
+    final currentUserInfo =  Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+    final currentUserName = currentUserInfo?.username;
+
+    // Obtener el UID del usuario objetivo (al que se está siguiendo)
+    final targetUserQuery = await userCollection
+        .where('username', isEqualTo: username)
+        .limit(1)
+        .get();
+
+    if (targetUserQuery.docs.isEmpty) {
+      throw Exception("El usuario objetivo no existe");
     }
+    final targetUid = targetUserQuery.docs.first.id;
+
+    // Verificar si ya está siguiendo al usuario
+    final userExists = await checkIfUserExistsInFollowers(uid, username);
+
+    // Crear un batch para actualizar ambos documentos
+    final batch = FirebaseFirestore.instance.batch();
+
+    if (userExists) {
+      // Dejar de seguir: eliminar de "following" y "followers"
+      batch.update(userCollection.doc(uid), {
+        'following': FieldValue.arrayRemove([username]),
+      });
+      batch.update(userCollection.doc(targetUid), {
+        'followers': FieldValue.arrayRemove([currentUserName]),
+      });
+    } else {
+      // Empezar a seguir: agregar a "following" y "followers"
+      batch.update(userCollection.doc(uid), {
+        'following': FieldValue.arrayUnion([username]),
+      });
+      batch.update(userCollection.doc(targetUid), {
+        'followers': FieldValue.arrayUnion([currentUserName]),
+      });
+    }
+
+    await batch.commit(); // Ejecutar ambas operaciones atómicamente
+    return !userExists;
+
+  } catch (e) {
+    rethrow;
   }
+}
+
+  // //Function to follow the user
+  // Future<bool> followOrUnfollowUser(String uid, String username) async {
+  //   try {
+  //     final userExists = await checkIfUserExistsInFollowers(uid, username);
+  //     if (userExists) {
+  //       await userCollection.doc(uid).update({
+  //         'following': FieldValue.arrayRemove([username])
+  //       });
+  //       return false; // Unfollow
+  //     } else {
+  //       await userCollection.doc(uid).update({
+  //         'following': FieldValue.arrayUnion([username])
+  //       });
+  //       return true; // Follow
+  //     }
+  //   } catch (e) {
+  //     rethrow;
+  //   }
+  // }
 
 // Usar BehaviorSubject en lugar de StreamController
   final BehaviorSubject<List<SAPPost>> _postsSubject =
@@ -540,6 +589,12 @@ class FirebaseService {
           email: data['email'] ?? '',
           website: data['website'] ?? '',
           hourlyRate: data['hourlyRate'] ?? 0.0,
+          following: data['following'] != null
+              ? List<String>.from(data['following'])
+              : <String>[], // Manejo de `null`
+          followers: data['followers'] != null
+              ? List<String>.from(data['followers'])
+              : <String>[], // Manejo de `null`
           joinDate: data['joinDate'] ?? Timestamp.fromDate(DateTime.now()),
           experience: data['experience'] ?? '',
           isExpert: data['isExpert'] ?? false,
@@ -665,7 +720,10 @@ class FirebaseService {
     // Filtrar los posts por la palabra clave (insensible a mayúsculas/minúsculas)
     return posts
         .where((post) =>
-            post.content.toLowerCase().contains(keyword.toLowerCase()))
+            (post.content.toLowerCase().contains(keyword.toLowerCase())) ||
+            (post.title.toLowerCase().contains(keyword.toLowerCase())) ||
+            (post.tags.contains(keyword.toLowerCase())) ||
+            (post.author.toLowerCase().contains(keyword.toLowerCase())))
         .toList();
   }
 

@@ -184,9 +184,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
             _searchQuery.isEmpty
                 ? Texts.translate(
                     'no_users_available', LanguageProvider().currentLanguage)
-                : Texts.translate('no_users_found_for',
-                        LanguageProvider().currentLanguage) +
-                    ' "$_searchQuery"',
+                : '${Texts.translate('no_users_found_for', LanguageProvider().currentLanguage)} "$_searchQuery"',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 16,
@@ -315,9 +313,7 @@ class _UserListItemState extends State<_UserListItem> {
 
     try {
       bool result = await FirebaseService().followOrUnfollowUser(
-        widget.currentUserId,
-        widget.user.username,
-      );
+          widget.currentUserId, widget.user.username, context);
 
       if (mounted) {
         setState(() {

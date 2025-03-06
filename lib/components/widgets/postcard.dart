@@ -60,7 +60,7 @@ class _PostCardState extends State<PostCard> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Card(
-          color: AppStyles().getCardColor(context),
+          color: Theme.of(context).cardColor,
           elevation: 0,
           child: Column(
             mainAxisSize: MainAxisSize.min,

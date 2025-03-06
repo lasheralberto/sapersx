@@ -91,7 +91,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                   _loadingStates['unfollow'] = true;
                 });
                 bool isFollowed = await _firebaseService.followOrUnfollowUser(
-                    FirebaseAuth.instance.currentUser!.uid, profile.username);
+                    FirebaseAuth.instance.currentUser!.uid,
+                    profile.username,
+                    context);
 
                 setState(() {
                   _loadingStates['seguir'] = false;
