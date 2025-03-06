@@ -12,6 +12,7 @@ import 'package:sapers/models/user.dart';
 
 final router = GoRouter(
   initialLocation: '/home',
+     
   routes: [
     GoRoute(
       name: 'home',

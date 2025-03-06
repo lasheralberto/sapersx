@@ -17,10 +17,12 @@ import 'package:sapers/models/auth_provider.dart' as zauth;
 import 'package:sapers/models/router.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'package:location/location.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  setPathUrlStrategy(); // Configura el modo path-based routing
+  //setPathUrlStrategy(); // Configura el modo path-based routing
+  setUrlStrategy(const HashUrlStrategy());
 
   // Inicializar Firebase
   if (kIsWeb) {
