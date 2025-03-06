@@ -4,6 +4,7 @@ class Texts {
 
   static final Map<String, Map<String, String>> _texts = {
     'es': {
+      'tarife': 'Tarifa/Hora',
       'expertMode': 'Modo experto',
       'crearPost': 'Crear post',
       'descripcionTab': 'Descripción',
@@ -88,12 +89,12 @@ class Texts {
       'expert': "Experto SAP",
       'pressLocation': 'Pulsa para obtener tu ubicación',
       'noMessages': 'Sin invitaciones aún',
-      'sendInvitation':'Enviar'
-
+      'sendInvitation': 'Enviar'
     },
     'en': {
+      'tarife': 'Tarife/Hour',
       'FollowersTab': 'Followers',
-      'sendInvitation':'Send',
+      'sendInvitation': 'Send',
       'noMessages': 'No invitations yet.',
       'pressLocation': 'Press to get your location',
       'expert': 'SAP Expert',

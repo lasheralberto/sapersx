@@ -388,10 +388,11 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
             const SizedBox(height: 20),
             _buildTextField(
               controller: _experienceController,
-              label: 'Experiencia/Proyectos realizados',
+              label: Texts.translate('experiencia', LanguageProvider().currentLanguage),
               maxLines: 3,
               maxLength: 200,
-              hint: 'Ej: 5 años de experiencia en...',
+          
+          
               validator: (value) {
                 if (_isExpertMode && (value?.isEmpty ?? true)) {
                   return Texts.translate(
@@ -403,12 +404,12 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
             const SizedBox(height: 20),
             _buildTextField(
               controller: _rateController,
-              label: 'Tarifa por hora',
+              label: Texts.translate('tarife', LanguageProvider().currentLanguage),
               prefixIcon: Icons.euro,
-              hint: 'Ej: 60',
+         
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              suffix: const Text('€/h'),
+             // suffix: const Text('€/h'),
               validator: (value) {
                 if (_isExpertMode) {
                   if (value?.isEmpty ?? true) {
@@ -417,7 +418,7 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
                   }
                   final rate = double.tryParse(value!);
                   if (rate == null || rate <= 0) {
-                    return 'Ingrese una tarifa válida';
+                    return 'Not valid';
                   }
                 }
                 return null;
