@@ -285,66 +285,6 @@ class _UserListItemState extends State<_UserListItem> {
   @override
   void initState() {
     super.initState();
-    _initFollowingStatus();
-  }
-
-  void _initFollowingStatus() {
-    _currentUserStream = FirebaseFirestore.instance
-        .collection('userinfo')
-        .doc(widget.currentUserId)
-        .snapshots();
-
-    // Inicializa el estado de seguimiento
-    _currentUserStream.first.then((snapshot) {
-      if (mounted) {
-        setState(() {
-          final data = snapshot.data() as Map<String, dynamic>?;
-          final following = data?['following'] as List<dynamic>? ?? [];
-          _isFollowing = following.contains(widget.user.uid);
-        });
-      }
-    });
-  }
-
-  Future<void> _toggleFollow() async {
-    if (_isLoading) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      bool result = await FirebaseService().followOrUnfollowUser(
-          widget.currentUserId, widget.user.username, context);
-
-      if (mounted) {
-        setState(() {
-          _isFollowing = result;
-          _isLoading = false;
-        });
-      }
-
-      widget.onUpdate();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result
-                ? 'Ahora sigues a ${widget.user.username}'
-                : 'Has dejado de seguir a ${widget.user.username}'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 
   @override
@@ -405,13 +345,6 @@ class _UserListItemState extends State<_UserListItem> {
                                   padding: EdgeInsets.zero,
                                 ),
                               ),
-
-                            ///f (widget.user.isExpert == true)
-                            // const Padding(
-                            //   padding: EdgeInsets.only(left: 4),
-                            //   child: Icon(Icons.verified,
-                            //       color: Colors.blue, size: 18),
-                            // ),
                           ],
                         ),
                         if (widget.user.location?.isNotEmpty ?? false)
@@ -485,7 +418,7 @@ class _UserListItemState extends State<_UserListItem> {
   Widget _buildUserStats(BuildContext context) {
     return Row(
       children: [
-        _buildStatItem(context, (widget.user.following?.length ?? 0).toString(),
+        _buildStatItem(context, (widget.user.followers?.length ?? 0).toString(),
             'seguidores'),
         const SizedBox(width: 16),
         _buildStatItem(context, (widget.user.following?.length ?? 0).toString(),

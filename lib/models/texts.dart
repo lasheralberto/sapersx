@@ -57,7 +57,7 @@ class Texts {
       'reviews': 'Reseñas',
       'feedGeneralTab': 'General',
       'FollowingTab': 'Siguiendo',
-      'FollowersTab':'Seguidores',
+      'FollowersTab': 'Seguidores',
       'noposts': 'No hay publicaciones disponibles',
       'mensajes': 'Mensajes',
       'projects': 'Invitaciones a proyectos',
@@ -85,11 +85,16 @@ class Texts {
       'mustBeLogged': 'Debes iniciar sesión para acceder a esta sección',
       'trendingTags': 'Tags populares',
       'activateExpertMode': 'Activa para ofrecer servicios de consultoría SAP',
-      'expert':"Experto SAP",
+      'expert': "Experto SAP",
       'pressLocation': 'Pulsa para obtener tu ubicación',
+      'noMessages': 'Sin invitaciones aún',
+      'sendInvitation':'Enviar'
+
     },
     'en': {
-      'FollowersTab':'Followers',
+      'FollowersTab': 'Followers',
+      'sendInvitation':'Send',
+      'noMessages': 'No invitations yet.',
       'pressLocation': 'Press to get your location',
       'expert': 'SAP Expert',
       'expertMode': 'Expert mode',

@@ -70,7 +70,7 @@ class UserInfoPopUp {
       hourlyRate: _parseDouble(map['hourlyRate']), // Función auxiliar
       following: _parseStringList(map['following']), // Función auxiliar
       followers: _parseStringList(map['followers']), // Función auxiliar
-      // joinDate: map['joinDate'] as Timestamp?,
+      joinDate: map['joinDate'] != null ? map['joinDate'] as Timestamp : null,
       isAvailable: map['isAvailable'] as bool? ?? false,
       reviews: _parseReviews(map['reviews']), // Función auxiliar
       experience: map['experience'] as String?,

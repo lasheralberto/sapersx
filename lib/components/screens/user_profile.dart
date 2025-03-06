@@ -134,19 +134,17 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
   Widget _buildSendMessageDialog(BuildContext context, UserInfoPopUp profile) {
     final messageController = TextEditingController();
     final backgroundColor = Colors.white;
-    String? selectedProject; // Guardará el ID del proyecto seleccionado
-    Project?
-        selectedProjectObj; // Guardará el objeto completo del proyecto seleccionado
+    String? selectedProject;
+    Project? selectedProjectObj;
 
     return StatefulBuilder(
-      builder: (context, setState) => AlertDialog(
+      builder: (context, setState) => Scaffold(
         backgroundColor: backgroundColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        elevation: AppStyles().getCardElevation(context),
-        title: Center(
-          child: isMessageSending
+        appBar: AppBar(
+          backgroundColor: backgroundColor,
+          elevation: 0,
+          centerTitle: true,
+          title: isMessageSending
               ? AppStyles().progressIndicatorButton()
               : Text(
                   Texts.translate('send_project_invitation',
@@ -157,122 +155,211 @@ class _ResponsiveProfileLayoutState extends State<ResponsiveProfileLayout> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-        ),
-        content: Container(
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(12),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
           ),
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              StreamBuilder<QuerySnapshot>(
-                stream: FirebaseService()
-                    .getCreatedProjectsForUser(userFrom!.username),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'No projects yet',
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                    );
-                  }
-
-                  // Convertir los documentos en objetos Project
-                  final projects = snapshot.data!.docs
-                      .map((doc) => Project.fromMap(
-                          doc.data() as Map<String, dynamic>, doc.id))
-                      .toList();
-
-                  return DropdownButton<String>(
-                    isExpanded: true,
-                    value: selectedProject,
-                    hint: Text(
-                      Texts.translate(
-                          'selectProject', LanguageProvider().currentLanguage),
-                      style: AppStyles().getTextStyle(context),
-                    ),
-                    items: projects.map((project) {
-                      return DropdownMenuItem<String>(
-                        value: project.projectid,
-                        child: Text(
-                          project.projectName,
-                          style: AppStyles().getTextStyle(context),
+        ),
+        body: SafeArea(
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: backgroundColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (String? value) {
-                      setState(() {
-                        selectedProject = value;
-                        // Buscar y asignar el objeto completo correspondiente
-                        selectedProjectObj = projects.firstWhere(
-                          (project) => project.projectid == value,
-                        );
-                      });
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: messageController,
-                decoration: InputDecoration(
-                  hintText: Texts.translate(
-                      'writeYourMessage', LanguageProvider().currentLanguage),
-                  hintStyle: AppStyles().getTextStyle(context,
-                      fontSize: 14, fontWeight: FontWeight.w300),
-                  border: InputBorder.none,
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          Texts.translate('selectProject',
+                              LanguageProvider().currentLanguage),
+                          style: AppStyles().getTextStyle(
+                            context,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseService()
+                              .getCreatedProjectsForUser(userFrom!.username),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+
+                            if (snapshot.hasError) {
+                              return Center(
+                                  child: Text('Error: ${snapshot.error}'));
+                            }
+
+                            if (!snapshot.hasData ||
+                                snapshot.data!.docs.isEmpty) {
+                              return const Center(
+                                child: Text(
+                                  'No projects yet',
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.grey),
+                                ),
+                              );
+                            }
+
+                            // Convertir los documentos en objetos Project
+                            final projects = snapshot.data!.docs
+                                .map((doc) => Project.fromMap(
+                                    doc.data() as Map<String, dynamic>, doc.id))
+                                .toList();
+
+                            return Container(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: selectedProject,
+                                underline: const SizedBox(),
+                                hint: Text(
+                                  Texts.translate('selectProject',
+                                      LanguageProvider().currentLanguage),
+                                  style: AppStyles().getTextStyle(context),
+                                ),
+                                items: projects.map((project) {
+                                  return DropdownMenuItem<String>(
+                                    value: project.projectid,
+                                    child: Text(
+                                      project.projectName,
+                                      style: AppStyles().getTextStyle(context),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (String? value) {
+                                  setState(() {
+                                    selectedProject = value;
+                                    // Buscar y asignar el objeto completo correspondiente
+                                    selectedProjectObj = projects.firstWhere(
+                                      (project) => project.projectid == value,
+                                    );
+                                  });
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          Texts.translate('writeYourMessage',
+                              LanguageProvider().currentLanguage),
+                          style: AppStyles().getTextStyle(
+                            context,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: TextField(
+                              controller: messageController,
+                              decoration: InputDecoration(
+                                hintText: Texts.translate('writeYourMessage',
+                                    LanguageProvider().currentLanguage),
+                                hintStyle: AppStyles().getTextStyle(
+                                  context,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.all(12),
+                              ),
+                              maxLines: null,
+                              expands: true,
+                              textAlignVertical: TextAlignVertical.top,
+                              style: AppStyles()
+                                  .getTextStyle(context, fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                maxLines: 10,
-                style: AppStyles().getTextStyle(context, fontSize: 16),
-              ),
-            ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: selectedProject == null
+                        ? null
+                        : () async {
+                            final message = messageController.text.trim();
+                            if (message.isNotEmpty) {
+                              setState(() {
+                                isMessageSending = true;
+                              });
+                              try {
+                                final success = await FirebaseService()
+                                    .sendProjectInvitation(
+                                  to: profile.username,
+                                  message: message,
+                                  from: userFrom!.username,
+                                  projectId: selectedProject!,
+                                  projectName: selectedProjectObj!.projectName,
+                                );
+                                Navigator.pop(context);
+                              } catch (e) {
+                                // Manejo de errores...
+                              } finally {
+                                setState(() {
+                                  isMessageSending = false;
+                                });
+                              }
+                            }
+                          },
+                    child: Text(
+                      Texts.translate(
+                          'sendInvitation', LanguageProvider().currentLanguage),
+                      style: AppStyles().getTextStyle(
+                        context,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        actions: [
-          ElevatedButton(
-            onPressed: selectedProject == null
-                ? null
-                : () async {
-                    final message = messageController.text.trim();
-                    if (message.isNotEmpty) {
-                      setState(() {
-                        isMessageSending = true;
-                      });
-                      try {
-                        final success =
-                            await FirebaseService().sendProjectInvitation(
-                          to: profile.username,
-                          message: message,
-                          from: userFrom!.username,
-                          projectId: selectedProject!,
-                          projectName: selectedProjectObj!
-                              .projectName, // Aquí pasas el projectName
-                        );
-                        // Manejo del éxito...
-                        Navigator.pop(context);
-                      } catch (e) {
-                        // Manejo de errores...
-                      } finally {
-                        setState(() {
-                          isMessageSending = false;
-                        });
-                      }
-                    }
-                  },
-            child: const Text('Enviar Invitación'),
-          ),
-        ],
       ),
     );
   }
