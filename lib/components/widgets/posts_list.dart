@@ -171,6 +171,7 @@ class PostsListWithSidebar extends StatefulWidget {
   final List<String> trendingTags;
   final Function(String) onTagSelected;
   final Function(bool) onPostExpanded;
+  final Function onRefresh;
   final SidebarController sidebarController;
 
   const PostsListWithSidebar({
@@ -180,6 +181,7 @@ class PostsListWithSidebar extends StatefulWidget {
     required this.trendingTags,
     required this.onTagSelected,
     required this.onPostExpanded,
+    required this.onRefresh,
     required this.sidebarController,
   }) : super(key: key);
 
@@ -196,7 +198,9 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
     });
 
     // Aquí deberías implementar tu lógica de recarga
-    await Future.delayed(const Duration(seconds: 1));
+    
+    widget.onRefresh;
+   
 
     setState(() {
       _isRefreshing = false;

@@ -412,6 +412,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
                   return PostsListWithSidebar(
                       sidebarController: _sidebarController,
+                      onRefresh: _updateFutures,
                       onPostExpanded: (p0) {
                         setState(() {
                           isPostExpanded = p0;
@@ -439,6 +440,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
                   return PostsListWithSidebar(
                       sidebarController: _sidebarController,
+                      onRefresh: _updateFutures,
                       onPostExpanded: (p0) {
                         setState(() {
                           isPostExpanded = p0;
