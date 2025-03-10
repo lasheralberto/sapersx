@@ -284,6 +284,6 @@ class _ResponsiveProjectsLayoutState extends State<ResponsiveProjectsLayout> {
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width > 768;
 
-    return ProjectInvitationSection(profile: userFrom!);
+    return ProjectInvitationSection(profile: widget.data);
   }
 }
