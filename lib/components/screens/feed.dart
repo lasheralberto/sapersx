@@ -77,14 +77,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     _updateFutures();
   }
 
-  Future<void> _handleRefresh() async {
-    if (!_isRefreshing) {
-      setState(() => _isRefreshing = true);
-      await _updateFutures();
-      setState(() => _isRefreshing = false);
-    }
-  }
-
   Future<void> _updateFutures() async {
     // Determinar qué posts cargar basado en los filtros seleccionados
     final Future<List<SAPPost>> generalPosts;

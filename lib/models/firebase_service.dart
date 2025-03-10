@@ -567,6 +567,34 @@ Future<bool> followOrUnfollowUser(String uid, String username, context) async {
     }).toList();
   }
 
+Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
+    final snapshot = await postsCollection
+        .where('lang', isEqualTo: LanguageProvider().currentLanguage)
+        .where('author', isEqualTo: username)
+        .orderBy('timestamp', descending: true)
+        //.limit(morePosts)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return SAPPost(
+        id: doc.id,
+        title: data['title'] ?? '',
+        lang: data['lang'] ?? 'en',
+        isExpert: data['isExpert'] ?? false,
+        content: data['content'] ?? '',
+        author: data['author'] ?? '',
+        timestamp: (data['timestamp'] as Timestamp).toDate(),
+        module: data['module'] ?? '',
+        isQuestion: data['isQuestion'] ?? false,
+        tags: List<String>.from(data['tags'] ?? []),
+        attachments: List<Map<String, dynamic>>.from(data['attachments'] ?? []),
+        replyCount: data['replyCount'] ?? 0,
+      );
+    }).toList();
+  }
+
+
   Future<UserInfoPopUp?> getUserInfoByUsername(String username) async {
     // Verificar cache primero
     if (_userCache.containsKey(username)) {

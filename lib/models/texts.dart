@@ -59,6 +59,7 @@ class Texts {
       'feedGeneralTab': 'General',
       'FollowingTab': 'Siguiendo',
       'FollowersTab': 'Seguidores',
+      'joinedOn':'Se unió en',
       'noposts': 'No hay publicaciones disponibles',
       'mensajes': 'Mensajes',
       'projects': 'Invitaciones a proyectos',
@@ -89,9 +90,15 @@ class Texts {
       'expert': "Experto SAP",
       'pressLocation': 'Pulsa para obtener tu ubicación',
       'noMessages': 'Sin invitaciones aún',
-      'sendInvitation': 'Enviar'
+      'sendInvitation': 'Enviar',
+      'posts': 'Publicaciones',
+      'fare':'Tarifa'
+
     },
     'en': {
+      'joinedOn':'Joined in',
+      'fare':'Fare',
+      'posts': 'Posts',
       'tarife': 'Tarife/Hour',
       'FollowersTab': 'Followers',
       'sendInvitation': 'Send',
