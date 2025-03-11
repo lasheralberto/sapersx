@@ -171,9 +171,9 @@ class _PostsTabState extends State<_PostsTab> {
   Future<List<SAPPost>>? generalPosts;
 
   @override
-  void initState() {
+  void initState() { 
     super.initState();
-    _postsFutureGeneral = _firebaseService.getPostsFuture();
+    _postsFutureGeneral = _firebaseService.getPostsFutureByAuthor(widget.userId);
   }
 
   Future<void> _handleRefresh() async {
@@ -181,7 +181,7 @@ class _PostsTabState extends State<_PostsTab> {
   }
 
   Future<void> _updateFutures() async {
-    generalPosts = _firebaseService.getPostsFuture();
+    generalPosts = _firebaseService.getPostsFutureByAuthor(widget.userId);
     setState(() {
       _postsFutureGeneral = generalPosts;
     });
@@ -284,6 +284,6 @@ class _ResponsiveProjectsLayoutState extends State<ResponsiveProjectsLayout> {
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width > 768;
 
-    return ProjectInvitationSection(profile: userFrom!);
+    return ProjectInvitationSection(profile: widget.data);
   }
 }
