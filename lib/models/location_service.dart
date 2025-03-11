@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:sapers/models/keys.dart';
 
 class LocationService {
-  static const String _apiKey = 'AIzaSyAqsIe_3BGWyDV_W1ooonn1BtDt4nFTF4I'; // Reemplaza con tu API Key
+  static const String _apiKey = AppKeys.googleLocationApiKey ;// Reemplaza con tu API Key
 
   /// Obtiene la ciudad a partir de las coordenadas (latitud y longitud).
   static Future<String?> getCityFromLatLng(double lat, double lng) async {

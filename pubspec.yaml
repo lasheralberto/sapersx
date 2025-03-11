@@ -33,6 +33,8 @@ dependencies:
   floating_menu_button: ^0.0.2
   liquid_pull_to_refresh: ^3.0.1
   location: ^8.0.0
+  google_maps_flutter_web: ^0.5.11
+  google_maps_flutter: ^2.10.1
 
  
  

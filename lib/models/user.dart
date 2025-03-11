@@ -7,6 +7,8 @@ class UserInfoPopUp {
   String email;
   String? bio;
   String? location;
+  double? latitude;
+  double? longitude;
   String? website;
   bool? isExpert;
   String? specialty;
@@ -24,6 +26,8 @@ class UserInfoPopUp {
       required this.email,
       this.bio,
       this.location,
+      this.latitude,
+      this.longitude,
       this.website,
       this.isExpert,
       this.specialty,
@@ -43,6 +47,8 @@ class UserInfoPopUp {
       'email': email,
       'bio': bio,
       'location': location,
+      'latitude':latitude,
+      'longitude':longitude,
       'website': website,
       'isExpert': isExpert,
       'specialty': specialty,
@@ -64,6 +70,8 @@ class UserInfoPopUp {
       email: map['email'] as String? ?? '',
       bio: map['bio'] as String?,
       location: map['location'] as String?,
+      latitude: map['latitude'] as double?,
+      longitude: map['longitude'] as double?,
       website: map['website'] as String?,
       isExpert: map['isExpert'] as bool? ?? false,
       specialty: map['specialty'] as String?,

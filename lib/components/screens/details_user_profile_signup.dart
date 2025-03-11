@@ -40,6 +40,8 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
   late final TextEditingController _specialtyController;
   late final TextEditingController _rateController;
   late final TextEditingController _experienceController;
+  late final double _latitude;
+  late final double _longitude;
 
   bool _isExpertMode = false;
   bool _isLoadingLocation = false;
@@ -73,6 +75,11 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
     _specialtyController = TextEditingController();
     _rateController = TextEditingController();
     _experienceController = TextEditingController();
+  }
+
+  void _initLatitudeLongitude() {
+    _latitude = 0.0;
+    _longitude = 0.0;
   }
 
   Future<void> _loadUserData() async {
@@ -111,6 +118,8 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
         username: _nameController.text.trim().toLowerCase().replaceAll(' ', ''),
         bio: _bioController.text.trim(),
         location: _locationController.text.trim(),
+        latitude: _latitude,
+        longitude: _longitude,
         website:
             _websiteController.text.trim().toLowerCase().replaceAll(' ', ''),
         isExpert: _isExpertMode,
@@ -388,11 +397,10 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
             const SizedBox(height: 20),
             _buildTextField(
               controller: _experienceController,
-              label: Texts.translate('experiencia', LanguageProvider().currentLanguage),
+              label: Texts.translate(
+                  'experiencia', LanguageProvider().currentLanguage),
               maxLines: 3,
               maxLength: 200,
-          
-          
               validator: (value) {
                 if (_isExpertMode && (value?.isEmpty ?? true)) {
                   return Texts.translate(
@@ -404,12 +412,13 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
             const SizedBox(height: 20),
             _buildTextField(
               controller: _rateController,
-              label: Texts.translate('tarife', LanguageProvider().currentLanguage),
+              label:
+                  Texts.translate('tarife', LanguageProvider().currentLanguage),
               prefixIcon: Icons.euro,
-         
+
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-             // suffix: const Text('€/h'),
+              // suffix: const Text('€/h'),
               validator: (value) {
                 if (_isExpertMode) {
                   if (value?.isEmpty ?? true) {
@@ -472,6 +481,11 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
                     if (city != null) {
                       controller.text = city;
                     }
+
+                    setState(() {
+                      _latitude = location[0];
+                      _longitude = location[1];
+                    });
                   }
 
                   setState(() {

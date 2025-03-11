@@ -5,6 +5,7 @@ class Texts {
   static final Map<String, Map<String, String>> _texts = {
     'es': {
       'tarife': 'Tarifa/Hora',
+      'view_on_map': 'Ver en mapa',
       'expertMode': 'Modo experto',
       'crearPost': 'Crear post',
       'descripcionTab': 'Descripción',
@@ -59,7 +60,7 @@ class Texts {
       'feedGeneralTab': 'General',
       'FollowingTab': 'Siguiendo',
       'FollowersTab': 'Seguidores',
-      'joinedOn':'Se unió en',
+      'joinedOn': 'Se unió en',
       'noposts': 'No hay publicaciones disponibles',
       'mensajes': 'Mensajes',
       'projects': 'Invitaciones a proyectos',
@@ -92,12 +93,12 @@ class Texts {
       'noMessages': 'Sin invitaciones aún',
       'sendInvitation': 'Enviar',
       'posts': 'Publicaciones',
-      'fare':'Tarifa'
-
+      'fare': 'Tarifa'
     },
     'en': {
-      'joinedOn':'Joined in',
-      'fare':'Fare',
+      'view_on_map': 'View on map',
+      'joinedOn': 'Joined in',
+      'fare': 'Fare',
       'posts': 'Posts',
       'tarife': 'Tarife/Hour',
       'FollowersTab': 'Followers',

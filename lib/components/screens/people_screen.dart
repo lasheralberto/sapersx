@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sapers/components/widgets/mustbeloggedsection.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
@@ -25,6 +26,14 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   app_user.UserInfoPopUp? currentUser;
+  List<app_user.UserInfoPopUp> _users = [];
+  app_user.UserInfoPopUp? _selectedUser;
+  GoogleMapController? _mapController;
+  Set<Marker> _markers = {};
+
+  // Ubicación predeterminada para el mapa (puedes ajustarla según tus necesidades)
+  final LatLng _defaultLocation =
+      const LatLng(40.416775, -3.703790); // Madrid, España
 
   @override
   void initState() {
@@ -37,6 +46,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _mapController?.dispose();
     super.dispose();
   }
 
@@ -52,7 +62,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
     _usersStream = FirebaseFirestore.instance
         .collection('userinfo')
-        .where('uid', isNotEqualTo: currentUser?.uid)
+        .where('username', isNotEqualTo: currentUser?.username)
         .snapshots();
   }
 
@@ -62,6 +72,44 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   void _refreshCurrentUser() {
     Provider.of<AuthProviderSapers>(context, listen: false).refreshUserInfo();
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+    _updateMarkers();
+  }
+
+  void _updateMarkers() {
+    setState(() {
+      _markers = _users
+          .where((user) => user.latitude != null && user.longitude != null)
+          .map((user) => Marker(
+                markerId: MarkerId(user.uid),
+                position: LatLng(user.latitude!, user.longitude!),
+                // Elimina la infoWindow y usa onTap directamente
+                onTap: () {
+                  setState(() {
+                    _selectedUser = user;
+                  });
+                },
+              ))
+          .toSet();
+    });
+  }
+
+  void _selectUserOnMap(app_user.UserInfoPopUp user) {
+    setState(() {
+      _selectedUser = user;
+    });
+
+    if (user.latitude != null && user.longitude != null) {
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(user.latitude!, user.longitude!),
+          14.0,
+        ),
+      );
+    }
   }
 
   @override
@@ -77,6 +125,21 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           ),
           child: Column(
             children: [
+              // Padding(
+              //   padding: const EdgeInsets.all(8.0),
+              //   child: TextField(
+              //     controller: _searchController,
+              //     decoration: InputDecoration(
+              //       hintText: Texts.translate(
+              //           'search_users', LanguageProvider().currentLanguage),
+              //       prefixIcon: const Icon(Icons.search),
+              //       border: OutlineInputBorder(
+              //         borderRadius:
+              //             BorderRadius.circular(AppStyles.borderRadiusValue),
+              //       ),
+              //     ),
+              //   ),
+              // ),
               Expanded(
                 child: currentUser == null
                     ? LoginRequiredWidget(
@@ -101,12 +164,17 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                           }
 
                           if (snapshot.hasData) {
-                            final users = _parseUsers(snapshot.data!.docs);
-                            final filteredUsers = _filterUsers(users);
+                            _users = _parseUsers(snapshot.data!.docs);
+                            final filteredUsers = _filterUsers(_users);
+
+                            // Actualizar marcadores cuando los usuarios cambien
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              _updateMarkers();
+                            });
 
                             return filteredUsers.isEmpty
                                 ? _buildEmptyState()
-                                : _buildUserList(filteredUsers);
+                                : _buildSplitScreen(filteredUsers);
                           } else {
                             return const SizedBox();
                           }
@@ -115,6 +183,143 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSplitScreen(List<app_user.UserInfoPopUp> users) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Lista de usuarios (lado izquierdo)
+        Expanded(
+          flex: 1,
+          child: _buildUserList(users),
+        ),
+        // Separador vertical
+        //const VerticalDivider(width: 1, thickness: 1),
+        // Mapa (lado derecho)
+        Expanded(
+          flex: 1,
+          child: _buildMapView(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMapView() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24.0),
+        child: Stack(
+          children: [
+            GoogleMap(
+              onMapCreated: (GoogleMapController controller) {
+                setState(() {
+                  _mapController = controller;
+                  _updateMarkers();
+                });
+              },
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(37.7749,
+                    -122.4194), // Coordenadas iniciales (San Francisco)
+                zoom: 12,
+              ),
+              markers: _markers,
+            ),
+
+            // Tarjeta informativa si un usuario está seleccionado
+            if (_selectedUser != null)
+              Positioned(
+                bottom: 16,
+                left: 16,
+                right: 16,
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            UserProfileCardHover(
+                              authorUsername: _selectedUser!.username,
+                              isExpert: _selectedUser!.isExpert ?? false,
+                              onProfileOpen: () {},
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _selectedUser!.username,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (_selectedUser!.specialty?.isNotEmpty ??
+                                      false)
+                                    Text(
+                                      _selectedUser!.specialty!,
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedUser = null;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        if (_selectedUser!.bio?.isNotEmpty ?? false)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              _selectedUser!.bio!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        if (_selectedUser!.latitude != null &&
+                            _selectedUser!.longitude != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.location_on,
+                                    size: 16, color: Colors.redAccent),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${_selectedUser!.latitude!.toStringAsFixed(6)}, ${_selectedUser!.longitude!.toStringAsFixed(6)}',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -216,6 +421,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           user: user,
           currentUserId: _currentUserId,
           onUpdate: _refreshCurrentUser,
+          onSelect: () => _selectUserOnMap(user),
+          isSelected: _selectedUser?.uid == user.uid,
           key: ValueKey(user.uid),
         );
       },
@@ -227,7 +434,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
         .map((doc) {
           try {
             final data = doc.data() as Map<String, dynamic>;
-            return app_user.UserInfoPopUp.fromMap(data);
+            // Asegúrate de que los campos de latitud y longitud estén incluidos
+            app_user.UserInfoPopUp user = app_user.UserInfoPopUp.fromMap(data);
+            return user;
           } catch (e) {
             debugPrint('Error parsing user ${doc.id}: $e');
             return app_user.UserInfoPopUp(
@@ -265,11 +474,15 @@ class _UserListItem extends StatefulWidget {
   final app_user.UserInfoPopUp user;
   final String currentUserId;
   final VoidCallback onUpdate;
+  final VoidCallback onSelect;
+  final bool isSelected;
 
   const _UserListItem({
     required this.user,
     required this.currentUserId,
     required this.onUpdate,
+    required this.onSelect,
+    this.isSelected = false,
     super.key,
   });
 
@@ -292,12 +505,14 @@ class _UserListItemState extends State<_UserListItem> {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 0),
       elevation: 0,
-      color: Theme.of(context).cardColor,
+      color: widget.isSelected
+          ? Theme.of(context).primaryColor.withOpacity(0.1)
+          : Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
       ),
       child: InkWell(
-        onTap: () {},
+        onTap: widget.onSelect,
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         child: Padding(
           padding: const EdgeInsets.all(30.0),
@@ -367,6 +582,28 @@ class _UserListItemState extends State<_UserListItem> {
                               ],
                             ),
                           ),
+                        // Añadir coordenadas si están disponibles
+                        if (widget.user.latitude != null &&
+                            widget.user.longitude != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Row(
+                              children: [
+                                Icon(Icons.gps_fixed,
+                                    size: 14,
+                                    color: Theme.of(context).hintColor),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    '${widget.user.latitude!.toStringAsFixed(5)}, ${widget.user.longitude!.toStringAsFixed(5)}',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -387,25 +624,22 @@ class _UserListItemState extends State<_UserListItem> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildUserStats(context),
-                  // StreamBuilder<DocumentSnapshot>(
-                  //   stream: _currentUserStream,
-                  //   builder: (context, snapshot) {
-                  //     // Actualiza el estado de seguimiento si los datos cambian
-                  //     if (snapshot.hasData && !_isLoading) {
-                  //       final data =
-                  //           snapshot.data!.data() as Map<String, dynamic>?;
-                  //       final following =
-                  //           data?['following'] as List<dynamic>? ?? [];
-                  //       _isFollowing = following.contains(widget.user.uid);
-                  //     }
-
-                  //     return _FollowButton(
-                  //       isFollowing: _isFollowing ?? false,
-                  //       isLoading: _isLoading,
-                  //       onPressed: _toggleFollow,
-                  //     );
-                  //   },
-                  // ),
+                  // Botón para ver en el mapa
+                  if (widget.user.latitude != null &&
+                      widget.user.longitude != null)
+                    OutlinedButton.icon(
+                      onPressed: widget.onSelect,
+                      icon: const Icon(Icons.map, size: 16),
+                      label: Text(Texts.translate(
+                          'view_on_map', LanguageProvider().currentLanguage)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ],
@@ -443,77 +677,6 @@ class _UserListItemState extends State<_UserListItem> {
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
-    );
-  }
-}
-
-class _FollowButton extends StatelessWidget {
-  final bool isFollowing;
-  final bool isLoading;
-  final VoidCallback onPressed;
-
-  const _FollowButton({
-    required this.isFollowing,
-    required this.isLoading,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      child: isLoading
-          ? const SizedBox(
-              width: 90,
-              height: 36,
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          : SizedBox(
-              height: 36,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: isFollowing
-                      ? Colors.grey[200]
-                      : Theme.of(context).primaryColor,
-                  foregroundColor:
-                      isFollowing ? Colors.grey[700] : Colors.white,
-                  side: BorderSide(
-                    color: isFollowing
-                        ? Colors.grey[300]!
-                        : Theme.of(context).primaryColor,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                onPressed: onPressed,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isFollowing ? Icons.check : Icons.add,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      isFollowing
-                          ? Texts.translate(
-                              'following', LanguageProvider().currentLanguage)
-                          : Texts.translate(
-                              'follow', LanguageProvider().currentLanguage),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-            ),
     );
   }
 }
