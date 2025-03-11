@@ -30,8 +30,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   app_user.UserInfoPopUp? _selectedUser;
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
+  bool _showMap = true; // Flag para alternar entre lista y mapa en móvil
 
-  // Ubicación predeterminada para el mapa (puedes ajustarla según tus necesidades)
+  // Ubicación predeterminada para el mapa
   final LatLng _defaultLocation =
       const LatLng(40.416775, -3.703790); // Madrid, España
 
@@ -86,7 +87,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           .map((user) => Marker(
                 markerId: MarkerId(user.uid),
                 position: LatLng(user.latitude!, user.longitude!),
-                // Elimina la infoWindow y usa onTap directamente
                 onTap: () {
                   setState(() {
                     _selectedUser = user;
@@ -100,6 +100,10 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   void _selectUserOnMap(app_user.UserInfoPopUp user) {
     setState(() {
       _selectedUser = user;
+      // En dispositivos móviles, cambiar automáticamente a la vista del mapa
+      if (_isSmallScreen(context)) {
+        _showMap = true;
+      }
     });
 
     if (user.latitude != null && user.longitude != null) {
@@ -112,8 +116,15 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     }
   }
 
+  // Verificar si es una pantalla pequeña (móvil)
+  bool _isSmallScreen(BuildContext context) {
+    return MediaQuery.of(context).size.width < 600;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isSmallScreen = _isSmallScreen(context);
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -125,6 +136,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           ),
           child: Column(
             children: [
+              // Barra de búsqueda (comentada en el código original)
               // Padding(
               //   padding: const EdgeInsets.all(8.0),
               //   child: TextField(
@@ -140,6 +152,50 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               //     ),
               //   ),
               // ),
+
+              // Solo mostrar botones de navegación en pantallas pequeñas
+              if (isSmallScreen)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        child: TextButton.icon(
+                          onPressed: () => setState(() => _showMap = false),
+                          icon: const Icon(Icons.people),
+                          label: Text(Texts.translate(
+                              'users', LanguageProvider().currentLanguage)),
+                          style: TextButton.styleFrom(
+                            backgroundColor: !_showMap
+                                ? Theme.of(context)
+                                    .primaryColor
+                                    .withOpacity(0.1)
+                                : null,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: TextButton.icon(
+                          onPressed: () => setState(() => _showMap = true),
+                          icon: const Icon(Icons.map),
+                          label: Text(Texts.translate(
+                              'map', LanguageProvider().currentLanguage)),
+                          style: TextButton.styleFrom(
+                            backgroundColor: _showMap
+                                ? Theme.of(context)
+                                    .primaryColor
+                                    .withOpacity(0.1)
+                                : null,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               Expanded(
                 child: currentUser == null
                     ? LoginRequiredWidget(
@@ -174,7 +230,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
                             return filteredUsers.isEmpty
                                 ? _buildEmptyState()
-                                : _buildSplitScreen(filteredUsers);
+                                : isSmallScreen
+                                    ? _buildMobileLayout(filteredUsers)
+                                    : _buildDesktopLayout(filteredUsers);
                           } else {
                             return const SizedBox();
                           }
@@ -185,10 +243,24 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           ),
         ),
       ),
+      // FAB para volver a la lista desde el mapa (solo en móvil)
+      floatingActionButton: isSmallScreen && _showMap && _selectedUser != null
+          ? FloatingActionButton(
+              mini: true,
+              onPressed: () => setState(() => _selectedUser = null),
+              child: const Icon(Icons.arrow_back),
+            )
+          : null,
     );
   }
 
-  Widget _buildSplitScreen(List<app_user.UserInfoPopUp> users) {
+  // Layout para móvil que alterna entre lista y mapa
+  Widget _buildMobileLayout(List<app_user.UserInfoPopUp> users) {
+    return _showMap ? _buildMapView() : _buildUserList(users);
+  }
+
+  // Layout para escritorio que muestra lista y mapa lado a lado
+  Widget _buildDesktopLayout(List<app_user.UserInfoPopUp> users) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -197,8 +269,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           flex: 1,
           child: _buildUserList(users),
         ),
-        // Separador vertical
-        //const VerticalDivider(width: 1, thickness: 1),
         // Mapa (lado derecho)
         Expanded(
           flex: 1,
@@ -216,18 +286,16 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
         child: Stack(
           children: [
             GoogleMap(
-              onMapCreated: (GoogleMapController controller) {
-                setState(() {
-                  _mapController = controller;
-                  _updateMarkers();
-                });
-              },
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(37.7749,
-                    -122.4194), // Coordenadas iniciales (San Francisco)
+              onMapCreated: _onMapCreated,
+              initialCameraPosition: CameraPosition(
+                target: _defaultLocation,
                 zoom: 12,
               ),
               markers: _markers,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
+              zoomControlsEnabled: true,
+              compassEnabled: true,
             ),
 
             // Tarjeta informativa si un usuario está seleccionado
@@ -423,6 +491,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           onUpdate: _refreshCurrentUser,
           onSelect: () => _selectUserOnMap(user),
           isSelected: _selectedUser?.uid == user.uid,
+          isSmallScreen: _isSmallScreen(context),
           key: ValueKey(user.uid),
         );
       },
@@ -434,7 +503,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
         .map((doc) {
           try {
             final data = doc.data() as Map<String, dynamic>;
-            // Asegúrate de que los campos de latitud y longitud estén incluidos
             app_user.UserInfoPopUp user = app_user.UserInfoPopUp.fromMap(data);
             return user;
           } catch (e) {
@@ -476,6 +544,7 @@ class _UserListItem extends StatefulWidget {
   final VoidCallback onUpdate;
   final VoidCallback onSelect;
   final bool isSelected;
+  final bool isSmallScreen;
 
   const _UserListItem({
     required this.user,
@@ -483,6 +552,7 @@ class _UserListItem extends StatefulWidget {
     required this.onUpdate,
     required this.onSelect,
     this.isSelected = false,
+    this.isSmallScreen = false,
     super.key,
   });
 
@@ -515,7 +585,7 @@ class _UserListItemState extends State<_UserListItem> {
         onTap: widget.onSelect,
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         child: Padding(
-          padding: const EdgeInsets.all(30.0),
+          padding: EdgeInsets.all(widget.isSmallScreen ? 16.0 : 30.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -582,7 +652,7 @@ class _UserListItemState extends State<_UserListItem> {
                               ],
                             ),
                           ),
-                        // Añadir coordenadas si están disponibles
+                        // Coordenadas
                         if (widget.user.latitude != null &&
                             widget.user.longitude != null)
                           Padding(
@@ -630,8 +700,10 @@ class _UserListItemState extends State<_UserListItem> {
                     OutlinedButton.icon(
                       onPressed: widget.onSelect,
                       icon: const Icon(Icons.map, size: 16),
-                      label: Text(Texts.translate(
-                          'view_on_map', LanguageProvider().currentLanguage)),
+                      label: Text(widget.isSmallScreen
+                          ? "" // En móvil, solo mostrar el ícono
+                          : Texts.translate('view_on_map',
+                              LanguageProvider().currentLanguage)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
