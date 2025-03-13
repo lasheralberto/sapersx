@@ -207,261 +207,265 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     final isMobile = screenWidth < 600;
 
     return Scaffold(
-      body: FloatingMenuWidget(
-        menuTray: const MenuTray(
-            itemsSeparation: 30,
-            itemTextStyle: TextStyle(fontWeight: FontWeight.bold),
-            padding: EdgeInsets.all(10),
-            trayHeight: 150,
-            trayWidth: 150),
-        menuButton: MenuButton(
-          padding: const EdgeInsets.only(right: 30, left: 15),
-          textStyle: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: Theme.of(context).textTheme.bodySmall!.fontSize,
-          ),
-          iconSize: 20,
-          iconOnClose: Icons.add,
-          iconOnOpen: Icons.close,
-          iconColor: AppStyles.colorAvatarBorder,
-          textOnClose:
-              Texts.translate('open', LanguageProvider().currentLanguage),
-          textOnOpen:
-              Texts.translate('close', LanguageProvider().currentLanguage),
-        ),
-        menuItems: [
-          MenuItems(
-              id: "1",
-              value: Texts.translate(
-                  'crearPost', LanguageProvider().currentLanguage)),
-          MenuItems(
-              id: "2",
-              value: Texts.translate(
-                  'nuevoProyecto', LanguageProvider().currentLanguage)),
-        ],
-        onItemSelection: (menuItems) {
-          if (menuItems.id == "1") {
-            _showCreatePostDialog();
-          } else if (menuItems.id == "2") {
-            _showCreateProjectDialog();
-          } else if (menuItems.id == "3") {}
-        },
-        child: NestedScrollView(
-          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-            return [
-              SliverAppBar(
-                floating: true,
-                snap: true,
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                elevation: innerBoxIsScrolled ? 4 : 0,
-                shadowColor: Theme.of(context).shadowColor.withOpacity(0.1),
-                surfaceTintColor: Colors.transparent,
-                centerTitle: false,
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                      ),
-                      child: Image.asset(
-                        AppStyles.logoImage,
-                        width: isMobile ? 80.0 : 100.0,
-                        height: isMobile ? 80.0 : 100.0,
-                      ),
-                    ),
-                    // Modifica el InkWell del icono de búsqueda
-                    Row(
-                      children: [
-                        FloatingActionButton(
-                          elevation: 1,
-                          backgroundColor: Colors.white,
-                          mini: true,
-                          onPressed: () {
-                            _sidebarController.toggle();
-                          },
-                          child: AnimatedBuilder(
-                            animation: _sidebarController,
-                            builder: (context, _) {
-                              return Icon(
-                                _sidebarController.isOpen
-                                    ? Icons.close
-                                    : Icons.tag,
-                                color: AppStyles.colorAvatarBorder,
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 18),
-                        InkWell(
-                          child: const Icon(Icons.search),
-                          onTap: () {
-                            setState(() {
-                              searchPressed = !searchPressed;
-                            });
-                          },
-                        ),
-                      ],
-                    )
-                  ],
+      body: (_tabController.index == 0 ||
+              _tabController.index == 1 ||
+              _tabController.index == 2)
+          ? FloatingMenuWidget(
+              menuTray: const MenuTray(
+                  itemsSeparation: 30,
+                  itemTextStyle: TextStyle(fontWeight: FontWeight.bold),
+                  padding: EdgeInsets.all(10),
+                  trayHeight: 150,
+                  trayWidth: 150),
+              menuButton: MenuButton(
+                padding: const EdgeInsets.only(right: 30, left: 15),
+                textStyle: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: Theme.of(context).textTheme.bodySmall!.fontSize,
                 ),
-                actions: [
-                  Padding(
-                    padding: EdgeInsets.only(right: isMobile ? 8.0 : 16.0),
-                    child: UserAvatar(user: widget.user),
-                  ),
-                ],
+                iconSize: 20,
+                iconOnClose: Icons.add,
+                iconOnOpen: Icons.close,
+                iconColor: AppStyles.colorAvatarBorder,
+                textOnClose:
+                    Texts.translate('open', LanguageProvider().currentLanguage),
+                textOnOpen: Texts.translate(
+                    'close', LanguageProvider().currentLanguage),
               ),
-              SliverPersistentHeader(
-                pinned: false,
-                floating: true,
-                delegate: AnimatedSliverHeaderDelegate(
-                  visible: searchPressed,
-                  child: Container(
+              menuItems: [
+                MenuItems(
+                    id: "1",
+                    value: Texts.translate(
+                        'crearPost', LanguageProvider().currentLanguage)),
+                MenuItems(
+                    id: "2",
+                    value: Texts.translate(
+                        'nuevoProyecto', LanguageProvider().currentLanguage)),
+              ],
+              onItemSelection: (menuItems) {
+                if (menuItems.id == "1") {
+                  _showCreatePostDialog();
+                } else if (menuItems.id == "2") {
+                  _showCreateProjectDialog();
+                } else if (menuItems.id == "3") {}
+              },
+              child: _buildNestedScrollView(context, isMobile, screenWidth))
+          : _buildNestedScrollView(context, isMobile, screenWidth),
+    );
+  }
+
+  Widget _buildNestedScrollView(
+      BuildContext context, bool isMobile, screenWidth) {
+    return NestedScrollView(
+      headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+        return [
+          SliverAppBar(
+            floating: true,
+            snap: true,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            elevation: innerBoxIsScrolled ? 4 : 0,
+            shadowColor: Theme.of(context).shadowColor.withOpacity(0.1),
+            surfaceTintColor: Colors.transparent,
+            centerTitle: false,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
                     color: Theme.of(context).scaffoldBackgroundColor,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 8.0 : 16.0,
-                        vertical: 8.0,
-                      ),
-                      child: Center(
-                        child: SizedBox(
-                          width: screenWidth >= 600
-                              ? screenWidth / 2
-                              : screenWidth * 0.9,
-                          child: SearchBarCustom(
-                            onDeleteTag: () {
-                              setState(() {
-                                tagPressed = null;
-                                _updateFutures();
-                              });
-                            },
-                            tag: tagPressed.toString(),
-                            controller: _searchController,
-                            onSearch: _performSearch,
-                            onModuleSelected: (module) {
-                              setState(() {
-                                _selectedModule = module;
-                                searchPressed = !searchPressed;
-                                _updateFutures();
-                              });
-                            },
-                            modules: _modules,
-                            selectedModule: _selectedModule,
-                          ),
-                        ),
-                      ),
-                    ),
+                  ),
+                  child: Image.asset(
+                    AppStyles.logoImage,
+                    width: isMobile ? 80.0 : 100.0,
+                    height: isMobile ? 80.0 : 100.0,
                   ),
                 ),
-              ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: SliverTabBarDelegate(
-                  TabBar(
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.center,
-                    indicatorPadding: EdgeInsets.all(isMobile ? 5.0 : 10.0),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    controller: _tabController,
-                    indicator: const BoxDecoration(
-                      image: DecorationImage(
-                        alignment: Alignment.center,
-                        opacity: 0.8,
-                        scale: 0.5,
-                        image: AssetImage(AppStyles.tabMarkerImage),
-                        fit: BoxFit.scaleDown,
+                // Modifica el InkWell del icono de búsqueda
+                Row(
+                  children: [
+                    FloatingActionButton(
+                      elevation: 1,
+                      backgroundColor: Colors.white,
+                      mini: true,
+                      onPressed: () {
+                        _sidebarController.toggle();
+                      },
+                      child: AnimatedBuilder(
+                        animation: _sidebarController,
+                        builder: (context, _) {
+                          return Icon(
+                            _sidebarController.isOpen ? Icons.close : Icons.tag,
+                            color: AppStyles.colorAvatarBorder,
+                          );
+                        },
                       ),
                     ),
-                    labelColor: AppStyles.colorAvatarBorder,
-                    unselectedLabelColor: Theme.of(context).disabledColor,
-                    indicatorColor: AppStyles.colorAvatarBorder,
-                    dividerColor: Colors.transparent,
-                    tabs: [
-                      _buildTab('feedGeneralTab'),
-                      _buildTab('FollowingTab'),
-                      _buildTab('projectsTab'),
-                      _buildTab('genteTab')
-                    ],
-                  ),
-                ),
-              ),
-            ];
-          },
-          body: TabBarView(
-            controller: _tabController,
-            children: [
-              FutureBuilder<List<String>>(
-                future: _futureTags,
-                builder: (context, snapshot) {
-                  List<String> trendingTags = ['PP']; // Valor por defecto
-
-                  if (snapshot.hasData) {
-                    trendingTags = snapshot.data!;
-                  }
-
-                  return PostsListWithSidebar(
-                      sidebarController: _sidebarController,
-                      onRefresh: _updateFutures,
-                      onPostExpanded: (p0) {
+                    const SizedBox(width: 18),
+                    InkWell(
+                      child: const Icon(Icons.search),
+                      onTap: () {
                         setState(() {
-                          isPostExpanded = p0;
+                          searchPressed = !searchPressed;
                         });
                       },
-                      future: _postsFutureGeneral!,
-                      isMobile: isMobile,
-                      trendingTags: trendingTags,
-                      onTagSelected: (tag) {
-                        setState(() {
-                          tagPressed = tag;
-                          _updateFutures();
-                        });
-                      });
-                },
+                    ),
+                  ],
+                )
+              ],
+            ),
+            actions: [
+              Padding(
+                padding: EdgeInsets.only(right: isMobile ? 8.0 : 16.0),
+                child: UserAvatar(user: widget.user),
               ),
-              FutureBuilder<List<String>>(
-                future: _futureTags,
-                builder: (context, snapshot) {
-                  List<String> trendingTags = ['PP']; // Valor por defecto
-
-                  if (snapshot.hasData) {
-                    trendingTags = snapshot.data!;
-                  }
-
-                  return PostsListWithSidebar(
-                      sidebarController: _sidebarController,
-                      onRefresh: _updateFutures,
-                      onPostExpanded: (p0) {
-                        setState(() {
-                          isPostExpanded = p0;
-                        });
-                      },
-                      future: _postsFutureFollowing!,
-                      isMobile: isMobile,
-                      trendingTags: trendingTags,
-                      onTagSelected: (tag) {
-                        setState(() {
-                          tagPressed = tag;
-                          _updateFutures();
-                        });
-                      });
-                },
-              ),
-              // _buildPostsList(_postsFutureGeneral!, isMobile),
-              //_buildPostsList(_postsFutureFollowing!, isMobile),
-              ProjectListView(
-                future: _postsProjects!,
-                isMobile: isMobile,
-                onRefresh: () {
-                  _updateFutures();
-                },
-              ),
-              const UserSearchScreen()
             ],
           ),
-        ),
+          SliverPersistentHeader(
+            pinned: false,
+            floating: true,
+            delegate: AnimatedSliverHeaderDelegate(
+              visible: searchPressed,
+              child: Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 8.0 : 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: Center(
+                    child: SizedBox(
+                      width: screenWidth >= 600
+                          ? screenWidth / 2
+                          : screenWidth * 0.9,
+                      child: SearchBarCustom(
+                        onDeleteTag: () {
+                          setState(() {
+                            tagPressed = null;
+                            _updateFutures();
+                          });
+                        },
+                        tag: tagPressed.toString(),
+                        controller: _searchController,
+                        onSearch: _performSearch,
+                        onModuleSelected: (module) {
+                          setState(() {
+                            _selectedModule = module;
+                            searchPressed = !searchPressed;
+                            _updateFutures();
+                          });
+                        },
+                        modules: _modules,
+                        selectedModule: _selectedModule,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: SliverTabBarDelegate(
+              TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.center,
+                indicatorPadding: EdgeInsets.all(isMobile ? 5.0 : 10.0),
+                indicatorSize: TabBarIndicatorSize.tab,
+                controller: _tabController,
+                indicator: const BoxDecoration(
+                  image: DecorationImage(
+                    alignment: Alignment.center,
+                    opacity: 0.8,
+                    scale: 0.5,
+                    image: AssetImage(AppStyles.tabMarkerImage),
+                    fit: BoxFit.scaleDown,
+                  ),
+                ),
+                labelColor: AppStyles.colorAvatarBorder,
+                unselectedLabelColor: Theme.of(context).disabledColor,
+                indicatorColor: AppStyles.colorAvatarBorder,
+                dividerColor: Colors.transparent,
+                tabs: [
+                  _buildTab('feedGeneralTab'),
+                  _buildTab('FollowingTab'),
+                  _buildTab('projectsTab'),
+                  _buildTab('genteTab')
+                ],
+              ),
+            ),
+          ),
+        ];
+      },
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          FutureBuilder<List<String>>(
+            future: _futureTags,
+            builder: (context, snapshot) {
+              List<String> trendingTags = ['PP']; // Valor por defecto
+
+              if (snapshot.hasData) {
+                trendingTags = snapshot.data!;
+              }
+
+              return PostsListWithSidebar(
+                  sidebarController: _sidebarController,
+                  onRefresh: _updateFutures,
+                  onPostExpanded: (p0) {
+                    setState(() {
+                      isPostExpanded = p0;
+                    });
+                  },
+                  future: _postsFutureGeneral!,
+                  isMobile: isMobile,
+                  trendingTags: trendingTags,
+                  onTagSelected: (tag) {
+                    setState(() {
+                      tagPressed = tag;
+                      _updateFutures();
+                    });
+                  });
+            },
+          ),
+          FutureBuilder<List<String>>(
+            future: _futureTags,
+            builder: (context, snapshot) {
+              List<String> trendingTags = ['PP']; // Valor por defecto
+
+              if (snapshot.hasData) {
+                trendingTags = snapshot.data!;
+              }
+
+              return PostsListWithSidebar(
+                  sidebarController: _sidebarController,
+                  onRefresh: _updateFutures,
+                  onPostExpanded: (p0) {
+                    setState(() {
+                      isPostExpanded = p0;
+                    });
+                  },
+                  future: _postsFutureFollowing!,
+                  isMobile: isMobile,
+                  trendingTags: trendingTags,
+                  onTagSelected: (tag) {
+                    setState(() {
+                      tagPressed = tag;
+                      _updateFutures();
+                    });
+                  });
+            },
+          ),
+          ProjectListView(
+            future: _postsProjects!,
+            isMobile: isMobile,
+            onRefresh: () {
+              _updateFutures();
+            },
+          ),
+          const UserSearchScreen()
+        ],
       ),
     );
   }
