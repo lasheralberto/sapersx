@@ -289,7 +289,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               onMapCreated: _onMapCreated,
               initialCameraPosition: CameraPosition(
                 target: _defaultLocation,
-                zoom: 12,
+                zoom: 5,
               ),
               markers: _markers,
               myLocationEnabled: true,
