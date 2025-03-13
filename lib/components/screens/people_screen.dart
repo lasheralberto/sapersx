@@ -279,115 +279,146 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   Widget _buildMapView() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24.0),
-        child: Stack(
-          children: [
-            GoogleMap(
-              onMapCreated: _onMapCreated,
-              initialCameraPosition: CameraPosition(
-                target: _defaultLocation,
-                zoom: 5,
-              ),
-              markers: _markers,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
-              zoomControlsEnabled: true,
-              compassEnabled: true,
+    return InkWell(
+      onTap: () {
+        if (_selectedUser?.latitude != null &&
+            _selectedUser?.longitude != null) {
+          _mapController?.animateCamera(
+            CameraUpdate.newLatLngZoom(
+              LatLng(_selectedUser?.latitude as double,
+                  _selectedUser?.longitude as double),
+              14.0,
             ),
+          );
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24.0),
+          child: Stack(
+            children: [
+              GoogleMap(
+                onMapCreated: _onMapCreated,
+                initialCameraPosition: CameraPosition(
+                  target: _defaultLocation,
+                  zoom: 5,
+                ),
+                markers: _markers,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: true,
+                zoomControlsEnabled: true,
+                compassEnabled: true,
+              ),
 
-            // Tarjeta informativa si un usuario está seleccionado
-            if (_selectedUser != null)
-              Positioned(
-                bottom: 16,
-                left: 16,
-                right: 16,
-                child: Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: [
-                            UserProfileCardHover(
-                              authorUsername: _selectedUser!.username,
-                              isExpert: _selectedUser!.isExpert ?? false,
-                              onProfileOpen: () {},
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _selectedUser!.username,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if (_selectedUser!.specialty?.isNotEmpty ??
-                                      false)
-                                    Text(
-                                      _selectedUser!.specialty!,
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 14,
+              // Tarjeta informativa si un usuario está seleccionado
+              if (_selectedUser != null)
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              UserProfileCardHover(
+                                authorUsername: _selectedUser!.username,
+                                isExpert: _selectedUser!.isExpert ?? false,
+                                onProfileOpen: () {},
+                              ),
+                              const SizedBox(width: 12),
+                              InkWell(
+                                onTap: () {
+                                  if (_selectedUser?.latitude != null &&
+                                      _selectedUser?.longitude != null) {
+                                    _mapController?.animateCamera(
+                                      CameraUpdate.newLatLngZoom(
+                                        LatLng(
+                                            _selectedUser?.latitude as double,
+                                            _selectedUser?.longitude as double),
+                                        14.0,
                                       ),
-                                    ),
+                                    );
+                                  }
+                                },
+                                child: Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _selectedUser!.username,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (_selectedUser!
+                                              .specialty?.isNotEmpty ??
+                                          false)
+                                        Text(
+                                          _selectedUser!.specialty!,
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedUser = null;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          if (_selectedUser!.bio?.isNotEmpty ?? false)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                _selectedUser!.bio!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          if (_selectedUser!.latitude != null &&
+                              _selectedUser!.longitude != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.location_on,
+                                      size: 16, color: Colors.redAccent),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${_selectedUser!.latitude!.toStringAsFixed(6)}, ${_selectedUser!.longitude!.toStringAsFixed(6)}',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
                                 ],
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                setState(() {
-                                  _selectedUser = null;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                        if (_selectedUser!.bio?.isNotEmpty ?? false)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              _selectedUser!.bio!,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        if (_selectedUser!.latitude != null &&
-                            _selectedUser!.longitude != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.location_on,
-                                    size: 16, color: Colors.redAccent),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${_selectedUser!.latitude!.toStringAsFixed(6)}, ${_selectedUser!.longitude!.toStringAsFixed(6)}',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
