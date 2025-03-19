@@ -134,121 +134,58 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
             right: 1,
             top: 1,
           ),
-          child: Column(
-            children: [
-              // Barra de búsqueda (comentada en el código original)
-              // Padding(
-              //   padding: const EdgeInsets.all(8.0),
-              //   child: TextField(
-              //     controller: _searchController,
-              //     decoration: InputDecoration(
-              //       hintText: Texts.translate(
-              //           'search_users', LanguageProvider().currentLanguage),
-              //       prefixIcon: const Icon(Icons.search),
-              //       border: OutlineInputBorder(
-              //         borderRadius:
-              //             BorderRadius.circular(AppStyles.borderRadiusValue),
-              //       ),
-              //     ),
-              //   ),
-              // ),
+          child: Expanded(
+            child: currentUser == null
+                ? LoginRequiredWidget(
+                    onTap: () {
+                      AuthService().isUserLoggedIn(context);
+                    },
+                  )
+                : StreamBuilder<QuerySnapshot>(
+                    stream: _usersStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return _buildErrorState(snapshot.error!);
+                      }
 
-              // Solo mostrar botones de navegación en pantallas pequeñas
-              if (isSmallScreen)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                        child: TextButton.icon(
-                          onPressed: () => setState(() => _showMap = false),
-                          icon: const Icon(Icons.people),
-                          label: Text(Texts.translate(
-                              'users', LanguageProvider().currentLanguage)),
-                          style: TextButton.styleFrom(
-                            backgroundColor: !_showMap
-                                ? Theme.of(context)
-                                    .primaryColor
-                                    .withOpacity(0.1)
-                                : null,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: TextButton.icon(
-                          onPressed: () => setState(() => _showMap = true),
-                          icon: const Icon(Icons.map),
-                          label: Text(Texts.translate(
-                              'map', LanguageProvider().currentLanguage)),
-                          style: TextButton.styleFrom(
-                            backgroundColor: _showMap
-                                ? Theme.of(context)
-                                    .primaryColor
-                                    .withOpacity(0.1)
-                                : null,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
-                    ],
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return _buildLoadingState();
+                      } else if (snapshot.connectionState ==
+                          ConnectionState.none) {
+                        return _buildErrorState('No se pudo cargar los datos');
+                      }
+
+                      if (snapshot.hasData) {
+                        _users = _parseUsers(snapshot.data!.docs);
+                        final filteredUsers = _filterUsers(_users);
+
+                        // Actualizar marcadores cuando los usuarios cambien
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _updateMarkers();
+                        });
+
+                        return filteredUsers.isEmpty
+                            ? _buildEmptyState()
+                            : isSmallScreen
+                                ? _buildMobileLayout(filteredUsers)
+                                : _buildDesktopLayout(filteredUsers);
+                      } else {
+                        return const SizedBox();
+                      }
+                    },
                   ),
-                ),
-
-              Expanded(
-                child: currentUser == null
-                    ? LoginRequiredWidget(
-                        onTap: () {
-                          AuthService().isUserLoggedIn(context);
-                        },
-                      )
-                    : StreamBuilder<QuerySnapshot>(
-                        stream: _usersStream,
-                        builder: (context, snapshot) {
-                          if (snapshot.hasError) {
-                            return _buildErrorState(snapshot.error!);
-                          }
-
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return _buildLoadingState();
-                          } else if (snapshot.connectionState ==
-                              ConnectionState.none) {
-                            return _buildErrorState(
-                                'No se pudo cargar los datos');
-                          }
-
-                          if (snapshot.hasData) {
-                            _users = _parseUsers(snapshot.data!.docs);
-                            final filteredUsers = _filterUsers(_users);
-
-                            // Actualizar marcadores cuando los usuarios cambien
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              _updateMarkers();
-                            });
-
-                            return filteredUsers.isEmpty
-                                ? _buildEmptyState()
-                                : isSmallScreen
-                                    ? _buildMobileLayout(filteredUsers)
-                                    : _buildDesktopLayout(filteredUsers);
-                          } else {
-                            return const SizedBox();
-                          }
-                        },
-                      ),
-              ),
-            ],
           ),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       // FAB para volver a la lista desde el mapa (solo en móvil)
-      floatingActionButton: isSmallScreen && _showMap && _selectedUser != null
+      floatingActionButton: _isSmallScreen(context) == true
           ? FloatingActionButton(
               mini: true,
-              onPressed: () => setState(() => _selectedUser = null),
-              child: const Icon(Icons.arrow_back),
+              onPressed: () => setState(() => _showMap = !_showMap),
+              child: _showMap == false
+                  ? const Icon(Icons.people)
+                  : const Icon(Icons.map),
             )
           : null,
     );
@@ -405,10 +342,11 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                                   const Icon(Icons.location_on,
                                       size: 16, color: Colors.redAccent),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    '${_selectedUser!.latitude!.toStringAsFixed(6)}, ${_selectedUser!.longitude!.toStringAsFixed(6)}',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
+                                  Text(_selectedUser?.location ?? ''),
+                                  // Text(
+                                  //   '${_selectedUser!.latitude!.toStringAsFixed(6)}, ${_selectedUser!.longitude!.toStringAsFixed(6)}',
+                                  //   style: const TextStyle(fontSize: 12),
+                                  // ),
                                 ],
                               ),
                             ),
@@ -664,47 +602,33 @@ class _UserListItemState extends State<_UserListItem> {
                           ],
                         ),
                         if (widget.user.location?.isNotEmpty ?? false)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Row(
-                              children: [
-                                Icon(Icons.location_on_outlined,
-                                    size: 14,
-                                    color: Theme.of(context).hintColor),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    widget.user.location!,
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
-                                    overflow: TextOverflow.ellipsis,
+                          InkWell(
+                            onTap: widget.onSelect,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.location_on_outlined,
+                                      size: 14,
+                                      color: Theme.of(context).hintColor),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      widget.user.location!,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: Theme.of(context).hintColor,
+                                          ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         // Coordenadas
-                        if (widget.user.latitude != null &&
-                            widget.user.longitude != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Row(
-                              children: [
-                                Icon(Icons.gps_fixed,
-                                    size: 14,
-                                    color: Theme.of(context).hintColor),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    '${widget.user.latitude!.toStringAsFixed(5)}, ${widget.user.longitude!.toStringAsFixed(5)}',
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                       ],
                     ),
                   ),
