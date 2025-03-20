@@ -30,7 +30,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   app_user.UserInfoPopUp? _selectedUser;
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
-  bool _showMap = true; // Flag para alternar entre lista y mapa en móvil
+  bool _showMap = false; // Flag para alternar entre lista y mapa en móvil
 
   // Ubicación predeterminada para el mapa
   final LatLng _defaultLocation =
@@ -45,9 +45,13 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   @override
   void dispose() {
+    // Make sure to set to null before disposing
+    final controller = _mapController;
+    _mapController = null;
+    controller?.dispose();
+
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
-    _mapController?.dispose();
     super.dispose();
   }
 
@@ -76,25 +80,35 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   void _onMapCreated(GoogleMapController controller) {
-    _mapController = controller;
-    _updateMarkers();
+    setState(() {
+      _mapController = controller;
+    });
+
+    // Delay marker update to ensure map is ready
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        _updateMarkers();
+      }
+    });
   }
 
   void _updateMarkers() {
-    setState(() {
-      _markers = _users
-          .where((user) => user.latitude != null && user.longitude != null)
-          .map((user) => Marker(
-                markerId: MarkerId(user.uid),
-                position: LatLng(user.latitude!, user.longitude!),
-                onTap: () {
-                  setState(() {
-                    _selectedUser = user;
-                  });
-                },
-              ))
-          .toSet();
-    });
+    if (!mounted || _mapController == null) return;
+
+    ///setState(() {
+    _markers = _users
+        .where((user) => user.latitude != null && user.longitude != null)
+        .map((user) => Marker(
+              markerId: MarkerId(user.uid),
+              position: LatLng(user.latitude!, user.longitude!),
+              onTap: () {
+                setState(() {
+                  _selectedUser = user;
+                });
+              },
+            ))
+        .toSet();
+    //   });
   }
 
   void _selectUserOnMap(app_user.UserInfoPopUp user) {
@@ -106,8 +120,10 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
       }
     });
 
-    if (user.latitude != null && user.longitude != null) {
-      _mapController?.animateCamera(
+    if (user.latitude != null &&
+        user.longitude != null &&
+        _mapController != null) {
+      _mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(
           LatLng(user.latitude!, user.longitude!),
           14.0,
@@ -134,47 +150,46 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
             right: 1,
             top: 1,
           ),
-          child: Expanded(
-            child: currentUser == null
-                ? LoginRequiredWidget(
-                    onTap: () {
-                      AuthService().isUserLoggedIn(context);
-                    },
-                  )
-                : StreamBuilder<QuerySnapshot>(
-                    stream: _usersStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return _buildErrorState(snapshot.error!);
+          child: currentUser == null
+              ? LoginRequiredWidget(
+                  onTap: () {
+                    AuthService().isUserLoggedIn(context);
+                  },
+                )
+              : StreamBuilder<QuerySnapshot>(
+                  stream: _usersStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return _buildErrorState(snapshot.error!);
+                    }
+
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return _buildLoadingState();
+                    } else if (snapshot.connectionState ==
+                        ConnectionState.none) {
+                      return _buildErrorState('No se pudo cargar los datos');
+                    }
+
+                    // In your StreamBuilder:
+                    if (snapshot.hasData) {
+                      _users = _parseUsers(snapshot.data!.docs);
+                      final filteredUsers = _filterUsers(_users);
+
+                      // Only update markers if map controller exists
+                      if (_mapController != null) {
+                        _updateMarkers();
                       }
 
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return _buildLoadingState();
-                      } else if (snapshot.connectionState ==
-                          ConnectionState.none) {
-                        return _buildErrorState('No se pudo cargar los datos');
-                      }
-
-                      if (snapshot.hasData) {
-                        _users = _parseUsers(snapshot.data!.docs);
-                        final filteredUsers = _filterUsers(_users);
-
-                        // Actualizar marcadores cuando los usuarios cambien
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          _updateMarkers();
-                        });
-
-                        return filteredUsers.isEmpty
-                            ? _buildEmptyState()
-                            : isSmallScreen
-                                ? _buildMobileLayout(filteredUsers)
-                                : _buildDesktopLayout(filteredUsers);
-                      } else {
-                        return const SizedBox();
-                      }
-                    },
-                  ),
-          ),
+                      return filteredUsers.isEmpty
+                          ? _buildEmptyState()
+                          : isSmallScreen
+                              ? _buildMobileLayout(filteredUsers)
+                              : _buildDesktopLayout(filteredUsers);
+                    } else {
+                      return const SizedBox();
+                    }
+                  },
+                ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
@@ -184,8 +199,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               mini: true,
               onPressed: () => setState(() => _showMap = !_showMap),
               child: _showMap == false
-                  ? const Icon(Icons.people)
-                  : const Icon(Icons.map),
+                  ? const Icon(Icons.map)
+                  : const Icon(Icons.list_rounded),
             )
           : null,
     );
@@ -273,21 +288,22 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                                 onProfileOpen: () {},
                               ),
                               const SizedBox(width: 12),
-                              InkWell(
-                                onTap: () {
-                                  if (_selectedUser?.latitude != null &&
-                                      _selectedUser?.longitude != null) {
-                                    _mapController?.animateCamera(
-                                      CameraUpdate.newLatLngZoom(
-                                        LatLng(
-                                            _selectedUser?.latitude as double,
-                                            _selectedUser?.longitude as double),
-                                        14.0,
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: Expanded(
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    if (_selectedUser?.latitude != null &&
+                                        _selectedUser?.longitude != null) {
+                                      _mapController?.animateCamera(
+                                        CameraUpdate.newLatLngZoom(
+                                          LatLng(
+                                              _selectedUser?.latitude as double,
+                                              _selectedUser?.longitude
+                                                  as double),
+                                          14.0,
+                                        ),
+                                      );
+                                    }
+                                  },
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
