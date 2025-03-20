@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
@@ -191,8 +192,9 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
           GestureDetector(
             onTap: onDelete,
             child: const Icon(
-              Icons.close,
+              Symbols.close,
               size: 16,
+              weight: 1150.0,
               color: Colors.blue,
             ),
           ),
@@ -296,15 +298,19 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                         animation: _sidebarController,
                         builder: (context, _) {
                           return Icon(
-                            _sidebarController.isOpen ? Icons.close : Icons.tag,
+                            _sidebarController.isOpen
+                                ? Symbols.close
+                                : Symbols.tag,
                             color: AppStyles.colorAvatarBorder,
+                            weight: 1150.0,
                           );
                         },
                       ),
                     ),
                     const SizedBox(width: 18),
                     InkWell(
-                      child: const Icon(Icons.search),
+                      child: const Icon(Symbols.search,
+                          weight: 1150.0, color: AppStyles.colorAvatarBorder),
                       onTap: () {
                         setState(() {
                           searchPressed = !searchPressed;

@@ -35,6 +35,7 @@ dependencies:
   location: ^8.0.0
   google_maps_flutter_web: ^0.5.11
   google_maps_flutter: ^2.10.1
+  material_symbols_icons: ^4.2810.1
 
  
  

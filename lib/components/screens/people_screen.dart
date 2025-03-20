@@ -1,10 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:sapers/components/widgets/map_view.dart';
 import 'package:sapers/components/widgets/mustbeloggedsection.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
+import 'package:sapers/components/widgets/user_list_peoplescreen.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/auth_service.dart';
@@ -13,6 +16,7 @@ import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart' as app_user;
 import 'package:sapers/models/styles.dart';
+import 'package:sapers/models/user.dart';
 
 class UserSearchScreen extends StatefulWidget {
   const UserSearchScreen({super.key});
@@ -29,12 +33,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   List<app_user.UserInfoPopUp> _users = [];
   app_user.UserInfoPopUp? _selectedUser;
   GoogleMapController? _mapController;
-  Set<Marker> _markers = {};
-  bool _showMap = false; // Flag para alternar entre lista y mapa en móvil
 
-  // Ubicación predeterminada para el mapa
-  final LatLng _defaultLocation =
-      const LatLng(40.416775, -3.703790); // Madrid, España
+  bool _showMap = false; // Flag para alternar entre lista y mapa en móvil
 
   @override
   void initState() {
@@ -45,11 +45,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   @override
   void dispose() {
-    // Make sure to set to null before disposing
-    final controller = _mapController;
-    _mapController = null;
-    controller?.dispose();
-
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
@@ -77,59 +72,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   void _refreshCurrentUser() {
     Provider.of<AuthProviderSapers>(context, listen: false).refreshUserInfo();
-  }
-
-  void _onMapCreated(GoogleMapController controller) {
-    setState(() {
-      _mapController = controller;
-    });
-
-    // Delay marker update to ensure map is ready
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        _updateMarkers();
-      }
-    });
-  }
-
-  void _updateMarkers() {
-    if (!mounted || _mapController == null) return;
-
-    ///setState(() {
-    _markers = _users
-        .where((user) => user.latitude != null && user.longitude != null)
-        .map((user) => Marker(
-              markerId: MarkerId(user.uid),
-              position: LatLng(user.latitude!, user.longitude!),
-              onTap: () {
-                setState(() {
-                  _selectedUser = user;
-                });
-              },
-            ))
-        .toSet();
-    //   });
-  }
-
-  void _selectUserOnMap(app_user.UserInfoPopUp user) {
-    setState(() {
-      _selectedUser = user;
-      // En dispositivos móviles, cambiar automáticamente a la vista del mapa
-      if (_isSmallScreen(context)) {
-        _showMap = true;
-      }
-    });
-
-    if (user.latitude != null &&
-        user.longitude != null &&
-        _mapController != null) {
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLngZoom(
-          LatLng(user.latitude!, user.longitude!),
-          14.0,
-        ),
-      );
-    }
   }
 
   // Verificar si es una pantalla pequeña (móvil)
@@ -175,11 +117,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                       _users = _parseUsers(snapshot.data!.docs);
                       final filteredUsers = _filterUsers(_users);
 
-                      // Only update markers if map controller exists
-                      if (_mapController != null) {
-                        _updateMarkers();
-                      }
-
                       return filteredUsers.isEmpty
                           ? _buildEmptyState()
                           : isSmallScreen
@@ -199,8 +136,14 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               mini: true,
               onPressed: () => setState(() => _showMap = !_showMap),
               child: _showMap == false
-                  ? const Icon(Icons.map)
-                  : const Icon(Icons.list_rounded),
+                  ? const Icon(
+                      Symbols.map,
+                      weight: 50.0,
+                    )
+                  : const Icon(
+                      Symbols.list_rounded,
+                      weight: 50.0,
+                    ),
             )
           : null,
     );
@@ -208,7 +151,28 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   // Layout para móvil que alterna entre lista y mapa
   Widget _buildMobileLayout(List<app_user.UserInfoPopUp> users) {
-    return _showMap ? _buildMapView() : _buildUserList(users);
+    return _showMap
+        ? MapViewPeopleScreen(
+            selectedUser: _selectedUser,
+            onMapCreated: (mapController) {
+              setState(() {
+                _mapController = mapController;
+              });
+            },
+            isSmallScreen: _isSmallScreen(context),
+            showMap: (showmap) {
+              setState(() {
+                _showMap = showmap;
+              });
+            },
+            users: users)
+        : UserListWidget(
+            users: users,
+            currentUserId: _currentUserId,
+            onRefreshCurrentUser: () {},
+            onSelectUser: (user) {
+              _selectUserOnMap(user);
+            });
   }
 
   // Layout para escritorio que muestra lista y mapa lado a lado
@@ -218,163 +182,30 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
       children: [
         // Lista de usuarios (lado izquierdo)
         Expanded(
-          flex: 1,
-          child: _buildUserList(users),
-        ),
+            flex: 1,
+            child: UserListWidget(
+                users: users,
+                currentUserId: _currentUserId,
+                onRefreshCurrentUser: () {},
+                onSelectUser: (user) {
+                  _selectUserOnMap(user);
+                })),
         // Mapa (lado derecho)
         Expanded(
           flex: 1,
-          child: _buildMapView(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMapView() {
-    return InkWell(
-      onTap: () {
-        if (_selectedUser?.latitude != null &&
-            _selectedUser?.longitude != null) {
-          _mapController?.animateCamera(
-            CameraUpdate.newLatLngZoom(
-              LatLng(_selectedUser?.latitude as double,
-                  _selectedUser?.longitude as double),
-              14.0,
-            ),
-          );
-        }
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24.0),
-          child: Stack(
-            children: [
-              GoogleMap(
-                onMapCreated: _onMapCreated,
-                initialCameraPosition: CameraPosition(
-                  target: _defaultLocation,
-                  zoom: 5,
-                ),
-                markers: _markers,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: true,
-                zoomControlsEnabled: true,
-                compassEnabled: true,
-              ),
-
-              // Tarjeta informativa si un usuario está seleccionado
-              if (_selectedUser != null)
-                Positioned(
-                  bottom: 16,
-                  left: 16,
-                  right: 16,
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              UserProfileCardHover(
-                                authorUsername: _selectedUser!.username,
-                                isExpert: _selectedUser!.isExpert ?? false,
-                                onProfileOpen: () {},
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    if (_selectedUser?.latitude != null &&
-                                        _selectedUser?.longitude != null) {
-                                      _mapController?.animateCamera(
-                                        CameraUpdate.newLatLngZoom(
-                                          LatLng(
-                                              _selectedUser?.latitude as double,
-                                              _selectedUser?.longitude
-                                                  as double),
-                                          14.0,
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        _selectedUser!.username,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      if (_selectedUser!
-                                              .specialty?.isNotEmpty ??
-                                          false)
-                                        Text(
-                                          _selectedUser!.specialty!,
-                                          style: const TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.close),
-                                onPressed: () {
-                                  setState(() {
-                                    _selectedUser = null;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          if (_selectedUser!.bio?.isNotEmpty ?? false)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text(
-                                _selectedUser!.bio!,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          if (_selectedUser!.latitude != null &&
-                              _selectedUser!.longitude != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.location_on,
-                                      size: 16, color: Colors.redAccent),
-                                  const SizedBox(width: 4),
-                                  Text(_selectedUser?.location ?? ''),
-                                  // Text(
-                                  //   '${_selectedUser!.latitude!.toStringAsFixed(6)}, ${_selectedUser!.longitude!.toStringAsFixed(6)}',
-                                  //   style: const TextStyle(fontSize: 12),
-                                  // ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+          child: MapViewPeopleScreen(
+            selectedUser: _selectedUser,
+            onMapCreated: (GoogleMapController controller) {},
+            isSmallScreen: null,
+            showMap: (showmap) {
+              setState(() {
+                _showMap = showmap;
+              });
+            },
+            users: _users,
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -463,24 +294,25 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     );
   }
 
-  Widget _buildUserList(List<app_user.UserInfoPopUp> users) {
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 24),
-      physics: const BouncingScrollPhysics(),
-      itemCount: users.length,
-      itemBuilder: (context, index) {
-        final user = users[index];
-        return _UserListItem(
-          user: user,
-          currentUserId: _currentUserId,
-          onUpdate: _refreshCurrentUser,
-          onSelect: () => _selectUserOnMap(user),
-          isSelected: _selectedUser?.uid == user.uid,
-          isSmallScreen: _isSmallScreen(context),
-          key: ValueKey(user.uid),
-        );
-      },
-    );
+  void _selectUserOnMap(UserInfoPopUp user) {
+    setState(() {
+      _selectedUser = user;
+      // En dispositivos móviles, cambiar automáticamente a la vista del mapa
+      if (_isSmallScreen(context) == true) {
+        _showMap = true;
+      }
+    });
+
+    if (user.latitude != null &&
+        user.longitude != null &&
+        _mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(user.latitude!, user.longitude!),
+          14.0,
+        ),
+      );
+    }
   }
 
   List<app_user.UserInfoPopUp> _parseUsers(List<QueryDocumentSnapshot> docs) {
@@ -520,206 +352,5 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           bio.contains(_searchQuery) ||
           location.contains(_searchQuery);
     }).toList();
-  }
-}
-
-class _UserListItem extends StatefulWidget {
-  final app_user.UserInfoPopUp user;
-  final String currentUserId;
-  final VoidCallback onUpdate;
-  final VoidCallback onSelect;
-  final bool isSelected;
-  final bool isSmallScreen;
-
-  const _UserListItem({
-    required this.user,
-    required this.currentUserId,
-    required this.onUpdate,
-    required this.onSelect,
-    this.isSelected = false,
-    this.isSmallScreen = false,
-    super.key,
-  });
-
-  @override
-  State<_UserListItem> createState() => _UserListItemState();
-}
-
-class _UserListItemState extends State<_UserListItem> {
-  bool _isLoading = false;
-  bool? _isFollowing;
-  late Stream<DocumentSnapshot> _currentUserStream;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 0),
-      elevation: 0,
-      color: widget.isSelected
-          ? Theme.of(context).primaryColor.withOpacity(0.1)
-          : Theme.of(context).cardColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-      ),
-      child: InkWell(
-        onTap: widget.onSelect,
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-        child: Padding(
-          padding: EdgeInsets.all(widget.isSmallScreen ? 16.0 : 30.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  UserProfileCardHover(
-                    authorUsername: widget.user.username,
-                    isExpert: widget.user.isExpert ?? false,
-                    onProfileOpen: () {},
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                widget.user.username,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (widget.user.specialty?.isNotEmpty ?? false)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Chip(
-                                  label: Text(widget.user.specialty!),
-                                  backgroundColor: AppStyles.colorAvatarBorder
-                                      .withOpacity(0.1),
-                                  labelStyle: const TextStyle(fontSize: 12),
-                                  materialTapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  padding: EdgeInsets.zero,
-                                ),
-                              ),
-                          ],
-                        ),
-                        if (widget.user.location?.isNotEmpty ?? false)
-                          InkWell(
-                            onTap: widget.onSelect,
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.location_on_outlined,
-                                      size: 14,
-                                      color: Theme.of(context).hintColor),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      widget.user.location!,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Theme.of(context).hintColor,
-                                          ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        // Coordenadas
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              if (widget.user.bio?.isNotEmpty ?? false)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Text(
-                    widget.user.bio!,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildUserStats(context),
-                  // Botón para ver en el mapa
-                  if (widget.user.latitude != null &&
-                      widget.user.longitude != null)
-                    OutlinedButton.icon(
-                      onPressed: widget.onSelect,
-                      icon: const Icon(Icons.map, size: 16),
-                      label: Text(widget.isSmallScreen
-                          ? "" // En móvil, solo mostrar el ícono
-                          : Texts.translate('view_on_map',
-                              LanguageProvider().currentLanguage)),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUserStats(BuildContext context) {
-    return Row(
-      children: [
-        _buildStatItem(context, (widget.user.followers?.length ?? 0).toString(),
-            'seguidores'),
-        const SizedBox(width: 16),
-        _buildStatItem(context, (widget.user.following?.length ?? 0).toString(),
-            'siguiendo'),
-      ],
-    );
-  }
-
-  Widget _buildStatItem(BuildContext context, String count, String label) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          count,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).primaryColor,
-          ),
-        ),
-        Text(
-          Texts.translate(label, LanguageProvider().currentLanguage),
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
-    );
   }
 }
