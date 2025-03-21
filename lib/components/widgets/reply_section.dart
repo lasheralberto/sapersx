@@ -7,12 +7,13 @@ import 'package:flutter_highlighting/themes/github.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
+import 'package:sapers/components/widgets/attachments_carousel.dart';
 import 'package:sapers/components/widgets/attachmentsviewer.dart';
 import 'package:sapers/components/widgets/custombutton.dart';
 import 'package:sapers/components/widgets/like_button.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/text_editor.dart';
- 
+
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/auth_provider.dart';
@@ -72,7 +73,6 @@ class _ReplySectionState extends State<ReplySection> {
     _scrollController.dispose();
     super.dispose();
   }
- 
 
   Future<void> _handleReply(String postId, String replyId) async {
     if (_replyController.text.isEmpty && selectedFiles.isEmpty) return;
@@ -84,7 +84,9 @@ class _ReplySectionState extends State<ReplySection> {
         setState(() => isUploading = true);
 
         List<Map<String, dynamic>> attachmentsList = [];
-        UserInfoPopUp? userInfo =   Provider.of<AuthProviderSapers>(context, listen: false).userInfo;;
+        UserInfoPopUp? userInfo =
+            Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+        ;
         if (selectedFiles.isNotEmpty) {
           attachmentsList = await _firebaseService.addAttachments(
               postId, replyId, userInfo!.username, selectedFiles);
@@ -112,7 +114,9 @@ class _ReplySectionState extends State<ReplySection> {
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(Texts.translate('passError', LanguageProvider().currentLanguage))),
+          SnackBar(
+              content: Text(Texts.translate(
+                  'passError', LanguageProvider().currentLanguage))),
         );
         setState(() {
           isUploading = false;
@@ -300,7 +304,8 @@ class _ReplySectionState extends State<ReplySection> {
                     ),
                     onPressed: () => _handleReply(postId, replyId),
                     child: Text(
-                      Texts.translate('responder', LanguageProvider().currentLanguage),
+                      Texts.translate(
+                          'responder', LanguageProvider().currentLanguage),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -373,7 +378,7 @@ class _ReplySectionState extends State<ReplySection> {
                     if (reply.attachments != null &&
                         reply.attachments!.isNotEmpty) ...[
                       const SizedBox(height: 16),
-                      AttachmentsViewer(
+                      ReplyAttachmentsCarousel(
                         reply: reply,
                         onAttachmentOpen: (attachment) {
                           if (attachment['url'] != null) {
@@ -516,15 +521,15 @@ class _ReplySectionState extends State<ReplySection> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    Texts.translate(
-                        'copiarAlPortapapeles', LanguageProvider().currentLanguage),
+                    Texts.translate('copiarAlPortapapeles',
+                        LanguageProvider().currentLanguage),
                   ),
                   duration: const Duration(seconds: 2),
                 ),
               );
             },
-            tooltip:
-                Texts.translate('copiarAlPortapapeles', LanguageProvider().currentLanguage),
+            tooltip: Texts.translate(
+                'copiarAlPortapapeles', LanguageProvider().currentLanguage),
           ),
         ],
       ),
@@ -557,7 +562,8 @@ class _ReplySectionState extends State<ReplySection> {
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Text(
-          Texts.translate('serElPrimeroEnResponder', LanguageProvider().currentLanguage),
+          Texts.translate(
+              'serElPrimeroEnResponder', LanguageProvider().currentLanguage),
           style: TextStyle(
             color: Colors.grey.shade600,
             fontSize: 16,

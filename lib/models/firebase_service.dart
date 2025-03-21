@@ -540,6 +540,20 @@ Future<bool> followOrUnfollowUser(String uid, String username, context) async {
     return result.map((entry) => entry['tag'].toString()).toList();
   }
 
+  //Method to check if username exists 
+  Future<bool> checkIfUsernameExists(String username) async {
+    try {
+      final userQuery = await userCollection
+          .where('username', isEqualTo: username)
+          .limit(1)
+          .get();
+
+      return userQuery.docs.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+
 // Método para obtener todos los posts una sola vez
   Future<List<SAPPost>> getPostsFuture() async {
     final snapshot = await postsCollection

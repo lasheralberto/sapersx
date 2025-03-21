@@ -319,7 +319,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: AppStyles.colorAvatarBorder,
-      scaffoldBackgroundColor: AppStyles.scaffoldBackgroundColorBright,
+      scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
       colorScheme: const ColorScheme.light(
         primary: AppStyles.colorAvatarBorder,
         secondary: AppStyles._orangeLight,

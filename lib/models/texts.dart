@@ -93,9 +93,11 @@ class Texts {
       'noMessages': 'Sin invitaciones aún',
       'sendInvitation': 'Enviar',
       'posts': 'Publicaciones',
-      'fare': 'Tarifa'
+      'fare': 'Tarifa',
+      'usernameExists': 'El nombre de usuario ya existe',
     },
     'en': {
+      'usernameExists': 'Username already exists',
       'view_on_map': 'View on map',
       'joinedOn': 'Joined in',
       'fare': 'Fare',

@@ -211,6 +211,24 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
       actions: [
         TextButton(
           onPressed: () async {
+//check first if username exists in firebase
+            final bool usernameExists = await FirebaseService()
+                .checkIfUsernameExists(_nameController.text
+                    .trim()
+                    .toLowerCase()
+                    .replaceAll(' ', ''));
+
+            if (usernameExists) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(Texts.translate(
+                      'usernameExists', LanguageProvider().currentLanguage)),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
             _isSaving ? null : await _saveProfile(email);
           },
           style: TextButton.styleFrom(

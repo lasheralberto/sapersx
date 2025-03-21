@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:random_avatar/random_avatar.dart';
+import 'package:sapers/components/widgets/attachments_carousel.dart';
 import 'package:sapers/components/widgets/attachmentsviewer.dart';
 import 'package:sapers/components/widgets/attachmentsviewer_header.dart';
 import 'package:sapers/components/widgets/commentButton.dart';
@@ -252,6 +253,18 @@ class _PostCardState extends State<PostCard> {
           style: AppStyles().getTextStyle(context),
           maxLines: isExpanded ? null : 4,
           overflow: isExpanded ? TextOverflow.visible : TextOverflow.fade,
+        ),
+        // Añadir el carrusel de imágenes adjuntas
+        AttachmentsCarousel(
+          reply: widget.post,
+          onAttachmentOpen: (attachment) {
+            if (attachment['url'] != null) {
+              launchUrl(
+                Uri.parse(attachment['url']),
+                mode: LaunchMode.externalApplication,
+              );
+            }
+          },
         ),
         if (widget.post.tags.isNotEmpty)
           Padding(
