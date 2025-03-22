@@ -5,10 +5,10 @@ class MesomorphicPopup extends StatelessWidget {
   final VoidCallback onClose;
 
   const MesomorphicPopup({
-    Key? key,
+    super.key,
     required this.text,
     required this.onClose,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

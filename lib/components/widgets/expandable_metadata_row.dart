@@ -7,7 +7,7 @@ class ExpandableMetadataRow extends StatefulWidget {
   final int maxLinesCollapsed;
   final int maxLinesExpanded;
 
-  ExpandableMetadataRow({
+  const ExpandableMetadataRow({super.key, 
     required this.icon,
     required this.text,
     required this.light,

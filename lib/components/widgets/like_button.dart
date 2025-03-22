@@ -10,11 +10,11 @@ class LikeButton extends StatefulWidget {
   final int initialLikeCount;
 
   const LikeButton({
-    Key? key,
+    super.key,
     required this.postId,
     required this.replyId,
     required this.initialLikeCount,
-  }) : super(key: key);
+  });
 
   @override
   _LikeButtonState createState() => _LikeButtonState();

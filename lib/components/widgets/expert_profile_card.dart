@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sapers/components/widgets/add_review.dart';
-import 'package:sapers/main.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
@@ -19,17 +18,13 @@ class SAPExpertProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          _buildExperienceSection(context),
-          const SizedBox(
-              height: 20), // Espacio entre la sección de experiencia y reseñas
-          _buildReviewsSection(context),
-          const SizedBox(
-              height: 16), // Espacio entre la sección de reseñas y mensajes
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 108.0),
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _buildExperienceSection(context)),
+          const SliverToBoxAdapter(child: SizedBox(height: 20)),
+          SliverToBoxAdapter(child: _buildReviewsSection(context)),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
         ],
       ),
     );
@@ -50,9 +45,12 @@ class SAPExpertProfile extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(Texts.translate('experiencia', LanguageProvider().currentLanguage),
-                    style: AppStyles().getTextStyle(context,
-                        fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  Texts.translate(
+                      'experiencia', LanguageProvider().currentLanguage),
+                  style: AppStyles().getTextStyle(context,
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -84,7 +82,8 @@ class SAPExpertProfile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  Texts.translate('reviews', LanguageProvider().currentLanguage),
+                  Texts.translate(
+                      'reviews', LanguageProvider().currentLanguage),
                   style: AppStyles().getTextStyle(context,
                       fontSize: 16, fontWeight: FontWeight.bold),
                 ),

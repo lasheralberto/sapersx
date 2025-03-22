@@ -175,7 +175,7 @@ class PostsListWithSidebar extends StatefulWidget {
   final SidebarController sidebarController;
 
   const PostsListWithSidebar({
-    Key? key,
+    super.key,
     required this.future,
     required this.isMobile,
     required this.trendingTags,
@@ -183,7 +183,7 @@ class PostsListWithSidebar extends StatefulWidget {
     required this.onPostExpanded,
     required this.onRefresh,
     required this.sidebarController,
-  }) : super(key: key);
+  });
 
   @override
   _PostsListWithSidebarState createState() => _PostsListWithSidebarState();

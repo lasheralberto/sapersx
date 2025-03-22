@@ -18,10 +18,10 @@ class InvitationItem extends StatefulWidget {
   final String formattedDate;
 
   const InvitationItem({
-    Key? key,
+    super.key,
     required this.message,
     required this.formattedDate,
-  }) : super(key: key);
+  });
 
   @override
   _InvitationItemState createState() => _InvitationItemState();
@@ -59,7 +59,6 @@ class _InvitationItemState extends State<InvitationItem> {
                   var currentUser =
                       Provider.of<AuthProviderSapers>(context, listen: false)
                           .userInfo;
-                  ;
 
                   if (currentUser?.username != widget.message['to']) {
                   } else {

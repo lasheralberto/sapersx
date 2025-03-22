@@ -10,10 +10,10 @@ class AttachmentsCarousel extends StatefulWidget {
   final Function(Map<String, dynamic>) onAttachmentOpen;
 
   const AttachmentsCarousel({
-    Key? key,
+    super.key,
     required this.reply,
     required this.onAttachmentOpen,
-  }) : super(key: key);
+  });
 
   @override
   State<AttachmentsCarousel> createState() => _AttachmentsCarouselState();
@@ -109,10 +109,10 @@ class ReplyAttachmentsCarousel extends StatelessWidget {
   final Function(Map<String, dynamic>) onAttachmentOpen;
 
   const ReplyAttachmentsCarousel({
-    Key? key,
+    super.key,
     required this.reply,
     required this.onAttachmentOpen,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -173,10 +173,10 @@ class FirebaseImageThumbnail extends StatefulWidget {
   final Function(Map<String, dynamic>) onTap;
 
   const FirebaseImageThumbnail({
-    Key? key,
+    super.key,
     required this.attachment,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   State<FirebaseImageThumbnail> createState() => _FirebaseImageThumbnailState();

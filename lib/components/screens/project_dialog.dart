@@ -11,7 +11,7 @@ import 'package:sapers/models/utils_sapers.dart'; // Para UtilsSapers()
 
 class CreateProjectScreen extends StatefulWidget {
   final UserInfoPopUp? user;
-  const CreateProjectScreen({Key? key, required this.user}) : super(key: key);
+  const CreateProjectScreen({super.key, required this.user});
 
   @override
   State<CreateProjectScreen> createState() => _CreateProjectScreenState();

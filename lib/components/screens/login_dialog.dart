@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sapers/components/screens/details_user_profile_signup.dart';
-import 'package:sapers/main.dart';
 import 'package:sapers/models/auth_service.dart';
-import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';

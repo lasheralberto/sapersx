@@ -26,10 +26,10 @@ import 'package:url_launcher/url_launcher.dart';
 class ProjectDetailScreen extends StatefulWidget {
   final Project project;
 
-  ProjectDetailScreen({
-    Key? key,
+  const ProjectDetailScreen({
+    super.key,
     required this.project,
-  }) : super(key: key);
+  });
 
   @override
   State<ProjectDetailScreen> createState() => _ProjectDetailScreenState();
@@ -46,7 +46,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   bool? isLoading = true;
   bool _isUploading = false;
   late TabController _tabController;
-  LanguageProvider _languageProvider = LanguageProvider();
+  final LanguageProvider _languageProvider = LanguageProvider();
   late Future<List<PlatformFile>?> _selectedFilesChat;
 
   @override
@@ -80,7 +80,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
 
       final user =
           Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
-      ;
       setState(() => currentUser = user);
     } catch (e) {
       setState(() => currentUser = null);
@@ -118,12 +117,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   }
 
   Future<bool> _isMemberUser() async {
-    if (currentUser?.username == null)
+    if (currentUser?.username == null) {
       return false; // Usar userId en lugar de username
+    }
 
     try {
       return await FirebaseService().isProjectMember(widget.project.projectid,
-          currentUser!.username! // Enviar userId en lugar de username
+          currentUser!.username // Enviar userId en lugar de username
           );
     } catch (e) {
       return false;
@@ -756,8 +756,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
     await _firebaseService.sendProjectMessage(
       projectId: widget.project.projectid,
       text: _messageController.text,
-      senderId: currentUser!.uid!,
-      senderName: currentUser!.username!,
+      senderId: currentUser!.uid,
+      senderName: currentUser!.username,
       senderPhoto: currentUser!.username ?? '',
     );
 

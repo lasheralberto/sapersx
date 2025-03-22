@@ -27,7 +27,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final bool _isQuestion = false;
   AppStyles styles = AppStyles();
   List<PlatformFile> selectedFiles = [];
-  List<String> _tags = [];
+  final List<String> _tags = [];
   String postId = '';
   String replyId = '';
   late SAPPost newPost;
@@ -252,7 +252,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: Center(
                     child: Container(
-                      constraints: BoxConstraints(
+                      constraints: const BoxConstraints(
                         maxWidth: 800, // Ancho máximo para tablets y desktop
                       ),
                       child: Column(

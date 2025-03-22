@@ -36,14 +36,15 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage>
     with TickerProviderStateMixin {
   late Future<UserInfoPopUp?> userProfileData;
-  final FirebaseService _firebaseService = FirebaseService();
+
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     userProfileData = _loadUserProfileData();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+        length: widget.userinfo?.isExpert == true ? 3 : 2, vsync: this);
   }
 
   @override
@@ -100,6 +101,10 @@ class _UserProfilePageState extends State<UserProfilePage>
                         Tab(
                             text: Texts.translate(
                                 'posts', LanguageProvider().currentLanguage)),
+                        if (widget.userinfo?.isExpert == true)
+                          Tab(
+                              text: Texts.translate('expertTab',
+                                  LanguageProvider().currentLanguage)),
                       ],
                     ),
                   ),
@@ -118,6 +123,8 @@ class _UserProfilePageState extends State<UserProfilePage>
           children: [
             _ProjectsTab(userinfo: widget.userinfo),
             _PostsTab(userId: widget.userinfo?.username ?? ''),
+            if (widget.userinfo?.isExpert == true)
+              SAPExpertProfile(profile: widget.userinfo!),
           ],
         ),
       ),
@@ -143,8 +150,6 @@ class _ProjectsTab extends StatelessWidget {
             child: Column(
               children: [
                 if (userinfo != null) ResponsiveProjectsLayout(data: userinfo!),
-                if (userinfo?.isExpert == true)
-                  SAPExpertProfile(profile: userinfo!),
               ],
             ),
           ),
@@ -164,16 +169,17 @@ class _PostsTab extends StatefulWidget {
 }
 
 class _PostsTabState extends State<_PostsTab> {
-  bool _isRefreshing = false;
-  FirebaseService _firebaseService = FirebaseService();
+  final bool _isRefreshing = false;
+  final FirebaseService _firebaseService = FirebaseService();
 
   Future<List<SAPPost>>? _postsFutureGeneral;
   Future<List<SAPPost>>? generalPosts;
 
   @override
-  void initState() { 
+  void initState() {
     super.initState();
-    _postsFutureGeneral = _firebaseService.getPostsFutureByAuthor(widget.userId);
+    _postsFutureGeneral =
+        _firebaseService.getPostsFutureByAuthor(widget.userId);
   }
 
   Future<void> _handleRefresh() async {

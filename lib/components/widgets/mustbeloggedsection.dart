@@ -10,12 +10,12 @@ class LoginRequiredWidget extends StatelessWidget {
   final Color textColor;
 
   const LoginRequiredWidget({
-    Key? key,
+    super.key,
     this.message = '',
     this.onTap,
     this.buttonColor = AppStyles.colorAvatarBorder,
     this.textColor = Colors.white,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

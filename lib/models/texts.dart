@@ -4,6 +4,7 @@ class Texts {
 
   static final Map<String, Map<String, String>> _texts = {
     'es': {
+      'expertTab': 'Perfil de experto',
       'tarife': 'Tarifa/Hora',
       'view_on_map': 'Ver en mapa',
       'expertMode': 'Modo experto',
@@ -97,6 +98,7 @@ class Texts {
       'usernameExists': 'El nombre de usuario ya existe',
     },
     'en': {
+      'expertTab': 'Expert profile',
       'usernameExists': 'Username already exists',
       'view_on_map': 'View on map',
       'joinedOn': 'Joined in',

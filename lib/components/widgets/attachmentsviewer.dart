@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sapers/main.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';

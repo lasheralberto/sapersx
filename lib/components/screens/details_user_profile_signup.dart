@@ -460,7 +460,6 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
-    bool? locationIndicator,
     IconData? prefixIcon,
     int? maxLength,
     int maxLines = 1,
@@ -482,8 +481,8 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
             if (prefixIcon == Icons.location_on_outlined)
               IconButton(
                 style: ButtonStyle(
-                  padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                    EdgeInsets.all(10.0),
+                  padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
+                    const EdgeInsets.all(10.0),
                   ),
                 ),
                 tooltip: hint,
@@ -493,7 +492,7 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
                   });
                   List<double> location =
                       await UtilsSapers().getLocationOfUser();
-                  if (location != null && location.length >= 2) {
+                  if (location.length >= 2) {
                     String? city = await LocationService.getCityFromLatLng(
                         location[0], location[1]);
                     if (city != null) {

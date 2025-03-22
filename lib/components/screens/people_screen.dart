@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -6,16 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sapers/components/widgets/map_view.dart';
 import 'package:sapers/components/widgets/mustbeloggedsection.dart';
-import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/user_list_peoplescreen.dart';
-import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/auth_service.dart';
-import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart' as app_user;
-import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/user.dart';
 
 class UserSearchScreen extends StatefulWidget {
@@ -63,6 +58,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     _usersStream = FirebaseFirestore.instance
         .collection('userinfo')
         .where('username', isNotEqualTo: currentUser?.username)
+        .orderBy('username', descending: false)
         .snapshots();
   }
 
@@ -195,7 +191,11 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           flex: 1,
           child: MapViewPeopleScreen(
             selectedUser: _selectedUser,
-            onMapCreated: (GoogleMapController controller) {},
+            onMapCreated: (GoogleMapController mapController) {
+              setState(() {
+                _mapController = mapController;
+              });
+            },
             isSmallScreen: null,
             showMap: (showmap) {
               setState(() {

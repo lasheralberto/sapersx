@@ -51,7 +51,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   Future<List<SAPPost>>? _postsFutureFollowing;
   Future<List<String>>? _futureTags;
   Future<List<Project>>? _postsProjects;
-  bool _isRefreshing = false;
+  final bool _isRefreshing = false;
   bool isPostExpanded = false;
   UserInfoPopUp? userinfo;
   LanguageProvider languageProvider = LanguageProvider();
