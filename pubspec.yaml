@@ -37,6 +37,7 @@ dependencies:
   google_maps_flutter: ^2.10.1
   material_symbols_icons: ^4.2810.1
   cached_network_image: ^3.4.1
+  sliding_up_panel: ^2.0.0+1
  
  
  

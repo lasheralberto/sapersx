@@ -17,6 +17,7 @@ import 'package:sapers/components/widgets/postcard.dart';
 import 'package:sapers/components/widgets/posts_list.dart';
 import 'package:sapers/components/widgets/project_card.dart';
 import 'package:sapers/components/widgets/project_list.dart';
+import 'package:sapers/components/widgets/sap_ia_widget.dart';
 import 'package:sapers/components/widgets/searchbar.dart';
 import 'package:sapers/components/widgets/user_avatar.dart';
 import 'package:sapers/main.dart';
@@ -29,6 +30,7 @@ import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/theme.dart';
 import 'package:sapers/models/user.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class Feed extends StatefulWidget {
   final User? user;
@@ -207,8 +209,31 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    final PanelController _panelController = PanelController();
+    bool _isPanelOpen = false;
+    double _panelPosition = 0.0;
 
     return Scaffold(
+        body: SlidingUpPanel(
+      onPanelSlide: (position) {
+        setState(() {
+          _panelPosition = position;
+          _isPanelOpen = position > 0.5;
+        });
+      },
+      controller: _panelController,
+      minHeight: 80,
+      maxHeight: MediaQuery.of(context).size.height * 0.7,
+      parallaxEnabled: false,
+      parallaxOffset: 0.5,
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(24.0),
+        topRight: Radius.circular(24.0),
+      ),
+      panelBuilder: (scrollController) => const SAPAIAssistantWidget(
+        username: 'UsuarioDemo',
+        isPanelVisible: true,
+      ),
       body: (_tabController.index == 0 ||
               _tabController.index == 1 ||
               _tabController.index == 2)
@@ -254,7 +279,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
               },
               child: _buildNestedScrollView(context, isMobile, screenWidth))
           : _buildNestedScrollView(context, isMobile, screenWidth),
-    );
+    ));
   }
 
   Widget _buildNestedScrollView(

@@ -96,9 +96,11 @@ class Texts {
       'posts': 'Publicaciones',
       'fare': 'Tarifa',
       'usernameExists': 'El nombre de usuario ya existe',
+      'askMe': 'Pregúntame algo sobre SAP',
     },
     'en': {
       'expertTab': 'Expert profile',
+      'askMe': 'Ask me anything about SAP',
       'usernameExists': 'Username already exists',
       'view_on_map': 'View on map',
       'joinedOn': 'Joined in',
