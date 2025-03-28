@@ -26,7 +26,7 @@ void main() async {
 
   // Inicializar Firebase
   if (kIsWeb) {
-    await dotenv.load();
+   // await dotenv.load();
     await Firebase.initializeApp(
       options: FirebaseOptions(
         apiKey: DefaultFirebaseOptions.web.apiKey,
