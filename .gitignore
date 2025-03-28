@@ -42,4 +42,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-./sapers_sa.json
+sapers_sa.json
