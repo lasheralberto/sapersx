@@ -4,9 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:sapers/models/firebase_service.dart';
 import 'dart:convert';
 import 'package:sapers/models/posts.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 class SAPAIAssistantService {
-  final String _openAIApiKey = process.env.OPENAI;
+  final String _openAIApiKey = dotenv.env['OPENAI'] ?? 'default_api_key';
+  
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<String> _generateEnhancedContext(String query) async {
