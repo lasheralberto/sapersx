@@ -6,8 +6,7 @@ import 'dart:convert';
 import 'package:sapers/models/posts.dart';
 
 class SAPAIAssistantService {
-  final String _openAIApiKey =
-      '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'; // Replace with secure key management
+  final String _openAIApiKey = process.env.OPENAI;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<String> _generateEnhancedContext(String query) async {
