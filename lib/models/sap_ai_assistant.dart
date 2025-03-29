@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:sapers/models/posts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 class SAPAIAssistantService {
-  final String _openAIApiKey = 'm';
+  final String _openAIApiKey = 'am';
 //dotenv.env['OPENAI'] ?? 'default_api_key';
   
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
