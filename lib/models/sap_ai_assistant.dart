@@ -111,54 +111,92 @@ class SAPAIAssistantService {
       // Preparar payload para nueva estructura de API de OpenAI
       final enhancedContext = await _generateEnhancedContext(query);
 
-      final payload = {
-        'model': 'o3-mini-2025-01-31',
-        'input': [
-          {
-            'role': 'developer',
-            'content': [
-              {'type': 'input_text', 'text': enhancedContext}
-            ]
-          },
-          {
-            'role': 'user',
-            'content': [
-              {'type': 'input_text', 'text': query}
-            ]
-          }
-        ],
-        'text': {
-          'format': {'type': 'text'}
-        },
-        'reasoning': {'effort': 'low'},
-        'tools': [],
-        'store': true
-      };
+     final payload = {
+  'model': 'deepseek-chat',
+  'messages': [
+    {'role': 'system', 'content': 'You are a helpful assistant.'},
+    {'role': 'user', 'content': enhancedContext}
+  ],
+  'stream': false
+};
 
-      // Realizar llamada a OpenAI
-      final response = await http.post(
-          Uri.parse('https://api.openai.com/v1/responses'),
-          headers: {
-            'Authorization': 'Bearer $_openAIApiKey',
-            'Content-Type': 'application/json'
-          },
-          body: json.encode(payload));
+// Realizar llamada a DeepSeek
+final response = await http.post(
+  Uri.parse('https://api.deepseek.com/chat/completions'),
+  headers: {
+    'Authorization': 'Bearer $_deepSeekApiKey',
+    'Content-Type': 'application/json'
+  },
+  body: json.encode(payload),
+);
 
-      // Procesar respuesta
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
+// Procesar respuesta
+if (response.statusCode == 200) {
+  final responseData = json.decode(response.body);
 
-        // Extraer la respuesta del asistente de la nueva estructura
-        final aiResponse = responseData['output'][1]['content'][0]['text'];
+  // Extraer la respuesta del asistente
+  final aiResponse = responseData['choices'][0]['message']['content'];
 
-        // Opcionalmente, guardar interacción en Firestore
-        //  await _saveAIInteraction(
-        //     username: username, query: query, response: aiResponse);
+  // Opcionalmente, guardar interacción en Firestore
+  // await _saveAIInteraction(
+  //   username: username, query: query, response: aiResponse);
 
-        return aiResponse;
-      } else {
-        return 'Lo siento, no pude generar una respuesta en este momento.';
-      }
+  return aiResponse;
+} else {
+  return 'Lo siento, no pude generar una respuesta en este momento.';
+}
+
+/* Código anterior basado en OpenAI:
+final payload = {
+  'model': 'o3-mini-2025-01-31',
+  'input': [
+    {
+      'role': 'developer',
+      'content': [
+        {'type': 'input_text', 'text': enhancedContext}
+      ]
+    },
+    {
+      'role': 'user',
+      'content': [
+        {'type': 'input_text', 'text': query}
+      ]
+    }
+  ],
+  'text': {
+    'format': {'type': 'text'}
+  },
+  'reasoning': {'effort': 'low'},
+  'tools': [],
+  'store': true
+};
+
+// Realizar llamada a OpenAI
+final response = await http.post(
+  Uri.parse('https://api.openai.com/v1/responses'),
+  headers: {
+    'Authorization': 'Bearer $_openAIApiKey',
+    'Content-Type': 'application/json'
+  },
+  body: json.encode(payload)
+);
+
+// Procesar respuesta
+if (response.statusCode == 200) {
+  final responseData = json.decode(response.body);
+
+  // Extraer la respuesta del asistente de la nueva estructura
+  final aiResponse = responseData['output'][1]['content'][0]['text'];
+
+  // Opcionalmente, guardar interacción en Firestore
+  // await _saveAIInteraction(
+  //   username: username, query: query, response: aiResponse);
+
+  return aiResponse;
+} else {
+  return 'Lo siento, no pude generar una respuesta en este momento.';
+}
+*/
     } catch (e) {
       print('Error in AI assistant: $e');
       return 'Ocurrió un error al procesar tu solicitud.';
