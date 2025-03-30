@@ -121,6 +121,7 @@ class SAPAIAssistantService {
 };
 
 // Realizar llamada a DeepSeek
+String _deepSeekApiKey='sk-dab16eb7cc2e4128850c712015edbfb3';
 final response = await http.post(
   Uri.parse('https://api.deepseek.com/chat/completions'),
   headers: {
