@@ -2,12 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/get_secret.dart';
 import 'dart:convert';
 import 'package:sapers/models/posts.dart';
 
 class SAPAIAssistantService {
-  final String _openAIApiKey =
-      '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'; // Replace with secure key management
+  // Replace with secure key management
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<String> _generateEnhancedContext(String query) async {
@@ -134,11 +134,19 @@ class SAPAIAssistantService {
         'store': true
       };
 
+      final googleCloudService = GoogleSecretManager(
+        projectId: '568424820796',
+        secretName: 'openai',
+        serviceAccountFile: 'assets/sapersx_sa.json',
+      );
+
+      final openAIKey = await googleCloudService.getSecret();
+
       // Realizar llamada a OpenAI
       final response = await http.post(
           Uri.parse('https://api.openai.com/v1/responses'),
           headers: {
-            'Authorization': 'Bearer $_openAIApiKey',
+            'Authorization': 'Bearer $openAIKey',
             'Content-Type': 'application/json'
           },
           body: json.encode(payload));

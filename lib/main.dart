@@ -21,6 +21,7 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   //setPathUrlStrategy(); // Configura el modo path-based routing
   setUrlStrategy(const HashUrlStrategy());
 
