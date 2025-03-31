@@ -39,6 +39,7 @@ dependencies:
   cached_network_image: ^3.4.1
   sliding_up_panel: ^2.0.0+1
   googleapis_auth: ^1.6.0
+  shimmer: ^3.0.0
  
  
  

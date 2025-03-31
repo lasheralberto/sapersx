@@ -364,54 +364,54 @@ class FirebaseService {
     }
   }
 
-Future<bool> followOrUnfollowUser(String uid, String username, context) async {
-  try {
+  Future<bool> followOrUnfollowUser(
+      String uid, String username, context) async {
+    try {
+      final currentUserInfo =
+          Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+      final currentUserName = currentUserInfo?.username;
 
-    final currentUserInfo =  Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
-    final currentUserName = currentUserInfo?.username;
+      // Obtener el UID del usuario objetivo (al que se está siguiendo)
+      final targetUserQuery = await userCollection
+          .where('username', isEqualTo: username)
+          .limit(1)
+          .get();
 
-    // Obtener el UID del usuario objetivo (al que se está siguiendo)
-    final targetUserQuery = await userCollection
-        .where('username', isEqualTo: username)
-        .limit(1)
-        .get();
+      if (targetUserQuery.docs.isEmpty) {
+        throw Exception("El usuario objetivo no existe");
+      }
+      final targetUid = targetUserQuery.docs.first.id;
 
-    if (targetUserQuery.docs.isEmpty) {
-      throw Exception("El usuario objetivo no existe");
+      // Verificar si ya está siguiendo al usuario
+      final userExists = await checkIfUserExistsInFollowers(uid, username);
+
+      // Crear un batch para actualizar ambos documentos
+      final batch = FirebaseFirestore.instance.batch();
+
+      if (userExists) {
+        // Dejar de seguir: eliminar de "following" y "followers"
+        batch.update(userCollection.doc(uid), {
+          'following': FieldValue.arrayRemove([username]),
+        });
+        batch.update(userCollection.doc(targetUid), {
+          'followers': FieldValue.arrayRemove([currentUserName]),
+        });
+      } else {
+        // Empezar a seguir: agregar a "following" y "followers"
+        batch.update(userCollection.doc(uid), {
+          'following': FieldValue.arrayUnion([username]),
+        });
+        batch.update(userCollection.doc(targetUid), {
+          'followers': FieldValue.arrayUnion([currentUserName]),
+        });
+      }
+
+      await batch.commit(); // Ejecutar ambas operaciones atómicamente
+      return !userExists;
+    } catch (e) {
+      rethrow;
     }
-    final targetUid = targetUserQuery.docs.first.id;
-
-    // Verificar si ya está siguiendo al usuario
-    final userExists = await checkIfUserExistsInFollowers(uid, username);
-
-    // Crear un batch para actualizar ambos documentos
-    final batch = FirebaseFirestore.instance.batch();
-
-    if (userExists) {
-      // Dejar de seguir: eliminar de "following" y "followers"
-      batch.update(userCollection.doc(uid), {
-        'following': FieldValue.arrayRemove([username]),
-      });
-      batch.update(userCollection.doc(targetUid), {
-        'followers': FieldValue.arrayRemove([currentUserName]),
-      });
-    } else {
-      // Empezar a seguir: agregar a "following" y "followers"
-      batch.update(userCollection.doc(uid), {
-        'following': FieldValue.arrayUnion([username]),
-      });
-      batch.update(userCollection.doc(targetUid), {
-        'followers': FieldValue.arrayUnion([currentUserName]),
-      });
-    }
-
-    await batch.commit(); // Ejecutar ambas operaciones atómicamente
-    return !userExists;
-
-  } catch (e) {
-    rethrow;
   }
-}
 
   // //Function to follow the user
   // Future<bool> followOrUnfollowUser(String uid, String username) async {
@@ -540,7 +540,7 @@ Future<bool> followOrUnfollowUser(String uid, String username, context) async {
     return result.map((entry) => entry['tag'].toString()).toList();
   }
 
-  //Method to check if username exists 
+  //Method to check if username exists
   Future<bool> checkIfUsernameExists(String username) async {
     try {
       final userQuery = await userCollection
@@ -581,7 +581,7 @@ Future<bool> followOrUnfollowUser(String uid, String username, context) async {
     }).toList();
   }
 
-Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
+  Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
     final snapshot = await postsCollection
         .where('lang', isEqualTo: LanguageProvider().currentLanguage)
         .where('author', isEqualTo: username)
@@ -607,7 +607,6 @@ Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
       );
     }).toList();
   }
-
 
   Future<UserInfoPopUp?> getUserInfoByUsername(String username) async {
     // Verificar cache primero
@@ -744,6 +743,21 @@ Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
     });
   }
 
+  Future<List<SAPPost>> getPostsByKeywordForAiAssistant(String keyword) async {
+    final snapshot = await postsCollection
+        .where('content', isGreaterThanOrEqualTo: keyword)
+        .where('content', isLessThanOrEqualTo: keyword + '\uf8ff')
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      if (data['timestamp'] is Timestamp) {
+        data['timestamp'] = (data['timestamp'] as Timestamp).toDate();
+      }
+      return SAPPost.fromMap(data, doc.id);
+    }).toList();
+  }
+
   Future<List<SAPPost>> getPostsByKeyword(String keyword) async {
     final snapshot =
         await postsCollection.get(); // Obtiene todos los documentos
@@ -762,10 +776,11 @@ Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
     // Filtrar los posts por la palabra clave (insensible a mayúsculas/minúsculas)
     return posts
         .where((post) =>
-            (post.content.toLowerCase().contains(keyword.toLowerCase())) ||
-            (post.title.toLowerCase().contains(keyword.toLowerCase())) ||
-            (post.tags.contains(keyword.toLowerCase())) ||
-            (post.author.toLowerCase().contains(keyword.toLowerCase())))
+            post.content.toLowerCase().contains(keyword.toLowerCase()))
+        //||
+        //post.title.toLowerCase().contains(keyword.toLowerCase()))
+        // (post.tags.contains(keyword.toLowerCase())) ||
+        //  (post.author.toLowerCase().contains(keyword.toLowerCase())))
         .toList();
   }
 

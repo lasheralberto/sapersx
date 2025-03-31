@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
-
+import 'package:shimmer/shimmer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
@@ -15,6 +15,92 @@ import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/texts.dart';
 
 class UtilsSapers {
+  Widget buildShimmerEffect() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Column(
+        children: List.generate(5, (index) => buildShimmerLine()),
+      ),
+    );
+  }
+
+  Widget buildShimmerLine() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Container(
+        height: 20,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
+  static List<TextSpan> parsePostContent(String content) {
+    final List<TextSpan> spans = [];
+    final lines = content.split('\n');
+
+    for (final line in lines) {
+      if (line.trim().isEmpty) continue;
+
+      if (line.startsWith('#')) {
+        // Encabezado
+        spans.add(TextSpan(
+          text: '${line.replaceAll('#', '').trim()}\n',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ));
+      } else if (line.startsWith('* ') || line.startsWith('- ')) {
+        // Lista
+        spans.add(TextSpan(
+          text: '• ${line.substring(2).trim()}\n',
+          style: const TextStyle(
+            color: Colors.black87,
+          ),
+        ));
+      } else if (line.contains('**')) {
+        // Texto en negrita
+        final parts = line.split('**');
+        for (int i = 0; i < parts.length; i++) {
+          spans.add(TextSpan(
+            text: parts[i],
+            style: TextStyle(
+              fontWeight: i.isOdd ? FontWeight.bold : FontWeight.normal,
+              color: Colors.black87,
+            ),
+          ));
+        }
+        spans.add(const TextSpan(text: '\n'));
+      } else if (line.contains('`')) {
+        // Código
+        spans.add(TextSpan(
+          text: '${line.replaceAll('`', '').trim()}\n',
+          style: TextStyle(
+            fontFamily: 'RobotoMono',
+            backgroundColor: Colors.orange.withOpacity(0.1),
+            color: Colors.orange.shade800,
+          ),
+        ));
+      } else {
+        // Texto normal
+        spans.add(TextSpan(
+          text: '$line\n',
+          style: const TextStyle(
+            color: Colors.black87,
+          ),
+        ));
+      }
+    }
+
+    return spans;
+  }
+
   showTextPopup(context, message) {
     showDialog(
         context: context,

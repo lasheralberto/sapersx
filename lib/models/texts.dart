@@ -97,8 +97,10 @@ class Texts {
       'fare': 'Tarifa',
       'usernameExists': 'El nombre de usuario ya existe',
       'askMe': 'Pregúntame algo sobre SAP',
+      'recommendedPosts': 'Posts recomendados',
     },
     'en': {
+      'recommendedPosts': 'Recommended posts',
       'expertTab': 'Expert profile',
       'askMe': 'Ask me anything about SAP',
       'usernameExists': 'Username already exists',
