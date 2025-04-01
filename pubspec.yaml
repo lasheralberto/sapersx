@@ -38,7 +38,11 @@ dependencies:
   material_symbols_icons: ^4.2810.1
   cached_network_image: ^3.4.1
   sliding_up_panel: ^2.0.0+1
+<<<<<<< HEAD
   googleapis_auth: ^1.6.0
+=======
+  flutter_dotenv: ^5.2.1
+>>>>>>> fc39be462df7f199e1013f955b21202666519b54
  
  
  

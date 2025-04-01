@@ -42,4 +42,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+<<<<<<< HEAD
 .env
+=======
+sapers_sa.json
+>>>>>>> fc39be462df7f199e1013f955b21202666519b54
