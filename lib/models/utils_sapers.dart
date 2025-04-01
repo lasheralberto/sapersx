@@ -24,6 +24,7 @@ class UtilsSapers {
       ),
     );
   }
+  
 
   Widget buildShimmerLine() {
     return Padding(

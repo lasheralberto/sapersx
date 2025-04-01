@@ -134,6 +134,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                       ),
                     ),
                     onSubmitted: (_) => _sendQuery(),
+                    
                   ),
                   const SizedBox(height: 16),
                   _isLoading

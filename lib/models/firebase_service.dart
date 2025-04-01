@@ -772,6 +772,7 @@ class FirebaseService {
       // Crear el objeto SAPPost a partir de los datos del documento
       return SAPPost.fromMap(data, doc.id);
     }).toList();
+    
 
     // Filtrar los posts por la palabra clave (insensible a mayúsculas/minúsculas)
     return posts

@@ -100,6 +100,7 @@ $baseContext
   }
 }
 
+
 /// Agente encargado de generar el contexto basado en la comunidad y posts relevantes.
 class ContextAgent {
   /// Siempre se busca en los posts de la comunidad.

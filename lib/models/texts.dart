@@ -98,6 +98,7 @@ class Texts {
       'usernameExists': 'El nombre de usuario ya existe',
       'askMe': 'Pregúntame algo sobre SAP',
       'recommendedPosts': 'Posts recomendados',
+      
     },
     'en': {
       'recommendedPosts': 'Recommended posts',

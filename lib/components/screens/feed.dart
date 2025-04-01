@@ -220,6 +220,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     );
   }
 
+
   Widget _buildSlidingUpPanelUI(
       BuildContext context, bool isMobile, double screenWidth) {
     return SlidingUpPanel(
