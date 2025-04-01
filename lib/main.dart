@@ -18,7 +18,6 @@ import 'package:sapers/models/router.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'package:location/location.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
