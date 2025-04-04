@@ -30,6 +30,7 @@ import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/theme.dart';
 import 'package:sapers/models/user.dart';
+import 'package:sapers/models/utils_sapers.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class Feed extends StatefulWidget {
@@ -342,6 +343,11 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     return FutureBuilder<List<String>>(
       future: _futureTags,
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return UtilsSapers()
+              .buildShimmerEffect(3, UtilsSapers().buildShimmerPost(context));
+        }
+
         List<String> trendingTags = ['PP']; // Valor por defecto
 
         if (snapshot.hasData) {

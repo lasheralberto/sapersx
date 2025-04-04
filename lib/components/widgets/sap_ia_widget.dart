@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import 'package:sapers/components/widgets/sapers_ai_icon.dart';
+import 'package:sapers/models/auth_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/sap_ai_assistant.dart';
@@ -16,13 +17,12 @@ class SAPAIAssistantWidget extends StatefulWidget {
   final Function(dynamic post)? onPostSelected;
   final FocusNode searchFocusNode;
 
-  const SAPAIAssistantWidget({
-    super.key,
-    required this.username,
-    required this.isPanelVisible,
-    this.onPostSelected,
-    required this.searchFocusNode
-  });
+  const SAPAIAssistantWidget(
+      {super.key,
+      required this.username,
+      required this.isPanelVisible,
+      this.onPostSelected,
+      required this.searchFocusNode});
 
   @override
   _SAPAIAssistantWidgetState createState() => _SAPAIAssistantWidgetState();
@@ -39,6 +39,8 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
   bool _shouldNebulaMove = false;
 
   Future<void> _sendQuery() async {
+    if (AuthService().isUserLoggedIn(context) == false) return;
+
     if (_queryController.text.trim().isEmpty) return;
 
     setState(() {
@@ -165,7 +167,8 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                   ),
                   const SizedBox(height: 16),
                   _isLoading
-                      ? UtilsSapers().buildShimmerEffect(10)
+                      ? UtilsSapers().buildShimmerEffect(
+                          10, UtilsSapers().buildShimmerLine())
                       : Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

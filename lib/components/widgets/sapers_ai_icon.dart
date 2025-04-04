@@ -29,18 +29,18 @@ class _NebulaEffectState extends State<NebulaEffect>
       duration: Duration(seconds: 3),
     )..repeat(reverse: true);
 
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.1).animate(
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 4.1).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
     _movementController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 5),
+      duration: Duration(seconds: 10),
     )..addListener(() {
         if (widget.shouldMove) {
           setState(() {
-            _dx = (_random.nextDouble() - 0.5) * 10;
-            _dy = (_random.nextDouble() - 0.5) * 10;
+            _dx = (_random.nextDouble() - 0.5) * 5;
+            _dy = (_random.nextDouble() - 0.5) * 2;
           });
         }
       });
@@ -95,7 +95,7 @@ class _NebulaEffectState extends State<NebulaEffect>
                             Colors.orange.withOpacity(0.08),
                             Colors.transparent
                           ],
-                          stops: [0.2, 0.7, 1.0],
+                          stops: const [0.2, 0.7, 1.0],
                         ),
                       ),
                     ),
@@ -110,9 +110,10 @@ class _NebulaEffectState extends State<NebulaEffect>
                         colors: [
                           Colors.orangeAccent.withOpacity(0.3),
                           Colors.deepOrange.withOpacity(0.2),
+                          Colors.orange,
                           Colors.transparent,
                         ],
-                        stops: [0.1, 0.6, 1.0],
+                        stops: const [0.1, 0.6, 1.0, 1.5],
                       ),
                     ),
                   ),
@@ -124,10 +125,12 @@ class _NebulaEffectState extends State<NebulaEffect>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
+                          Colors.white,
                           Colors.deepOrangeAccent.withOpacity(0.6),
+                          Colors.deepOrange.withOpacity(0.1),
                           Colors.transparent
                         ],
-                        stops: [0.1, 1.0],
+                        stops: const [0.1, 0.2, 1.0, 2.0],
                       ),
                     ),
                   ),

@@ -100,7 +100,6 @@ $baseContext
   }
 }
 
-
 /// Agente encargado de generar el contexto basado en la comunidad y posts relevantes.
 class ContextAgent {
   /// Siempre se busca en los posts de la comunidad.
@@ -203,7 +202,12 @@ class ResponseAgent {
         );
 
         if (response.statusCode == 200) {
-          final responseData = json.decode(response.body);
+          // 🔥 Decodificar en UTF-8 correctamente
+          final decodedBody = utf8.decode(response.bodyBytes);
+
+          // 👇 Luego convertir a JSON
+          final responseData = json.decode(decodedBody);
+
           final candidate = responseData['choices'][0]['message']['content'];
           candidates.add(candidate);
         } else {
@@ -242,7 +246,13 @@ class ResponseAgent {
       );
 
       if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
+        // 🔥 Decodificar en UTF-8 correctamente
+        final decodedBody = utf8.decode(response.bodyBytes);
+
+        // 👇 Luego convertir a JSON
+        final responseData = json.decode(decodedBody);
+
+        // ✅ Extraer el contenido
         return responseData['choices'][0]['message']['content'];
       } else {
         return 'Error generating refined response.';

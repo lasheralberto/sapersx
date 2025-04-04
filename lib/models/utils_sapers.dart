@@ -16,14 +16,113 @@ import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UtilsSapers {
-  Widget buildShimmerEffect(int lines) {
+  Widget buildShimmerEffect(int lines, Widget shimmerWidget) {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
       highlightColor: AppStyles.colorAvatarBorderLighter,
       child: Column(
-        children: List.generate(lines, (index) => buildShimmerLine()),
+        children: List.generate(lines, (index) => shimmerWidget),
+      ),
+    );
+  }
+
+  Widget buildShimmerPost(context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      child: Container(
+        width: MediaQuery.of(context).size.width / 1.5,
+        height: 180, // 🔽 Altura más baja
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar + Nombre + Fecha
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Container(
+                    height: 32,
+                    width: 32,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.orange,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 8,
+                          width: 100,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 8,
+                          width: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+            // Título
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Container(
+                height: 12,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Cuerpo reducido
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Container(
+                height: 10,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            // Botón
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Container(
+                height: 24,
+                width: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -46,24 +145,37 @@ class UtilsSapers {
     final List<TextSpan> spans = [];
     final lines = content.split('\n');
 
-    final normalStyle = const TextStyle(color: Colors.black87);
-    final boldStyle = const TextStyle(
-      fontWeight: FontWeight.bold,
-      color: Colors.black87,
-    );
-    final italicStyle = const TextStyle(
-      fontStyle: FontStyle.italic,
-      color: Colors.black87,
-    );
+    const normalStyle =
+        TextStyle(fontSize: 15, color: Colors.black87, height: 1.5);
+    const boldStyle =
+        TextStyle(fontWeight: FontWeight.bold, color: Colors.black87);
+    const italicStyle =
+        TextStyle(fontStyle: FontStyle.italic, color: Colors.black87);
     final codeStyle = TextStyle(
       fontFamily: 'RobotoMono',
-      backgroundColor: Colors.orange.withOpacity(0.1),
-      color: Colors.orange.shade800,
+      fontSize: 13,
+      backgroundColor: const Color(0xFFF6F8FA),
+      color: const Color(0xFFEA7E00),
+      letterSpacing: 0.5,
     );
-    final linkStyle = const TextStyle(
+    const linkStyle = TextStyle(
       color: Colors.blueAccent,
       decoration: TextDecoration.underline,
+      fontWeight: FontWeight.w500,
     );
+
+    final heading1Style = TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
+        height: 2.2);
+    final heading2Style = TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: Colors.black87,
+        height: 2.0);
+    final bulletStyle =
+        TextStyle(fontSize: 15, height: 1.6, color: Colors.black87);
 
     TextSpan _parseLineWithMarkup(String line) {
       final List<TextSpan> innerSpans = [];
@@ -113,12 +225,14 @@ class UtilsSapers {
 
           innerSpans.add(
             TextSpan(
-              text: text,
+              text: '🔗 $text',
               style: linkStyle,
               recognizer: TapGestureRecognizer()
-                ..onTap = () {
-                  // Aquí puedes abrir el enlace
-                  print('Abrir URL: $url');
+                ..onTap = () async {
+                  final uri = Uri.parse(url);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
                 },
             ),
           );
@@ -131,25 +245,29 @@ class UtilsSapers {
 
     for (final rawLine in lines) {
       final line = rawLine.trim();
-      if (line.isEmpty) continue;
-
-      if (line.startsWith('#')) {
-        spans.add(TextSpan(
-          text: '${line.replaceAll(RegExp(r'^#+'), '').trim()}\n',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ));
-      } else if (line.startsWith('* ') || line.startsWith('- ')) {
-        spans.add(TextSpan(
-          text: '• ${line.substring(2).trim()}\n',
-          style: normalStyle,
-        ));
-      } else {
-        spans.add(_parseLineWithMarkup(line));
+      if (line.isEmpty) {
         spans.add(const TextSpan(text: '\n'));
+        continue;
+      }
+
+      // Heading
+      if (line.startsWith('#')) {
+        final level = RegExp(r'^#+').firstMatch(line)?.group(0)?.length ?? 1;
+        final headingText = line.replaceFirst(RegExp(r'^#+'), '').trim();
+        final style = level == 1 ? heading1Style : heading2Style;
+        spans.add(TextSpan(text: '$headingText\n\n', style: style));
+      }
+
+      // Bullet points
+      else if (line.startsWith('* ') || line.startsWith('- ')) {
+        final bulletText = '• ${line.substring(2).trim()}\n';
+        spans.add(TextSpan(text: bulletText, style: bulletStyle));
+      }
+
+      // Paragraph
+      else {
+        spans.add(_parseLineWithMarkup(line));
+        spans.add(const TextSpan(text: '\n\n'));
       }
     }
 
