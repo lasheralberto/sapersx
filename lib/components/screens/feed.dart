@@ -65,11 +65,13 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   int takenTags = 10;
   bool _isPanelOpen = false;
   double _panelPosition = 0.0;
+  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   void dispose() {
     _tabController.dispose();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -79,6 +81,15 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
       setState(() {});
+    });
+    _searchFocusNode.addListener(() {
+      if (_searchFocusNode.hasFocus) {
+        _panelController.animatePanelToPosition(
+          1.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
     });
     _updateFutures();
   }
@@ -238,7 +249,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         topLeft: Radius.circular(24.0),
         topRight: Radius.circular(24.0),
       ),
-      panelBuilder: (scrollController) => const SAPAIAssistantWidget(
+      panelBuilder: (scrollController) => SAPAIAssistantWidget(
+        searchFocusNode: _searchFocusNode,
         username: 'UsuarioDemo',
         isPanelVisible: true,
       ),

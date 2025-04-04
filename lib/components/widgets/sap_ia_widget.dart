@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
+import 'package:sapers/components/widgets/sapers_ai_icon.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/sap_ai_assistant.dart';
@@ -13,13 +14,15 @@ class SAPAIAssistantWidget extends StatefulWidget {
   final String username;
   final bool isPanelVisible;
   final Function(dynamic post)? onPostSelected;
+  final FocusNode searchFocusNode;
 
   const SAPAIAssistantWidget({
-    Key? key,
+    super.key,
     required this.username,
     required this.isPanelVisible,
     this.onPostSelected,
-  }) : super(key: key);
+    required this.searchFocusNode
+  });
 
   @override
   _SAPAIAssistantWidgetState createState() => _SAPAIAssistantWidgetState();
@@ -33,6 +36,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
   bool _isLoading = false;
   List<dynamic> _recommendedPosts = [];
   Timer? _animationTimer;
+  bool _shouldNebulaMove = false;
 
   Future<void> _sendQuery() async {
     if (_queryController.text.trim().isEmpty) return;
@@ -42,6 +46,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
       _fullResponse = '';
       _animationProgress = 0.0;
       _recommendedPosts = [];
+      _shouldNebulaMove = true;
     });
 
     try {
@@ -51,6 +56,8 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
       setState(() {
         _fullResponse = response;
         _recommendedPosts = posts;
+        _shouldNebulaMove = false;
+        _isLoading = false;
       });
 
       _startSweepAnimation();
@@ -58,6 +65,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
       setState(() {
         _fullResponse = 'Error al procesar la solicitud';
         _isLoading = false;
+        _shouldNebulaMove = false;
       });
     }
   }
@@ -110,35 +118,54 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
               ),
               child: Column(
                 children: [
-                  TextField(
-                    controller: _queryController,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.surfaceVariant,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
+                  Row(
+                    spacing: 10.0,
+                    children: [
+                      NebulaEffect(
+                        shouldMove: _shouldNebulaMove,
                       ),
-                      hintText: Texts.translate('askMe', currentLanguage),
-                      hintStyle: TextStyle(
-                        color: Theme.of(context).hintColor,
-                        fontSize: 14,
+                      Expanded(
+                        child: TextField(
+                          focusNode: widget.searchFocusNode,
+                          controller: _queryController,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor:
+                                Theme.of(context).colorScheme.surfaceVariant,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                            hintText: Texts.translate('askMe', currentLanguage),
+                            hintStyle: TextStyle(
+                              color: Theme.of(context).hintColor,
+                              fontSize: 14,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(Symbols.send, size: 20),
+                              onPressed: _sendQuery,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          onSubmitted: (_) => _sendQuery(),
+                        ),
                       ),
-                      suffixIcon: IconButton(
-                        icon: Icon(Symbols.send, size: 20),
-                        onPressed: _sendQuery,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                    onSubmitted: (_) => _sendQuery(),
-                    
+                    ],
                   ),
                   const SizedBox(height: 16),
                   _isLoading
-                      ? UtilsSapers().buildShimmerEffect()
+                      ? UtilsSapers().buildShimmerEffect(10)
                       : Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

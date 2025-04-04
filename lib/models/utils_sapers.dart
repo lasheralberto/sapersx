@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:sapers/models/styles.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
@@ -13,14 +14,16 @@ import 'package:pasteboard/pasteboard.dart';
 import 'package:sapers/components/widgets/mesmorphic_popup.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/texts.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 
 class UtilsSapers {
-  Widget buildShimmerEffect() {
+  Widget buildShimmerEffect(int lines) {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      highlightColor: AppStyles.colorAvatarBorderLighter,
       child: Column(
-        children: List.generate(5, (index) => buildShimmerLine()),
+        children: List.generate(lines, (index) => buildShimmerLine()),
       ),
     );
   }
@@ -43,13 +46,96 @@ class UtilsSapers {
     final List<TextSpan> spans = [];
     final lines = content.split('\n');
 
-    for (final line in lines) {
-      if (line.trim().isEmpty) continue;
+    final normalStyle = const TextStyle(color: Colors.black87);
+    final boldStyle = const TextStyle(
+      fontWeight: FontWeight.bold,
+      color: Colors.black87,
+    );
+    final italicStyle = const TextStyle(
+      fontStyle: FontStyle.italic,
+      color: Colors.black87,
+    );
+    final codeStyle = TextStyle(
+      fontFamily: 'RobotoMono',
+      backgroundColor: Colors.orange.withOpacity(0.1),
+      color: Colors.orange.shade800,
+    );
+    final linkStyle = const TextStyle(
+      color: Colors.blueAccent,
+      decoration: TextDecoration.underline,
+    );
+
+    TextSpan _parseLineWithMarkup(String line) {
+      final List<TextSpan> innerSpans = [];
+      int index = 0;
+
+      while (index < line.length) {
+        final boldMatch = RegExp(r'\*\*(.+?)\*\*').matchAsPrefix(line, index);
+        final codeMatch = RegExp(r'`(.+?)`').matchAsPrefix(line, index);
+        final italicMatch = RegExp(r'_([^_]+)_').matchAsPrefix(line, index);
+        final linkMatch =
+            RegExp(r'\[([^\]]+)\]\(([^)]+)\)').matchAsPrefix(line, index);
+
+        final matches = [boldMatch, codeMatch, italicMatch, linkMatch]
+            .where((m) => m != null)
+            .toList();
+
+        if (matches.isEmpty) {
+          innerSpans.add(TextSpan(
+            text: line.substring(index),
+            style: normalStyle,
+          ));
+          break;
+        }
+
+        matches.sort((a, b) => a!.start.compareTo(b!.start));
+        final match = matches.first!;
+        if (match.start > index) {
+          innerSpans.add(TextSpan(
+            text: line.substring(index, match.start),
+            style: normalStyle,
+          ));
+        }
+
+        if (match == boldMatch) {
+          innerSpans.add(TextSpan(text: boldMatch!.group(1), style: boldStyle));
+          index = boldMatch.end;
+        } else if (match == codeMatch) {
+          innerSpans.add(TextSpan(text: codeMatch!.group(1), style: codeStyle));
+          index = codeMatch.end;
+        } else if (match == italicMatch) {
+          innerSpans
+              .add(TextSpan(text: italicMatch!.group(1), style: italicStyle));
+          index = italicMatch.end;
+        } else if (match == linkMatch) {
+          final text = linkMatch!.group(1)!;
+          final url = linkMatch.group(2)!;
+
+          innerSpans.add(
+            TextSpan(
+              text: text,
+              style: linkStyle,
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  // Aquí puedes abrir el enlace
+                  print('Abrir URL: $url');
+                },
+            ),
+          );
+          index = linkMatch.end;
+        }
+      }
+
+      return TextSpan(children: innerSpans);
+    }
+
+    for (final rawLine in lines) {
+      final line = rawLine.trim();
+      if (line.isEmpty) continue;
 
       if (line.startsWith('#')) {
-        // Encabezado
         spans.add(TextSpan(
-          text: '${line.replaceAll('#', '').trim()}\n',
+          text: '${line.replaceAll(RegExp(r'^#+'), '').trim()}\n',
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -57,44 +143,13 @@ class UtilsSapers {
           ),
         ));
       } else if (line.startsWith('* ') || line.startsWith('- ')) {
-        // Lista
         spans.add(TextSpan(
           text: '• ${line.substring(2).trim()}\n',
-          style: const TextStyle(
-            color: Colors.black87,
-          ),
-        ));
-      } else if (line.contains('**')) {
-        // Texto en negrita
-        final parts = line.split('**');
-        for (int i = 0; i < parts.length; i++) {
-          spans.add(TextSpan(
-            text: parts[i],
-            style: TextStyle(
-              fontWeight: i.isOdd ? FontWeight.bold : FontWeight.normal,
-              color: Colors.black87,
-            ),
-          ));
-        }
-        spans.add(const TextSpan(text: '\n'));
-      } else if (line.contains('`')) {
-        // Código
-        spans.add(TextSpan(
-          text: '${line.replaceAll('`', '').trim()}\n',
-          style: TextStyle(
-            fontFamily: 'RobotoMono',
-            backgroundColor: Colors.orange.withOpacity(0.1),
-            color: Colors.orange.shade800,
-          ),
+          style: normalStyle,
         ));
       } else {
-        // Texto normal
-        spans.add(TextSpan(
-          text: '$line\n',
-          style: const TextStyle(
-            color: Colors.black87,
-          ),
-        ));
+        spans.add(_parseLineWithMarkup(line));
+        spans.add(const TextSpan(text: '\n'));
       }
     }
 
