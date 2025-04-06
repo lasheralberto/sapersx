@@ -8,6 +8,7 @@ import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
+import 'package:sapers/models/utils_sapers.dart';
 
 // 1. Caché global para todos los usuarios
 class UserCacheManager {
@@ -254,10 +255,13 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
     );
   }
 
-  Widget _buildLoadingIndicator() => const SizedBox(
+  Widget _buildLoadingIndicator() => SizedBox(
         width: TwitterDimensions.avatarSizeSmall,
         height: TwitterDimensions.avatarSizeSmall,
-        child: CircularProgressIndicator(),
+        child: UtilsSapers().buildShimmerEffect(
+            1,
+            UtilsSapers()
+                .buildAvatarIconShimmer(size: AppStyles.avatarSize - 5)),
       );
 
   Widget _buildProfileAvatar() => ProfileAvatar(

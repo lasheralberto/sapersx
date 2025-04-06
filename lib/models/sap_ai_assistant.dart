@@ -12,13 +12,18 @@ class SAPAIAssistantService {
   final ResponseAgent _responseAgent = ResponseAgent();
   final ValidationAgent _validationAgent = ValidationAgent();
 
-  // Contexto base (para temas generales) con directrices de estilo.
+  // Contexto base mejorado con enfoque de consultoría
   String baseContext = '''
--You are an expert SAP professional assistant. 
--Your goal is to provide professional, concise, and accurate answers about SAP-related topics based on your comprehensive knowledge of SAP systems, modules, and best practices. 
--RESPOND IN PLAIN TEXT ONLY.
--Do not use markdown, code blocks, or special formatting.
--Avoid symbols like *, -, >, ```, etc.
+You are an expert SAP professional assistant recognized as one of the best consultants globally. 
+Your responses must be:
+- Highly focused on the user's specific query
+- Technically precise with clear, actionable advice
+- Structured logically (e.g., "Explanation:", "Recommendation:", "Next Steps:" when applicable)
+- Incorporate SAP best practices and real-world implementation experience
+- Prioritize solutions that balance technical feasibility with business impact
+- Acknowledge when additional information is needed for precise guidance
+- For non-technical queries, respond appropriately without technical content
+- RESPOND IN PLAIN TEXT ONLY. Avoid all formatting, symbols, and markdown
 ''';
 
   /// Método principal para generar la respuesta de la IA.
@@ -26,49 +31,57 @@ class SAPAIAssistantService {
     required String query,
     required String username,
   }) async {
-    // 1. Siempre se buscan posts en la comunidad
+    // 1. Detectar si es un saludo primero
+    if (_contextAgent._isGreeting(query)) {
+      return (
+        "¡Buenos días! ¿En qué puedo asistirte con SAP hoy?",
+        <SAPPost>[]
+      );
+    }
+
+    // 2. Buscar posts solo si es una consulta técnica
     final (contextWithPosts, posts) = await _contextAgent.generateContext(
       query: query,
       baseContext: baseContext,
     );
 
-    // 2. Analiza si se encontró alguno de valor (por ejemplo, contenido relevante)
-    bool hasCommunityResponse =
-        posts.isNotEmpty && posts.any((post) => post.content.trim().isNotEmpty);
+    // 3. Determinar si hay respuestas comunitarias relevantes
+    bool hasCommunityResponse = posts.isNotEmpty &&
+        posts.any((post) => _contextAgent._isTechnicallyRelevant(post, query));
 
-    // 3. Define el contexto final:
-    //    - Si se encontraron posts relevantes, se usa el contexto enriquecido.
-    //    - Si no se encontraron, se usa el baseContext + consulta genérica.
+    // 4. Construir contexto final
     final String finalContext = hasCommunityResponse
         ? contextWithPosts
         : '''
-You are an expert SAP professional assistant with comprehensive knowledge.
-Query: "$query"
 $baseContext
+
+Query: "$query"
+- Provide expert-level SAP guidance
+- Include implementation considerations
+- Highlight potential risks if applicable
 ''';
 
-    // 4. Se genera la respuesta (se pueden generar varias candidatas).
+    // 5. Generar y validar respuesta
     List<String> candidates = await _responseAgent
-        .generateCandidateResponses(finalContext, query, count: 1);
+        .generateCandidateResponses(finalContext, query, count: 3);
 
-    // 5. Se evalúan y se selecciona la mejor respuesta.
     String bestResponse = _validationAgent.selectBestResponse(candidates);
-    String feedback = _validationAgent.generateFeedback(bestResponse);
+    bestResponse = _applyConsultantStyle(bestResponse);
 
-    // 6. Si el feedback es negativo, se refina la respuesta.
-    if (feedback.contains('insuficiente')) {
+    // 6. Refinar si es necesario
+    if (_validationAgent
+        .generateFeedback(bestResponse)
+        .contains('insuficiente')) {
       bestResponse =
-          await _responseAgent.refineResponse(finalContext, query, feedback);
-      // Se evalúa la respuesta refinada para asegurarse de su calidad.
-      final double refinedScore =
-          _validationAgent.evaluateResponse(bestResponse);
-      if (refinedScore < 1.0) {
-        bestResponse =
-            'La respuesta no pudo ser refinada adecuadamente. Inténtalo de nuevo más tarde.';
-      }
+          await _responseAgent.refineResponse(finalContext, query, '''
+Improve by:
+1. Adding specific transaction codes
+2. Referencing SAP notes if applicable
+3. Providing configuration paths
+4. Including business process context
+''');
     }
 
-    // 7. (Opcional) Guarda la interacción en Firestore.
     await _saveAIInteraction(
       username: username,
       query: query,
@@ -79,7 +92,19 @@ $baseContext
     return (bestResponse, posts);
   }
 
-  /// Guarda la interacción en Firestore.
+  String _applyConsultantStyle(String response) {
+    // Asegurar estructura profesional
+    return response
+        .replaceAll(RegExp(r'\n\s*'), '\n')
+        .replaceAll('•', '') // Eliminar viñetas
+        .replaceAll(RegExp(r'\*\*'), '') // Eliminar negritas
+        .replaceAllMapped(
+            RegExp(r'(?<=\. )\w'), (match) => match.group(0)!.toUpperCase())
+        .replaceAll('Explanation:', 'Análisis:')
+        .replaceAll('Recommendation:', 'Recomendación profesional:')
+        .replaceAll('Next Steps:', 'Próximos pasos:');
+  }
+
   Future<void> _saveAIInteraction({
     required String username,
     required String query,
@@ -91,6 +116,7 @@ $baseContext
         'username': username,
         'query': query,
         'response': response,
+        'technical_depth': _validationAgent.evaluateResponse(response),
         'hasCommunityResponse': hasCommunityResponse,
         'timestamp': FieldValue.serverTimestamp(),
       });
@@ -100,94 +126,132 @@ $baseContext
   }
 }
 
-/// Agente encargado de generar el contexto basado en la comunidad y posts relevantes.
 class ContextAgent {
-  /// Siempre se busca en los posts de la comunidad.
-  /// Si se encuentran posts, se incorpora su contenido en el contexto enriquecido.
+  final List<String> _sapModules = [
+    'FI',
+    'CO',
+    'MM',
+    'SD',
+    'PP',
+    'QM',
+    'PM',
+    'PS',
+    'WM',
+    'HR',
+    'SAP HANA',
+    'ABAP',
+    'Fiori',
+    'BTP',
+    'SuccessFactors',
+    'Ariba'
+  ];
+
+  bool _isGreeting(String query) {
+    final greetings = [
+      'hola',
+      'hola!',
+      'buenos días',
+      'buenas tardes',
+      'buenas noches',
+      'saludos',
+      'adiós',
+      'gracias'
+    ];
+    return greetings.contains(query.toLowerCase());
+  }
+
+  bool _isTechnicalTerm(String query) {
+    return _sapModules.contains(query.toUpperCase()) ||
+        query.length > 3 && query.contains(RegExp(r'[A-Z]{3}'));
+  }
+
+  bool _isTechnicallyRelevant(SAPPost post, String query) {
+    return post.content.toLowerCase().contains(query.toLowerCase()) &&
+        post.content.length > 100 &&
+        _sapModules.any((module) => post.content.contains(module));
+  }
+
   Future<(String, List<SAPPost>)> generateContext({
     required String query,
     required String baseContext,
   }) async {
-    try {
-      // Buscar posts en la comunidad
-      List<SAPPost> relevantPosts = await _findRelevantPosts(query);
-      final contextInsights = relevantPosts.isNotEmpty
-          ? _extractContextInsights(relevantPosts)
-          : "";
-
-      // Se arma el contexto enriquecido, indicando si se usaron posts.
-      final enhancedContext = relevantPosts.isNotEmpty
-          ? '''
-You are an expert SAP professional assistant with community-backed insights.
-
-Community Context for Query "$query":
-$contextInsights
-
-Base Guidelines:
-- Provide technical and business-oriented insights.
-- Reference community knowledge when applicable.
-- Use professional SAP terminology.
-- Be precise and actionable.
-- If information is limited, offer general guidance.
-- $baseContext
-'''
-          : '''
-You are an expert SAP professional assistant with comprehensive knowledge.
-
-Query: "$query"
-
-Base Guidelines:
-- Provide technical and business-oriented insights.
-- Use professional SAP terminology.
-- Be precise and actionable.
-- If information is limited, offer general guidance.
-- $baseContext
-''';
-
-      return (enhancedContext, relevantPosts);
-    } catch (e) {
-      print('Error generating context: $e');
-      return ("", <SAPPost>[]);
+    if (_isGreeting(query) ||
+        (query.split(' ').length == 1 && !_isTechnicalTerm(query))) {
+      return (baseContext, <SAPPost>[]);
     }
+
+    List<SAPPost> relevantPosts = await _findRelevantPosts(query);
+    // relevantPosts = relevantPosts
+    //     .where((post) => _isTechnicallyRelevant(post, query))
+    //     .toList();
+
+    // final contextInsights = relevantPosts.isNotEmpty
+    //     ? _extractContextInsights(relevantPosts, query)
+    //     : "";
+
+    final enhancedContext = relevantPosts.isNotEmpty
+        ? '''
+$baseContext
+
+Directrices adicionales:
+- Combinar conocimiento experto con ejemplos prácticos
+- Priorizar soluciones validadas en implementaciones reales
+- Mencionar consideraciones de actualización SAP cuando aplique
+'''
+        : baseContext;
+
+    return (enhancedContext, relevantPosts);
   }
 
   Future<List<SAPPost>> _findRelevantPosts(String query) async {
     try {
-      return await FirebaseService().getPostsByKeyword(query);
+      return await FirebaseService().getPostsByKeywordAI(query);
     } catch (e) {
       print('Error finding relevant posts: $e');
       return [];
     }
   }
 
-  String _extractContextInsights(List<SAPPost> posts) {
+  String _extractContextInsights(List<SAPPost> posts, String query) {
     final buffer = StringBuffer();
-    for (final post in posts.take(3)) {
-      final snippet = post.content.length > 200
-          ? post.content.substring(0, post.content.length - 50)
-          : post.content;
-      buffer.writeln('• $snippet [Source: ${post.author}]');
+    for (final post in posts.take(2)) {
+      final technicalContent = post.content
+          .split(' ')
+          .where((word) => _sapModules.contains(word.toUpperCase()))
+          .join(', ');
+
+      buffer.writeln('Experiencia reportada (${post.author}): '
+          '${post.content.substring(0, 150)}... '
+          'Elementos técnicos: ${technicalContent.isNotEmpty ? technicalContent : 'N/A'}');
     }
     return buffer.toString();
   }
 }
 
-/// Agente encargado de generar respuestas utilizando la API DeepSeek.
 class ResponseAgent {
   final String _apiKey = 'sk-dab16eb7cc2e4128850c712015edbfb3';
   final String _apiUrl = 'https://api.deepseek.com/chat/completions';
 
-  /// Solicita [count] respuestas candidatas.
   Future<List<String>> generateCandidateResponses(String context, String query,
       {int count = 3}) async {
     List<String> candidates = [];
+
+    final professionalPrompt = '''
+Genera ${count} variaciones de respuesta profesional SAP considerando:
+1. Nivel de detalle técnico apropiado
+2. Mejores prácticas de implementación
+3. Posibles integraciones con otros módulos
+4. Consideraciones de performance''';
+
     for (int i = 0; i < count; i++) {
       final payload = {
         'model': 'deepseek-chat',
         'messages': [
           {'role': 'system', 'content': context},
-          {'role': 'user', 'content': query}
+          {'role': 'user', 'content': '$query\n$professionalPrompt'}
         ],
+        'temperature': 0.7,
+        'max_tokens': 350,
         'stream': false
       };
 
@@ -202,36 +266,34 @@ class ResponseAgent {
         );
 
         if (response.statusCode == 200) {
-          // 🔥 Decodificar en UTF-8 correctamente
-          final decodedBody = utf8.decode(response.bodyBytes);
+          final parsed =
+              await compute(parseResponseInBackground, response.bodyBytes);
 
-          // 👇 Luego convertir a JSON
-          final responseData = json.decode(decodedBody);
-
-          final candidate = responseData['choices'][0]['message']['content'];
-          candidates.add(candidate);
-        } else {
-          candidates.add('Error generating response.');
+          //final decodedBody = utf8.decode(response.bodyBytes);
+          candidates.add(parsed['choices'][0]['message']['content']);
         }
       } catch (e) {
-        print('Error generating candidate response: $e');
-        candidates.add('Error processing request.');
+        print('Error generating response: $e');
       }
     }
     return candidates;
   }
 
-  /// Genera una respuesta refinada basándose en el feedback.
+  static Map<String, dynamic> parseResponseInBackground(List<int> data) {
+    return json.decode(utf8.decode(data));
+  }
+
   Future<String> refineResponse(
       String context, String query, String feedback) async {
-    final refinedQuery =
-        '$query\n\nFeedback: $feedback\n\nPlease refine your answer accordingly.';
     final payload = {
       'model': 'deepseek-chat',
       'messages': [
         {'role': 'system', 'content': context},
-        {'role': 'user', 'content': refinedQuery}
+        {'role': 'user', 'content': query},
+        {'role': 'assistant', 'content': feedback}
       ],
+      'temperature': 0.5,
+      'max_tokens': 400,
       'stream': false
     };
 
@@ -245,90 +307,68 @@ class ResponseAgent {
         body: json.encode(payload),
       );
 
-      if (response.statusCode == 200) {
-        // 🔥 Decodificar en UTF-8 correctamente
-        final decodedBody = utf8.decode(response.bodyBytes);
+      final parsed =
+          await compute(parseResponseInBackground, response.bodyBytes);
 
-        // 👇 Luego convertir a JSON
-        final responseData = json.decode(decodedBody);
-
-        // ✅ Extraer el contenido
-        return responseData['choices'][0]['message']['content'];
-      } else {
-        return 'Error generating refined response.';
-      }
+      return parsed['choices'][0]['message']['content'];
     } catch (e) {
-      print('Error generating refined response: $e');
-      return 'Error processing refinement request.';
+      return 'Error procesando la solicitud. Por favor intenta reformular tu pregunta.';
     }
   }
 }
 
-/// Agente encargado de evaluar respuestas y generar feedback.
 class ValidationAgent {
-  /// Evalúa la respuesta y retorna un puntaje basado en diversos criterios.
+  final List<String> _technicalIndicators = [
+    'transacción',
+    'nota SAP',
+    'SPRO',
+    'tipo de dato',
+    'RFC',
+    'IDOC',
+    'BAPI',
+    'enhancement',
+    'customizing',
+    'debugging',
+    'performance',
+    'actualización',
+    'migración',
+    'Best Practice'
+  ];
+
   double evaluateResponse(String response) {
     double score = 0.0;
-    if (response.isNotEmpty && !response.contains("Error")) {
-      score += 1.0;
-    }
-    // Evalúa longitud
-    if (response.length < 100) score -= 0.5;
-    if (response.length > 1000) score -= 0.3;
-    // Evalúa contenido técnico (presencia de términos SAP relevantes)
-    final List<String> techTerms = [
-      'SAP',
-      'ERP',
-      'módulo',
-      'transacción',
-      'ABAP',
-      'HANA',
-      'S/4',
-      'BW',
-      'tabla',
-      'MM',
-      'SD',
-      'FI',
-      'CO',
-      'HR'
-    ];
-    int termCount = 0;
-    for (final term in techTerms) {
-      if (response.toLowerCase().contains(term.toLowerCase())) {
-        termCount++;
-      }
-    }
-    score += (termCount / 5).clamp(0.0, 1.0);
-    // Evalúa estructura (múltiples oraciones y claridad)
-    if (response.contains('.') && response.split('.').length > 3) {
+
+    // Evaluación técnica
+    final technicalDepth =
+        _technicalIndicators.where((term) => response.contains(term)).length /
+            5;
+    score += technicalDepth.clamp(0.0, 2.0);
+
+    // Estructura profesional
+    if (response.contains('Análisis:') ||
+        response.contains('Recomendación profesional:')) score += 1.0;
+
+    // Accionabilidad
+    if (response.contains(RegExp(r'(Pasos|Siguientes acciones):')))
       score += 0.5;
-    }
-    return score;
+
+    // Precisión SAP
+    if (response.contains(RegExp(r'SAP [A-Z]{2,4}'))) score += 0.5;
+
+    return score.clamp(0.0, 3.0);
   }
 
-  /// Selecciona la mejor respuesta entre las candidatas.
   String selectBestResponse(List<String> responses) {
-    double bestScore = double.negativeInfinity;
-    String bestResponse = '';
-    for (final response in responses) {
-      double score = evaluateResponse(response);
-      if (score > bestScore) {
-        bestScore = score;
-        bestResponse = response;
-      }
-    }
-    return bestResponse;
+    return responses
+        .reduce((a, b) => evaluateResponse(a) > evaluateResponse(b) ? a : b);
   }
 
-  /// Genera feedback basado en la evaluación de la respuesta.
   String generateFeedback(String response) {
     final score = evaluateResponse(response);
-    if (score < 1.0) {
-      return 'La respuesta es insuficiente. Agrega más detalles técnicos y asegúrate de que la información sea precisa y accionable.';
-    } else if (score < 1.5) {
-      return 'La respuesta es adecuada, pero podría incluir más terminología SAP específica y ejemplos prácticos.';
-    } else {
-      return 'La respuesta es adecuada.';
-    }
+    if (score < 1.5)
+      return 'Respuesta insuficiente. Mejorar: 1) Profundidad técnica 2) Estructura profesional 3) Referencias específicas';
+    if (score < 2.0)
+      return 'Respuesta aceptable. Mejorar: 1) Ejemplos prácticos 2) Consideraciones de implementación';
+    return 'Respuesta óptima';
   }
 }

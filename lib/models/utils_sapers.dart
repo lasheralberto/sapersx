@@ -29,6 +29,26 @@ class UtilsSapers {
     );
   }
 
+  Widget buildAvatarIconShimmer({double size = 10.0}) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+        ),
+        child: Icon(
+          Icons.person,
+          size: size * 0.6,
+          color: Colors.grey[300],
+        ),
+      ),
+    );
+  }
+
   Widget buildShimmerPost(context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),

@@ -743,6 +743,36 @@ Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
       'attachments': post.attachments,
     });
   }
+  Future<List<SAPPost>> getPostsByKeywordAI(String keyword) async {
+  final snapshot = await postsCollection.get();
+  final posts = snapshot.docs.map((doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
+    if (data['timestamp'] is Timestamp) {
+      data['timestamp'] = (data['timestamp'] as Timestamp).toDate();
+    }
+
+    return SAPPost.fromMap(data, doc.id);
+  }).toList();
+
+  // Separar la frase en palabras clave
+  final words = keyword.toLowerCase().split(RegExp(r'\s+'));
+
+  return posts.where((post) {
+    final content = post.content.toLowerCase();
+    final title = post.title.toLowerCase();
+    final author = post.author.toLowerCase();
+    final tags = post.tags.map((t) => t.toLowerCase()).toList();
+
+    return words.any((word) =>
+      content.contains(word) ||
+      title.contains(word) ||
+      author.contains(word) ||
+      tags.any((tag) => tag.contains(word))
+    );
+  }).toList();
+}
+
 
   Future<List<SAPPost>> getPostsByKeyword(String keyword) async {
     final snapshot =
