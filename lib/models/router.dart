@@ -34,20 +34,19 @@ final router = GoRouter(
             state.pathParameters['username']; // Obtener el parámetro
 
         return FutureBuilder<UserInfoPopUp?>(
+          key: ValueKey(
+              username), // Forzar reconstrucción cuando cambia el username
           future: FirebaseService().getUserInfoByUsername(username ?? ''),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
-
             if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             }
-
             if (!snapshot.hasData) {
               return const Center(child: Text('Usuario no encontrado'));
             }
-
             final userInfo = snapshot.data;
             if (userInfo == null) {
               return const Center(child: Text('Usuario no encontrado'));
