@@ -16,68 +16,70 @@ import 'package:sapers/models/auth_provider.dart' as zauth;
 class UserAvatar extends StatelessWidget {
   final User? user;
 
-  UserAvatar({super.key, required this.user});
+  const UserAvatar({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
-    // Si no hay un usuario autenticado, mostramos el icono de login
     if (user == null) {
-      if (1 == 1) {
-        return IconButton(
-          icon: const Icon(Icons.account_circle_outlined),
-          onPressed: () => _showLoginDialog(context),
-        );
-      }
+      return IconButton(
+        icon: const Icon(Icons.account_circle_outlined),
+        onPressed: () => _showLoginDialog(context),
+      );
     }
 
-    // Si hay un usuario autenticado, mostramos el avatar del usuario
     return _buildUserAvatar(context);
   }
 
   void _showLoginDialog(BuildContext context) {
-     Navigator.push(
-  context,
-  MaterialPageRoute(
-    fullscreenDialog: true,
-    builder: (context) => const LoginScreen(),
-  ),
-);
+    showDialog(
+      context: context,
+      builder: (context) => const LoginScreen(),
+    );
   }
 
   Widget _buildUserAvatar(BuildContext context) {
     return Consumer<zauth.AuthProviderSapers>(
       builder: (context, authProvider, child) {
-        // Si los datos del usuario están disponibles, mostramos el avatar
         if (authProvider.userInfo != null) {
           final user = authProvider.userInfo!;
-          var userAvatar = user.email;
-
+          
           return PopupMenuButton(
+            onSelected: (value) async {
+              if (value == 'profile') {
+                // Usar push para mantener el historial
+                await Future.delayed(Duration.zero); // Pequeño delay para cerrar el menú
+                context.push('/profile/${user.username}');
+              } else if (value == 'logout') {
+                AuthService().signOut();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'profile',
+                child: ListTile(
+                  leading: Icon(Icons.person),
+                  title: Text(user.email),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'logout',
+                child: ListTile(
+                  leading: Icon(Icons.exit_to_app),
+                  title: Text(
+                    Texts.translate('cerrarSesion', LanguageProvider().currentLanguage),
+                  ),
+                ),
+              ),
+            ],
             child: ProfileAvatar(
               isProfileMenuButton: true,
               userInfoPopUp: user,
               size: AppStyles.avatarSize,
-              seed: userAvatar,
+              seed: user.email,
               showBorder: user.isExpert as bool,
             ),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                child: GestureDetector(
-                  child: Text(user.email),
-                  onTap: () {
-                    context.push('/profile/${user.username}');
-                  },
-                ),
-              ),
-              PopupMenuItem(
-                onTap: () => AuthService().signOut(),
-                child: Text(Texts.translate(
-                    'cerrarSesion', LanguageProvider().currentLanguage)),
-              ),
-            ],
           );
         } else {
-          // Cargar la información del usuario una sola vez
           authProvider.loadUserInfo(user!);
           return const SizedBox(
             width: 36,

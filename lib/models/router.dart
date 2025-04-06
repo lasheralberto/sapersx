@@ -6,6 +6,7 @@ import 'package:sapers/components/screens/feed.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/screens/user_profile.dart';
 import 'package:sapers/models/auth_provider.dart';
+import 'package:sapers/models/auth_provider.dart' as zauth;
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/project.dart';
 import 'package:sapers/models/user.dart';
@@ -16,45 +17,64 @@ final router = GoRouter(
     GoRoute(
       name: 'home',
       path: '/home',
-      builder: (context, state) => const AuthWrapper(),
+      pageBuilder: (context, state) => MaterialPage(
+        key: state.pageKey,
+        child: const AuthWrapper(),
+      ),
     ),
     GoRoute(
       name: 'project-detail',
       path: '/project/:projectId',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final project = state.extra as Project;
-        return ProjectDetailScreen(project: project);
+        return MaterialPage(
+          key: state.pageKey,
+          child: ProjectDetailScreen(project: project),
+        );
       },
     ),
     GoRoute(
       name: 'profile',
-      path: '/profile/:username', // Cambiado a user=:username
-      builder: (context, state) {
-        final username =
-            state.pathParameters['username']; // Obtener el parámetro
+      path: '/profile/:username',
+      pageBuilder: (context, state) {
+        final username = state.pathParameters['username']!;
+        final authProvider = context.read<zauth.AuthProviderSapers>();
 
-        return FutureBuilder<UserInfoPopUp?>(
-          key: ValueKey(
-              username), // Forzar reconstrucción cuando cambia el username
-          future: FirebaseService().getUserInfoByUsername(username ?? ''),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            }
-            if (!snapshot.hasData) {
-              return const Center(child: Text('Usuario no encontrado'));
-            }
-            final userInfo = snapshot.data;
-            if (userInfo == null) {
-              return const Center(child: Text('Usuario no encontrado'));
-            }
-            return UserProfilePage(userinfo: userInfo);
-          },
+        if (authProvider.userInfo?.username == username) {
+          return MaterialPage(
+            key: ValueKey('profile_$username'),
+            child: UserProfilePage(userinfo: authProvider.userInfo!),
+          );
+        }
+
+        return MaterialPage(
+          key: ValueKey('profile_$username'),
+          child: FutureBuilder<UserInfoPopUp?>(
+            future: FirebaseService().getUserInfoByUsername(username),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError || !snapshot.hasData) {
+                return Scaffold(
+                  appBar: AppBar(),
+                  body: const Center(child: Text('Usuario no encontrado')),
+                );
+              }
+              return UserProfilePage(userinfo: snapshot.data!);
+            },
+          ),
         );
       },
     ),
   ],
+  errorPageBuilder: (context, state) => MaterialPage(
+    key: state.pageKey,
+    child: Scaffold(
+      appBar: AppBar(),
+      body: Center(child: Text('Error: ${state.error}')),
+    ),
+  ),
 );
