@@ -12,7 +12,6 @@ import 'package:sapers/models/user.dart';
 
 final router = GoRouter(
   initialLocation: '/home',
-     
   routes: [
     GoRoute(
       name: 'home',
@@ -23,7 +22,7 @@ final router = GoRouter(
       name: 'project-detail',
       path: '/project/:projectId',
       builder: (context, state) {
-        final project = state.extra as Project; // Para pasar el objeto completo
+        final project = state.extra as Project;
         return ProjectDetailScreen(project: project);
       },
     ),
