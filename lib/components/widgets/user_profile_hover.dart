@@ -52,8 +52,9 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
     if (_cachedUser != null) return;
 
     try {
-      final userData =
+      final UserInfoPopUp? userData =
           await FirebaseService().getUserInfoByUsername(widget.authorUsername);
+      print('UserData type: ${userData.runtimeType}');
       if (mounted) {
         UserCacheManager.cacheUser(widget.authorUsername, userData!);
         setState(() {});

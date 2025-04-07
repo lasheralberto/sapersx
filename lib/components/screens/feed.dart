@@ -345,7 +345,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return UtilsSapers()
-              .buildShimmerEffect(3, UtilsSapers().buildShimmerPost(context));
+              .buildShimmerEffect(5, UtilsSapers().buildShimmerPost(context));
         }
 
         List<String> trendingTags = ['PP']; // Valor por defecto
