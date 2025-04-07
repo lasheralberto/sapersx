@@ -364,54 +364,54 @@ class FirebaseService {
     }
   }
 
-Future<bool> followOrUnfollowUser(String uid, String username, context) async {
-  try {
+  Future<bool> followOrUnfollowUser(
+      String uid, String username, context) async {
+    try {
+      final currentUserInfo =
+          Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+      final currentUserName = currentUserInfo?.username;
 
-    final currentUserInfo =  Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
-    final currentUserName = currentUserInfo?.username;
+      // Obtener el UID del usuario objetivo (al que se está siguiendo)
+      final targetUserQuery = await userCollection
+          .where('username', isEqualTo: username)
+          .limit(1)
+          .get();
 
-    // Obtener el UID del usuario objetivo (al que se está siguiendo)
-    final targetUserQuery = await userCollection
-        .where('username', isEqualTo: username)
-        .limit(1)
-        .get();
+      if (targetUserQuery.docs.isEmpty) {
+        throw Exception("El usuario objetivo no existe");
+      }
+      final targetUid = targetUserQuery.docs.first.id;
 
-    if (targetUserQuery.docs.isEmpty) {
-      throw Exception("El usuario objetivo no existe");
+      // Verificar si ya está siguiendo al usuario
+      final userExists = await checkIfUserExistsInFollowers(uid, username);
+
+      // Crear un batch para actualizar ambos documentos
+      final batch = FirebaseFirestore.instance.batch();
+
+      if (userExists) {
+        // Dejar de seguir: eliminar de "following" y "followers"
+        batch.update(userCollection.doc(uid), {
+          'following': FieldValue.arrayRemove([username]),
+        });
+        batch.update(userCollection.doc(targetUid), {
+          'followers': FieldValue.arrayRemove([currentUserName]),
+        });
+      } else {
+        // Empezar a seguir: agregar a "following" y "followers"
+        batch.update(userCollection.doc(uid), {
+          'following': FieldValue.arrayUnion([username]),
+        });
+        batch.update(userCollection.doc(targetUid), {
+          'followers': FieldValue.arrayUnion([currentUserName]),
+        });
+      }
+
+      await batch.commit(); // Ejecutar ambas operaciones atómicamente
+      return !userExists;
+    } catch (e) {
+      rethrow;
     }
-    final targetUid = targetUserQuery.docs.first.id;
-
-    // Verificar si ya está siguiendo al usuario
-    final userExists = await checkIfUserExistsInFollowers(uid, username);
-
-    // Crear un batch para actualizar ambos documentos
-    final batch = FirebaseFirestore.instance.batch();
-
-    if (userExists) {
-      // Dejar de seguir: eliminar de "following" y "followers"
-      batch.update(userCollection.doc(uid), {
-        'following': FieldValue.arrayRemove([username]),
-      });
-      batch.update(userCollection.doc(targetUid), {
-        'followers': FieldValue.arrayRemove([currentUserName]),
-      });
-    } else {
-      // Empezar a seguir: agregar a "following" y "followers"
-      batch.update(userCollection.doc(uid), {
-        'following': FieldValue.arrayUnion([username]),
-      });
-      batch.update(userCollection.doc(targetUid), {
-        'followers': FieldValue.arrayUnion([currentUserName]),
-      });
-    }
-
-    await batch.commit(); // Ejecutar ambas operaciones atómicamente
-    return !userExists;
-
-  } catch (e) {
-    rethrow;
   }
-}
 
   // //Function to follow the user
   // Future<bool> followOrUnfollowUser(String uid, String username) async {
@@ -540,7 +540,7 @@ Future<bool> followOrUnfollowUser(String uid, String username, context) async {
     return result.map((entry) => entry['tag'].toString()).toList();
   }
 
-  //Method to check if username exists 
+  //Method to check if username exists
   Future<bool> checkIfUsernameExists(String username) async {
     try {
       final userQuery = await userCollection
@@ -581,7 +581,7 @@ Future<bool> followOrUnfollowUser(String uid, String username, context) async {
     }).toList();
   }
 
-Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
+  Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
     final snapshot = await postsCollection
         .where('lang', isEqualTo: LanguageProvider().currentLanguage)
         .where('author', isEqualTo: username)
@@ -608,7 +608,6 @@ Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
     }).toList();
   }
 
-
   Future<UserInfoPopUp?> getUserInfoByUsername(String username) async {
     // Verificar cache primero
     if (_userCache.containsKey(username)) {
@@ -622,29 +621,33 @@ Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
-        final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
-        final userInfo = UserInfoPopUp(
-          uid: data['uid'] ?? '',
-          username: data['username'] ?? '',
-          bio: data['bio'] ?? '',
-          location: data['location'] ?? '',
-          email: data['email'] ?? '',
-          website: data['website'] ?? '',
-          hourlyRate: data['hourlyRate'] ?? 0.0,
-          following: data['following'] != null
-              ? List<String>.from(data['following'])
-              : <String>[], // Manejo de `null`
-          followers: data['followers'] != null
-              ? List<String>.from(data['followers'])
-              : <String>[], // Manejo de `null`
-          joinDate: data['joinDate'] ?? Timestamp.fromDate(DateTime.now()),
-          experience: data['experience'] ?? '',
-          isExpert: data['isExpert'] ?? false,
-        );
+        final docSnapshot = querySnapshot.docs.first;
+        final rawData = docSnapshot.data();
+        if (rawData is Map<String, dynamic>) {
+          final data = rawData;
 
-        // Guardar en cache
-        _userCache[username] = userInfo;
-        return userInfo;
+          final userInfo = UserInfoPopUp(
+            uid: data['uid'] ?? '',
+            username: data['username'] ?? '',
+            bio: data['bio'] ?? '',
+            location: data['location'] ?? '',
+            email: data['email'] ?? '',
+            website: data['website'] ?? '',
+            hourlyRate: (data['hourlyRate'] ?? 0).toDouble(),
+            following: data['following'] != null
+                ? List<String>.from(data['following'])
+                : <String>[],
+            followers: data['followers'] != null
+                ? List<String>.from(data['followers'])
+                : <String>[],
+            joinDate: data['joinDate'] ?? Timestamp.fromDate(DateTime.now()),
+            experience: data['experience'] ?? '',
+            isExpert: data['isExpert'] ?? false,
+          );
+
+          _userCache[username] = userInfo;
+          return userInfo;
+        }
       }
       return null;
     } catch (e) {
@@ -743,36 +746,35 @@ Future<List<SAPPost>> getPostsFutureByAuthor(username) async {
       'attachments': post.attachments,
     });
   }
+
   Future<List<SAPPost>> getPostsByKeywordAI(String keyword) async {
-  final snapshot = await postsCollection.get();
-  final posts = snapshot.docs.map((doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final snapshot = await postsCollection.get();
+    final posts = snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
 
-    if (data['timestamp'] is Timestamp) {
-      data['timestamp'] = (data['timestamp'] as Timestamp).toDate();
-    }
+      if (data['timestamp'] is Timestamp) {
+        data['timestamp'] = (data['timestamp'] as Timestamp).toDate();
+      }
 
-    return SAPPost.fromMap(data, doc.id);
-  }).toList();
+      return SAPPost.fromMap(data, doc.id);
+    }).toList();
 
-  // Separar la frase en palabras clave
-  final words = keyword.toLowerCase().split(RegExp(r'\s+'));
+    // Separar la frase en palabras clave
+    final words = keyword.toLowerCase().split(RegExp(r'\s+'));
 
-  return posts.where((post) {
-    final content = post.content.toLowerCase();
-    final title = post.title.toLowerCase();
-    final author = post.author.toLowerCase();
-    final tags = post.tags.map((t) => t.toLowerCase()).toList();
+    return posts.where((post) {
+      final content = post.content.toLowerCase();
+      final title = post.title.toLowerCase();
+      final author = post.author.toLowerCase();
+      final tags = post.tags.map((t) => t.toLowerCase()).toList();
 
-    return words.any((word) =>
-      content.contains(word) ||
-      title.contains(word) ||
-      author.contains(word) ||
-      tags.any((tag) => tag.contains(word))
-    );
-  }).toList();
-}
-
+      return words.any((word) =>
+          content.contains(word) ||
+          title.contains(word) ||
+          author.contains(word) ||
+          tags.any((tag) => tag.contains(word)));
+    }).toList();
+  }
 
   Future<List<SAPPost>> getPostsByKeyword(String keyword) async {
     final snapshot =
