@@ -123,9 +123,9 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                   Row(
                     spacing: 10.0,
                     children: [
-                      NebulaEffect(
-                        shouldMove: _shouldNebulaMove,
-                      ),
+                     //NebulaEffect(
+                     //shouldMove: _shouldNebulaMove,
+                     // ),
                       Expanded(
                         child: TextField(
                           focusNode: widget.searchFocusNode,
