@@ -121,7 +121,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
               child: Column(
                 children: [
                   Row(
-                    spacing: 10.0,
+                    spacing: 1.0,
                     children: [
                      //NebulaEffect(
                      //shouldMove: _shouldNebulaMove,
@@ -156,7 +156,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                               onPressed: _sendQuery,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
+                              horizontal: 5,
                               vertical: 12,
                             ),
                           ),
