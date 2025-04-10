@@ -1,5 +1,4 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:floating_menu_button/floating_menu_button.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -183,6 +182,49 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     }
   }
 
+  void _showCreateOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Symbols.post_add, weight: 1150.0),
+                title: Text(
+                  Texts.translate(
+                      'crearPost', languageProvider.currentLanguage),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCreatePostDialog();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Symbols.add_task, weight: 1150.0),
+                title: Text(
+                  Texts.translate(
+                      'nuevoProyecto', languageProvider.currentLanguage),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCreateProjectDialog();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget tagBubblePressed({
     required String tag,
     required VoidCallback onDelete,
@@ -250,67 +292,76 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         topLeft: Radius.circular(24.0),
         topRight: Radius.circular(24.0),
       ),
-      panelBuilder: (scrollController) => SAPAIAssistantWidget(
-        searchFocusNode: _searchFocusNode,
-        username: 'UsuarioDemo',
-        isPanelVisible: true,
+      panel: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildPanelHeader(),
+          Expanded(
+            child: SAPAIAssistantWidget(
+              searchFocusNode: _searchFocusNode,
+              username: 'UsuarioDemo',
+              isPanelVisible: true,
+            ),
+          ),
+        ],
       ),
-      body: _buildContentWithFloatingMenu(context, isMobile, screenWidth),
+      body: _buildContentView(context, isMobile, screenWidth),
+    );
+  }
+
+  Widget _buildPanelHeader() {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _isPanelOpen = !_isPanelOpen;
+          _panelController.animatePanelToPosition(
+            _isPanelOpen ? 0.0 : 1.0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        });
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(18.0),
+        child: Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 26.0),
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24.0),
+              topRight: Radius.circular(24.0),
+            ),
+            color: Theme.of(context).cardColor,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              FloatingActionButton(
+                mini: true,
+                elevation: 2,
+                backgroundColor: AppStyles.colorAvatarBorder,
+                onPressed: _showCreateOptions,
+                child: const Icon(
+                  Icons.add,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildRegularUI(
       BuildContext context, bool isMobile, double screenWidth) {
-    return _buildContentWithFloatingMenu(context, isMobile, screenWidth);
+    return _buildContentView(context, isMobile, screenWidth);
   }
 
-  Widget _buildContentWithFloatingMenu(
+  Widget _buildContentView(
       BuildContext context, bool isMobile, double screenWidth) {
-    return (_tabController.index == 0 ||
-            _tabController.index == 1 ||
-            _tabController.index == 2)
-        ? FloatingMenuWidget(
-            menuTray: const MenuTray(
-                itemsSeparation: 30,
-                itemTextStyle: TextStyle(fontWeight: FontWeight.bold),
-                padding: EdgeInsets.all(10),
-                trayHeight: 150,
-                trayWidth: 150),
-            menuButton: MenuButton(
-              padding: const EdgeInsets.only(right: 30, left: 15),
-              textStyle: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: Theme.of(context).textTheme.bodySmall!.fontSize,
-              ),
-              iconSize: 20,
-              iconOnClose: Icons.add,
-              iconOnOpen: Icons.close,
-              iconColor: AppStyles.colorAvatarBorder,
-              textOnClose:
-                  Texts.translate('open', LanguageProvider().currentLanguage),
-              textOnOpen:
-                  Texts.translate('close', LanguageProvider().currentLanguage),
-            ),
-            menuItems: [
-              MenuItems(
-                  id: "1",
-                  value: Texts.translate(
-                      'crearPost', LanguageProvider().currentLanguage)),
-              MenuItems(
-                  id: "2",
-                  value: Texts.translate(
-                      'nuevoProyecto', LanguageProvider().currentLanguage)),
-            ],
-            onItemSelection: (menuItems) {
-              if (menuItems.id == "1") {
-                _showCreatePostDialog();
-              } else if (menuItems.id == "2") {
-                _showCreateProjectDialog();
-              }
-            },
-            child: _buildNestedScrollView(context, isMobile, screenWidth))
-        : _buildNestedScrollView(context, isMobile, screenWidth);
+    return _buildNestedScrollView(context, isMobile, screenWidth);
   }
 
   Widget _buildNestedScrollView(
