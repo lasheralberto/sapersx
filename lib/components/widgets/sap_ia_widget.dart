@@ -2,27 +2,40 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sapers/components/screens/login_dialog.dart';
+import 'package:sapers/components/screens/popup_create_post.dart';
+import 'package:sapers/components/screens/project_dialog.dart';
 import 'package:sapers/components/widgets/sapers_ai_icon.dart';
-import 'package:sapers/models/auth_service.dart';
+import 'package:sapers/models/auth_provider.dart';
+import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
+import 'package:sapers/models/project.dart';
 import 'package:sapers/models/sap_ai_assistant.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
+import 'package:sapers/models/user.dart';
 import 'package:sapers/models/utils_sapers.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class SAPAIAssistantWidget extends StatefulWidget {
   final String username;
   final bool isPanelVisible;
   final Function(dynamic post)? onPostSelected;
   final FocusNode searchFocusNode;
+  final VoidCallback? onPostCreated;
+  final VoidCallback? onProjectCreated;
 
-  const SAPAIAssistantWidget(
-      {super.key,
-      required this.username,
-      required this.isPanelVisible,
-      this.onPostSelected,
-      required this.searchFocusNode});
+  const SAPAIAssistantWidget({
+    super.key,
+    required this.username,
+    required this.isPanelVisible,
+    this.onPostSelected,
+    required this.searchFocusNode,
+    this.onPostCreated,
+    this.onProjectCreated,
+  });
 
   @override
   _SAPAIAssistantWidgetState createState() => _SAPAIAssistantWidgetState();
@@ -31,16 +44,17 @@ class SAPAIAssistantWidget extends StatefulWidget {
 class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
   final TextEditingController _queryController = TextEditingController();
   final SAPAIAssistantService _assistantService = SAPAIAssistantService();
+  final FirebaseService _firebaseService = FirebaseService();
   String _fullResponse = '';
   double _animationProgress = 0.0;
   bool _isLoading = false;
   List<dynamic> _recommendedPosts = [];
   Timer? _animationTimer;
   bool _shouldNebulaMove = false;
+  bool _isPanelOpen = false;
+  final PanelController _panelController = PanelController();
 
   Future<void> _sendQuery() async {
-    if (AuthService().isUserLoggedIn(context) == false) return;
-
     if (_queryController.text.trim().isEmpty) return;
 
     setState(() {
@@ -96,11 +110,123 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
     });
   }
 
+  void _showCreatePostDialog() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => const LoginDialog(),
+        ),
+      );
+    } else {
+      final result = await showDialog<SAPPost>(
+        context: context,
+        builder: (context) => const PopupCreatePost(),
+      );
+
+      if (result != null) {
+        await _firebaseService.createPost(result);
+        if (widget.onPostCreated != null) {
+          widget.onPostCreated!();
+        }
+      }
+    }
+  }
+
+  void _showCreateProjectDialog() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => const LoginDialog(),
+        ),
+      );
+    } else {
+      UserInfoPopUp? user =
+          Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+
+      final result = await showDialog<Project>(
+        context: context,
+        builder: (context) => ProjectDialog(user: user),
+      );
+
+      if (result != null) {
+        await _firebaseService.createProject(result);
+        if (widget.onProjectCreated != null) {
+          widget.onProjectCreated!();
+        }
+      }
+    }
+  }
+
+  void _showCreateOptions() {
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Symbols.post_add, weight: 1150.0),
+                title: Text(
+                  Texts.translate('crearPost', languageProvider.currentLanguage),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCreatePostDialog();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Symbols.add_task, weight: 1150.0),
+                title: Text(
+                  Texts.translate('nuevoProyecto', languageProvider.currentLanguage),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCreateProjectDialog();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _animationTimer?.cancel();
     _queryController.dispose();
     super.dispose();
+  }
+
+  Widget _buildPanelHeader() {
+    return Container(
+      height: 40,
+      width: 40,
+      margin: const EdgeInsets.only(right: 8),
+      child: FloatingActionButton(
+        mini: true,
+        elevation: 2,
+        backgroundColor: AppStyles.colorAvatarBorder,
+        onPressed: _showCreateOptions,
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
+      ),
+    );
   }
 
   @override
@@ -121,11 +247,8 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
               child: Column(
                 children: [
                   Row(
-                    spacing: 1.0,
                     children: [
-                     //NebulaEffect(
-                     //shouldMove: _shouldNebulaMove,
-                     // ),
+                      _buildPanelHeader(),
                       Expanded(
                         child: TextField(
                           focusNode: widget.searchFocusNode,
@@ -156,7 +279,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                               onPressed: _sendQuery,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 5,
+                              horizontal: 16,
                               vertical: 12,
                             ),
                           ),
@@ -256,10 +379,9 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
   }
 }
 
-// Añade esta clase como parte de tu _SAPAIAssistantWidgetState
+// Clase PostPopup para mostrar detalles de posts
 class PostPopup {
   static void show(BuildContext context, dynamic post) {
-    final theme = Theme.of(context);
     final orangeAccent = Colors.orange.shade400;
     final lightOrange = Colors.orange.shade50;
 

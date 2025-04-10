@@ -135,95 +135,9 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     });
   }
 
-  void _showCreatePostDialog() async {
-    if (FirebaseAuth.instance.currentUser == null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (context) => const LoginScreen(),
-        ),
-      );
-    } else {
-      final result = await showDialog<SAPPost>(
-        context: context,
-        builder: (context) => const CreatePostScreen(),
-      );
 
-      if (result != null) {
-        await _firebaseService.createPost(result);
-        _updateFutures();
-      }
-    }
-  }
 
-  void _showCreateProjectDialog() async {
-    if (FirebaseAuth.instance.currentUser == null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (context) => const LoginScreen(),
-        ),
-      );
-    } else {
-      UserInfoPopUp? user =
-          Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
-
-      final result = await showDialog<Project>(
-        context: context,
-        builder: (context) => CreateProjectScreen(user: user),
-      );
-
-      if (result != null) {
-        await _firebaseService.createProject(result);
-        _updateFutures();
-      }
-    }
-  }
-
-  void _showCreateOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Symbols.post_add, weight: 1150.0),
-                title: Text(
-                  Texts.translate(
-                      'crearPost', languageProvider.currentLanguage),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showCreatePostDialog();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Symbols.add_task, weight: 1150.0),
-                title: Text(
-                  Texts.translate(
-                      'nuevoProyecto', languageProvider.currentLanguage),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showCreateProjectDialog();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  
 
   Widget tagBubblePressed({
     required String tag,
@@ -274,85 +188,45 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildSlidingUpPanelUI(
-      BuildContext context, bool isMobile, double screenWidth) {
-    return SlidingUpPanel(
-      onPanelSlide: (position) {
-        setState(() {
-          _panelPosition = position;
-          _isPanelOpen = position > 0.5;
-        });
-      },
-      controller: _panelController,
-      minHeight: 80,
-      maxHeight: MediaQuery.of(context).size.height * 0.7,
-      parallaxEnabled: false,
-      parallaxOffset: 0.5,
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(24.0),
-        topRight: Radius.circular(24.0),
-      ),
-      panel: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildPanelHeader(),
-          Expanded(
-            child: SAPAIAssistantWidget(
-              searchFocusNode: _searchFocusNode,
-              username: 'UsuarioDemo',
-              isPanelVisible: true,
-            ),
-          ),
-        ],
-      ),
-      body: _buildContentView(context, isMobile, screenWidth),
-    );
-  }
+// En la clase _FeedState, actualiza este método:
 
-  Widget _buildPanelHeader() {
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _isPanelOpen = !_isPanelOpen;
-          _panelController.animatePanelToPosition(
-            _isPanelOpen ? 0.0 : 1.0,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(18.0),
-        child: Container(
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 26.0),
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24.0),
-              topRight: Radius.circular(24.0),
-            ),
-            color: Theme.of(context).cardColor,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              FloatingActionButton(
-                mini: true,
-                elevation: 2,
-                backgroundColor: AppStyles.colorAvatarBorder,
-                onPressed: _showCreateOptions,
-                child: const Icon(
-                  Icons.add,
-                  color: Colors.white,
-                ),
-              ),
-            ],
+Widget _buildSlidingUpPanelUI(
+    BuildContext context, bool isMobile, double screenWidth) {
+  return SlidingUpPanel(
+    onPanelSlide: (position) {
+      setState(() {
+        _panelPosition = position;
+        _isPanelOpen = position > 0.5;
+      });
+    },
+    controller: _panelController,
+    minHeight: 80,
+    maxHeight: MediaQuery.of(context).size.height * 0.7,
+    parallaxEnabled: false,
+    parallaxOffset: 0.5,
+    borderRadius: const BorderRadius.only(
+      topLeft: Radius.circular(24.0),
+      topRight: Radius.circular(24.0),
+    ),
+    panel: Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: SAPAIAssistantWidget(
+            searchFocusNode: _searchFocusNode,
+            username: widget.user?.displayName ?? 'UsuarioDemo',
+            isPanelVisible: true,
+            onPostCreated: _updateFutures, // Actualiza los posts cuando se crea uno nuevo
+            onProjectCreated: _updateFutures, // Actualiza los proyectos cuando se crea uno nuevo
           ),
         ),
-      ),
-    );
-  }
+      ],
+    ),
+    body: _buildContentView(context, isMobile, screenWidth),
+  );
+}
+  
 
   Widget _buildRegularUI(
       BuildContext context, bool isMobile, double screenWidth) {
