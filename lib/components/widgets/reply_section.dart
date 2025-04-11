@@ -556,9 +556,9 @@ Widget _buildCodeBlock(String content) {
     }
 
     // Si es ABAP y no tenemos soporte, forzar texto plano
-    if (language == 'abap' && !highlightLanguageExists(language)) {
+   
       return _buildPlainText(codeContent);
-    }
+ 
     
     // Resto del código...
   } catch (e) {
