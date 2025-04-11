@@ -153,7 +153,10 @@ class UtilsSapers {
   }
 
   Widget buildShimmerLine() {
-    return Padding(
+  return Shimmer.fromColors(
+    baseColor: Colors.grey[300]!,
+    highlightColor: Colors.grey[100]!,
+    child: Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Container(
         height: 20,
@@ -161,6 +164,7 @@ class UtilsSapers {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
+        ),
         ),
       ),
     );
