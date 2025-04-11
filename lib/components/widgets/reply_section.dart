@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_highlighting/flutter_highlighting.dart';
 import 'package:flutter_highlighting/themes/github.dart';
-import 'package:flutter_highlighting/languages/dart.dart';
-import 'package:flutter_highlighting/languages/javascript.dart';
+ 
 // Add other languages as needed
 import 'package:pasteboard/pasteboard.dart';
 import 'package:provider/provider.dart';
@@ -435,8 +434,9 @@ Widget _buildCodeContent(String content) {
     return const SizedBox.shrink();
   }
   
+  console.log(content.toString())
   // Debug print to verify content
-  debugPrint('Content to parse: ${content.substring(0, min(50, content.length))}...');
+  
   
   // If no code block markers are found, return the content as regular text
   if (!content.contains('```')) {
