@@ -16,6 +16,11 @@ import 'package:sapers/components/widgets/like_button.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/text_editor.dart';
 
+// Añade estos imports según los lenguajes que quieras soportar
+import 'package:flutter_highlighting/languages/dart.dart';
+import 'package:flutter_highlighting/languages/python.dart';
+import 'package:flutter_highlighting/languages/javascript.dart';
+
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/auth_provider.dart';
@@ -525,88 +530,54 @@ Widget _buildCodeContent(String content) {
   }
 }
 
+
 Widget _buildCodeBlock(String content) {
   try {
-    // Default to a generic language
     String language = 'text';
     String codeContent = content;
-    
-    // Extract language from first line if present
     final lines = content.split('\n');
+    
     if (lines.isNotEmpty) {
       final firstLine = lines[0].trim();
       if (firstLine.isNotEmpty && !firstLine.contains(' ')) {
-        language = firstLine;
-        // Remove language line
+        final extractedLang = firstLine.toLowerCase();
+        
+        // Lista blanca de lenguajes soportados
+        const supportedLanguages = {
+          'dart', 'python', 'javascript', 'abap' // Añade abap si creaste el parser
+        };
+        
+        language = supportedLanguages.contains(extractedLang)
+            ? extractedLang
+            : 'text';
+            
         codeContent = lines.sublist(1).join('\n');
       }
     }
+
+    // Si es ABAP y no tenemos soporte, forzar texto plano
+    if (language == 'abap' && !highlightLanguageExists(language)) {
+      return _buildPlainText(codeContent);
+    }
     
-    debugPrint('Building code block with language: $language');
-    
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Language header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  language.toUpperCase(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.copy, size: 18),
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: codeContent.trim()));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Code copied to clipboard')),
-                    );
-                  },
-                  tooltip: 'Copy code',
-                ),
-              ],
-            ),
-          ),
-          
-          // Code content with fallback
-          _buildHighlightedCode(codeContent, language),
-        ],
-      ),
-    );
+    // Resto del código...
   } catch (e) {
-    debugPrint('Error in _buildCodeBlock: $e');
-    return Text(
-      content,
-      style: TextStyle(
-        fontFamily: 'monospace',
-        fontSize: 14,
-        color: Colors.red[800],
-      ),
-    );
+    return _buildPlainText(content);
   }
 }
 
+Widget _buildPlainText(String code) {
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: Text(
+      code,
+      style: const TextStyle(
+        fontFamily: 'monospace',
+        fontSize: 14,
+      ),
+    ),
+  );
+}
 
 Widget _buildHighlightedCode(String code, String language) {
   try {
