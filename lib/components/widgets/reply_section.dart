@@ -428,67 +428,120 @@ class _ReplySectionState extends State<ReplySection> {
   }
 
   Widget _buildCodeContent(String content) {
-    if (content.isEmpty || !content.contains('```')) {
-      return Text(content,
-          style:
-              AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize));
-    }
-
-    final parts = content.split('```');
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: parts.asMap().entries.map((entry) {
-        final index = entry.key;
-        final part = entry.value.trim();
-
-        if (index % 2 == 0 && part.isNotEmpty) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(part,
-                style: AppStyles()
-                    .getTextStyle(context, fontSize: AppStyles.fontSize)),
-          );
-        } else if (index % 2 == 1) {
-          return _buildCodeBlock(part);
-        }
-        return const SizedBox.shrink();
-      }).toList(),
+  if (content.isEmpty) {
+    return const SizedBox.shrink();
+  }
+  
+  // If no code block markers are found, return the content as regular text
+  if (!content.contains('```')) {
+    return Text(
+      content,
+      style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize)
     );
   }
 
-  Widget _buildCodeBlock(String code) {
-    final codeLines = code.split('\n');
-    final language = codeLines.isNotEmpty ? codeLines[0].trim() : '';
-    final codeContent =
-        language.isNotEmpty ? codeLines.sublist(1).join('\n') : code;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (language.isNotEmpty) _buildCodeHeader(language, codeContent),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: HighlightView(
-              codeContent,
-              languageId: 'abap',
-              theme: githubTheme,
-              padding: const EdgeInsets.all(16),
-              textStyle: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 14,
-              ),
-            ),
+  // Split by code block markers
+  final parts = content.split('```');
+  List<Widget> contentWidgets = [];
+  
+  for (int i = 0; i < parts.length; i++) {
+    final part = parts[i].trim();
+    if (part.isEmpty) continue;
+    
+    // Even indices are regular text
+    if (i % 2 == 0) {
+      contentWidgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            part,
+            style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize)
           ),
-        ],
+        ),
+      );
+    } 
+    // Odd indices are code blocks
+    else {
+      contentWidgets.add(_buildCodeBlock(part));
+    }
+  }
+  
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: contentWidgets,
+  );
+}
+
+Widget _buildCodeBlock(String code) {
+  // Default to a generic language if none specified
+  String language = 'text';
+  String codeContent = code;
+  
+  // Check if there's a language specified in the first line
+  final codeLines = code.split('\n');
+  
+  if (codeLines.isNotEmpty) {
+    final firstLine = codeLines[0].trim();
+    // Check if first line contains language identifier without spaces
+    if (firstLine.isNotEmpty && !firstLine.contains(' ')) {
+      language = firstLine;
+      // Remove the language line from the code content
+      codeContent = codeLines.sublist(1).join('\n');
+    }
+  }
+
+  return Container(
+    margin: const EdgeInsets.symmetric(vertical: 8),
+    decoration: BoxDecoration(
+      color: Colors.grey[100],
+      borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+      border: Border.all(color: Colors.grey[300]!),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (language != 'text') _buildCodeHeader(language, codeContent),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: MediaQuery.of(context).size.width - 64,
+            ),
+            child: _buildSyntaxHighlighter(codeContent, language),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildSyntaxHighlighter(String code, String language) {
+  try {
+    return HighlightView(
+      code,
+      languageId: language,
+      theme: githubTheme,
+      padding: const EdgeInsets.all(16),
+      textStyle: const TextStyle(
+        fontFamily: 'monospace',
+        fontSize: 14,
+      ),
+    );
+  } catch (e) {
+    // Fallback if language not supported
+    return HighlightView(
+      code,
+      languageId: 'text',
+      theme: githubTheme,
+      padding: const EdgeInsets.all(16),
+      textStyle: const TextStyle(
+        fontFamily: 'monospace',
+        fontSize: 14,
       ),
     );
   }
-
+}
+ 
   Widget _buildCodeHeader(String language, String code) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
