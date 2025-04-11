@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_highlighting/flutter_highlighting.dart';
 import 'package:flutter_highlighting/themes/github.dart';
+import 'package:flutter_highlighting/languages/dart.dart';
+import 'package:flutter_highlighting/languages/javascript.dart';
+// Add other languages as needed
 import 'package:pasteboard/pasteboard.dart';
 import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
@@ -426,94 +429,235 @@ class _ReplySectionState extends State<ReplySection> {
       ],
     );
   }
-
-  Widget _buildCodeContent(String content) {
-  if (content.isEmpty) {
+Widget _buildCodeContent(String content) {
+  // Safety check for null or empty content
+  if (content == null || content.isEmpty) {
     return const SizedBox.shrink();
   }
   
+  // Debug print to verify content
+  debugPrint('Content to parse: ${content.substring(0, min(50, content.length))}...');
+  
   // If no code block markers are found, return the content as regular text
   if (!content.contains('```')) {
-    return Text(
-      content,
-      style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize)
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        content,
+        style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize),
+      ),
     );
   }
 
-  // Split by code block markers
-  final parts = content.split('```');
-  List<Widget> contentWidgets = [];
-  
-  for (int i = 0; i < parts.length; i++) {
-    final part = parts[i].trim();
-    if (part.isEmpty) continue;
+  try {
+    // Process content with code blocks
+    final List<Widget> contentWidgets = [];
+    bool insideCodeBlock = false;
+    String currentBlockContent = '';
     
-    // Even indices are regular text
-    if (i % 2 == 0) {
-      contentWidgets.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            part,
-            style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize)
+    // Split content by lines for more precise handling
+    final lines = content.split('\n');
+    for (int i = 0; i < lines.length; i++) {
+      String line = lines[i];
+      
+      // Check for code block delimiters
+      if (line.trim().startsWith('```')) {
+        if (insideCodeBlock) {
+          // End of code block
+          contentWidgets.add(_buildCodeBlock(currentBlockContent));
+          currentBlockContent = '';
+          insideCodeBlock = false;
+        } else {
+          // Start of code block
+          // Add any text before this code block
+          if (currentBlockContent.isNotEmpty) {
+            contentWidgets.add(Text(
+              currentBlockContent,
+              style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize),
+            ));
+            currentBlockContent = '';
+          }
+          
+          // Extract language if specified
+          String language = line.trim().substring(3).trim();
+          currentBlockContent = language.isNotEmpty ? language + '\n' : '';
+          insideCodeBlock = true;
+        }
+      } else {
+        // Add to current block content
+        currentBlockContent += line + '\n';
+      }
+    }
+    
+    // Add any remaining content
+    if (currentBlockContent.isNotEmpty) {
+      if (insideCodeBlock) {
+        contentWidgets.add(_buildCodeBlock(currentBlockContent));
+      } else {
+        contentWidgets.add(Text(
+          currentBlockContent,
+          style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize),
+        ));
+      }
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: contentWidgets,
+    );
+  } catch (e, stackTrace) {
+    // If parsing fails, display the original content with error indication
+    debugPrint('Error parsing code blocks: $e\n$stackTrace');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Error rendering code blocks',
+          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          content,
+          style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize),
+        ),
+      ],
+    );
+  }
+}
+
+Widget _buildCodeBlock(String content) {
+  try {
+    // Default to a generic language
+    String language = 'text';
+    String codeContent = content;
+    
+    // Extract language from first line if present
+    final lines = content.split('\n');
+    if (lines.isNotEmpty) {
+      final firstLine = lines[0].trim();
+      if (firstLine.isNotEmpty && !firstLine.contains(' ')) {
+        language = firstLine;
+        // Remove language line
+        codeContent = lines.sublist(1).join('\n');
+      }
+    }
+    
+    debugPrint('Building code block with language: $language');
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Language header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  language.toUpperCase(),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.copy, size: 18),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: codeContent.trim()));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Code copied to clipboard')),
+                    );
+                  },
+                  tooltip: 'Copy code',
+                ),
+              ],
+            ),
+          ),
+          
+          // Code content with fallback
+          _buildHighlightedCode(codeContent, language),
+        ],
+      ),
+    );
+  } catch (e) {
+    debugPrint('Error in _buildCodeBlock: $e');
+    return Text(
+      content,
+      style: TextStyle(
+        fontFamily: 'monospace',
+        fontSize: 14,
+        color: Colors.red[800],
+      ),
+    );
+  }
+}
+
+
+Widget _buildHighlightedCode(String code, String language) {
+  try {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.all(16),
+      child: HighlightView(
+        code,
+        // Try with the provided language first
+        languageId: language,
+        theme: githubTheme,
+        textStyle: const TextStyle(
+          fontFamily: 'monospace',
+          fontSize: 14,
+        ),
+      ),
+    );
+  } catch (e) {
+    debugPrint('Error using language "$language", falling back to "text": $e');
+    try {
+      // If the first language fails, try with plain text
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.all(16),
+        child: HighlightView(
+          code,
+          languageId: 'text',
+          theme: githubTheme,
+          textStyle: const TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 14,
           ),
         ),
       );
-    } 
-    // Odd indices are code blocks
-    else {
-      contentWidgets.add(_buildCodeBlock(part));
-    }
-  }
-  
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: contentWidgets,
-  );
-}
-
-Widget _buildCodeBlock(String code) {
-  // Default to a generic language if none specified
-  String language = 'text';
-  String codeContent = code;
-  
-  // Check if there's a language specified in the first line
-  final codeLines = code.split('\n');
-  
-  if (codeLines.isNotEmpty) {
-    final firstLine = codeLines[0].trim();
-    // Check if first line contains language identifier without spaces
-    if (firstLine.isNotEmpty && !firstLine.contains(' ')) {
-      language = firstLine;
-      // Remove the language line from the code content
-      codeContent = codeLines.sublist(1).join('\n');
-    }
-  }
-
-  return Container(
-    margin: const EdgeInsets.symmetric(vertical: 8),
-    decoration: BoxDecoration(
-      color: Colors.grey[100],
-      borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-      border: Border.all(color: Colors.grey[300]!),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (language != 'text') _buildCodeHeader(language, codeContent),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: MediaQuery.of(context).size.width - 64,
-            ),
-            child: _buildSyntaxHighlighter(codeContent, language),
+    } catch (finalError) {
+      // If all highlighting attempts fail, show plain text
+      debugPrint('Highlighting completely failed: $finalError');
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          code,
+          style: const TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 14,
           ),
         ),
-      ],
-    ),
-  );
+      );
+    }
+  }
 }
+
 
 Widget _buildSyntaxHighlighter(String code, String language) {
   try {
