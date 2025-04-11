@@ -376,7 +376,7 @@ class _ReplySectionState extends State<ReplySection> {
                   children: [
                     _buildReplyHeader(reply),
                     const SizedBox(height: 16),
-                    _buildCodeContent(reply.content),
+                    _buildCodeContent(reply.content ?? ''),
                     if (reply.attachments != null &&
                         reply.attachments!.isNotEmpty) ...[
                       const SizedBox(height: 16),
