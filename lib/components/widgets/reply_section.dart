@@ -16,10 +16,7 @@ import 'package:sapers/components/widgets/like_button.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/text_editor.dart';
 
-// Añade estos imports según los lenguajes que quieras soportar
-import 'package:flutter_highlighting/languages/dart.dart';
-import 'package:flutter_highlighting/languages/python.dart';
-import 'package:flutter_highlighting/languages/javascript.dart';
+ 
 
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
