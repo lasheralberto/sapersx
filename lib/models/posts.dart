@@ -109,8 +109,8 @@ class SAPReply {
     return SAPReply(
       id: map['id'],
       postId: map['postId'],
-      content: map['content'],
-      author: map['author'],
+      content: map['content'] ?? '',
+      author: map['author'] ?? '',
       replyVotes: map['replyVotes'] ?? 0,
       repliedBy: List<String>.from(map['repliedBy'] ?? []),
       attachments: List<Map<String, dynamic>>.from(
