@@ -434,7 +434,7 @@ Widget _buildCodeContent(String content) {
     return const SizedBox.shrink();
   }
   
-  console.log(content.toString())
+  console.log(content.toString());
   // Debug print to verify content
   
   
