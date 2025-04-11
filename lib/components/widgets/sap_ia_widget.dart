@@ -132,13 +132,13 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
         context,
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (context) => const LoginDialog(),
+          builder: (context) => const LoginScreen(),
         ),
       );
     } else {
       final result = await showDialog<SAPPost>(
         context: context,
-        builder: (context) => const PopupCreatePost(),
+        builder: (context) => const CreatePostScreen(),
       );
 
       if (result != null) {
@@ -156,7 +156,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
         context,
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (context) => const LoginDialog(),
+          builder: (context) => const LoginScreen(),
         ),
       );
     } else {
@@ -165,7 +165,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
 
       final result = await showDialog<Project>(
         context: context,
-        builder: (context) => ProjectDialog(user: user),
+        builder: (context) => CreateProjectScreen(user: user),
       );
 
       if (result != null) {
