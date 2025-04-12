@@ -200,7 +200,7 @@ Widget _buildSlidingUpPanelUI(
       });
     },
     controller: _panelController,
-    minHeight: 80,
+    minHeight: 70,
     maxHeight: MediaQuery.of(context).size.height * 0.7,
     parallaxEnabled: false,
     parallaxOffset: 0.5,
