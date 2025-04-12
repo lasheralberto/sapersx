@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:loading_indicator/loading_indicator.dart';
 
 class AppStyles {
   // Main color palette - Elegant Orange Theme
@@ -78,9 +79,16 @@ class AppStyles {
 
   //Progress indicator button
   Widget progressIndicatorButton() {
-    return const CircularProgressIndicator(
-      valueColor: AlwaysStoppedAnimation<Color>(_orangePrimary),
-    );
+   // return const CircularProgressIndicator(
+  //    valueColor: AlwaysStoppedAnimation<Color>(_orangePrimary),
+  //  );
+   return LoadingIndicator(
+    indicatorType: Indicator.ballRotate, /// Required, The loading type of the widget
+    colors: const [_orangeLight, Colors.orange,_mediumGray],       /// Optional, The color collections
+    strokeWidth: 2,                     /// Optional, The stroke of the line, only applicable to widget which contains line
+    backgroundColor: Colors.transparent,      /// Optional, Background of the widget
+    pathBackgroundColor: Colors.black   /// Optional, the stroke backgroundColor
+);
   }
 
   Color getBackgroundColor(BuildContext context) {
