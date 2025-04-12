@@ -6,6 +6,7 @@ import 'package:sapers/components/screens/feed.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/user.dart';
+import 'package:sapers/models/styles.dart';
 
 class AuthProviderSapers with ChangeNotifier {
   User? _user;
@@ -91,10 +92,11 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+//progressIndicatorButton
     return Consumer<AuthProviderSapers>(
       builder: (context, authProvider, child) {
         if (authProvider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: AppStyles().progressIndicatorButton());
         }
 
         // Si el usuario no está autenticado, mostrar Feed con opción de login
@@ -107,7 +109,7 @@ class AuthWrapper extends StatelessWidget {
 
         // Si el usuario está autenticado pero no tiene información de perfil
         if (authProvider.userInfo == null) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: AppStyles().progressIndicatorButton());
         }
 
         // Usuario autenticado y con información de perfil
