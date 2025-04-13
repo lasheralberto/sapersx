@@ -178,8 +178,9 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
   }
 
   void _showCreateOptions() {
-    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
-    
+    final languageProvider =
+        Provider.of<LanguageProvider>(context, listen: false);
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -194,7 +195,8 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
               ListTile(
                 leading: const Icon(Symbols.post_add, weight: 1150.0),
                 title: Text(
-                  Texts.translate('crearPost', languageProvider.currentLanguage),
+                  Texts.translate(
+                      'crearPost', languageProvider.currentLanguage),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onTap: () {
@@ -205,7 +207,8 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
               ListTile(
                 leading: const Icon(Symbols.add_task, weight: 1150.0),
                 title: Text(
-                  Texts.translate('nuevoProyecto', languageProvider.currentLanguage),
+                  Texts.translate(
+                      'nuevoProyecto', languageProvider.currentLanguage),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onTap: () {
@@ -290,10 +293,12 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                               color: Theme.of(context).hintColor,
                               fontSize: 14,
                             ),
-                            suffixIcon: IconButton(
-                              icon: Icon(Symbols.send, size: 20),
-                              onPressed: _sendQuery,
-                            ),
+                            suffixIcon: _isLoading
+                                ? AppStyles().progressIndicatorButton(context)
+                                : IconButton(
+                                    icon: const Icon(Symbols.send, size: 20),
+                                    onPressed: _sendQuery,
+                                  ),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 12,
@@ -307,7 +312,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                   const SizedBox(height: 16),
                   _isLoading
                       ? UtilsSapers().buildShimmerEffect(
-                          10, UtilsSapers().buildShimmerLine())
+                          5, UtilsSapers().buildShimmerLine())
                       : Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

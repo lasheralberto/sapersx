@@ -254,7 +254,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
           return SizedBox(
               height: 20,
               width: 20,
-              child: Center(child: AppStyles().progressIndicatorButton()));
+              child:
+                  Center(child: AppStyles().progressIndicatorButton(context)));
         }
         if (snapshot.hasData && snapshot.data!.isNotEmpty) {
           return _buildAttachments(snapshot.data!);
@@ -311,7 +312,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
         ? SizedBox(
             height: 20,
             width: 20,
-            child: Center(child: AppStyles().progressIndicatorButton()),
+            child: Center(child: AppStyles().progressIndicatorButton(context)),
           )
         : GridView.builder(
             padding: const EdgeInsets.all(16),
@@ -587,7 +588,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return Center(
                       child: Text(Texts.translate(
-                          'error', LanguageProvider().currentLanguage)));
+                          'noMessagesChat', LanguageProvider().currentLanguage)));
                 }
 
                 final messages = snapshot.data!.docs;

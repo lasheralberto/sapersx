@@ -153,18 +153,18 @@ class UtilsSapers {
   }
 
   Widget buildShimmerLine() {
-  return Shimmer.fromColors(
-    baseColor: Colors.grey[300]!,
-    highlightColor: Colors.grey[100]!,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Container(
-        height: 20,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-        ),
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Container(
+          height: 20,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       ),
     );

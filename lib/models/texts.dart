@@ -98,6 +98,7 @@ class Texts {
       'usernameExists': 'El nombre de usuario ya existe',
       'askMe': 'Pregúntame algo sobre SAP',
       'recommendedPosts': 'Posts recomendados',
+      'noMessagesChat': 'Sin mensajes',
     },
     'en': {
       'allmodules': 'All modules',
@@ -192,7 +193,8 @@ class Texts {
       'projectDescr': 'Project description',
       'notMember': 'You are not a member of this project',
       'projectFiles': 'Files',
-      'selectProject': 'Select a project'
+      'selectProject': 'Select a project',
+      'noMessagesChat': 'No messages',
     },
   };
 

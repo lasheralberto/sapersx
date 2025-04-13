@@ -90,7 +90,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
     bool isLoading = _loadingStates['follow'] ?? false;
 
     return isLoading
-        ? AppStyles().progressIndicatorButton()
+        ? AppStyles().progressIndicatorButton(context)
         : ElevatedButton.icon(
             onPressed: () async {
               setState(() {

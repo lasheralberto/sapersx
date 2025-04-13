@@ -96,7 +96,7 @@ class AuthWrapper extends StatelessWidget {
     return Consumer<AuthProviderSapers>(
       builder: (context, authProvider, child) {
         if (authProvider.isLoading) {
-          return Center(child: AppStyles().progressIndicatorButton());
+          return Center(child: AppStyles().progressIndicatorButton(context));
         }
 
         // Si el usuario no está autenticado, mostrar Feed con opción de login
@@ -109,7 +109,7 @@ class AuthWrapper extends StatelessWidget {
 
         // Si el usuario está autenticado pero no tiene información de perfil
         if (authProvider.userInfo == null) {
-          return Center(child: AppStyles().progressIndicatorButton());
+          return Center(child: AppStyles().progressIndicatorButton(context));
         }
 
         // Usuario autenticado y con información de perfil

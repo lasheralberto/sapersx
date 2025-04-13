@@ -77,18 +77,27 @@ class AppStyles {
     return fontSize != null ? fontSize.toDouble() : 12;
   }
 
-  //Progress indicator button
-  Widget progressIndicatorButton() {
-   // return const CircularProgressIndicator(
-  //    valueColor: AlwaysStoppedAnimation<Color>(_orangePrimary),
-  //  );
-   return LoadingIndicator(
-    indicatorType: Indicator.ballRotate, /// Required, The loading type of the widget
-    colors: const [_orangeLight, Colors.orange,_mediumGray],       /// Optional, The color collections
-    strokeWidth: 2,                     /// Optional, The stroke of the line, only applicable to widget which contains line
-    backgroundColor: Colors.transparent,      /// Optional, Background of the widget
-    pathBackgroundColor: Colors.black   /// Optional, the stroke backgroundColor
-);
+  Widget progressIndicatorButton(context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Si el ancho disponible es pequeño (típico de un botón), usamos un tamaño reducido
+        final isSmall = constraints.maxWidth < 350;
+
+        final size = isSmall ? 5.0 : 60.0;
+
+        return SizedBox(
+          width: size,
+          height: size,
+          child: const LoadingIndicator(
+            indicatorType: Indicator.ballRotate,
+            colors: [_orangeLight, Colors.orange],
+            strokeWidth: 2,
+            backgroundColor: Colors.transparent,
+            pathBackgroundColor: Colors.black,
+          ),
+        );
+      },
+    );
   }
 
   Color getBackgroundColor(BuildContext context) {

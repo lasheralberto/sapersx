@@ -131,7 +131,7 @@ class _ProjectInvitationSectionState extends State<ProjectInvitationSection> {
           elevation: 0,
           centerTitle: true,
           title: isMessageSending
-              ? AppStyles().progressIndicatorButton()
+              ? AppStyles().progressIndicatorButton(context)
               : Text(
                   Texts.translate('send_project_invitation',
                       LanguageProvider().currentLanguage),
