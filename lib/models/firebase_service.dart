@@ -1302,14 +1302,16 @@ class FirebaseService {
   Future<void> _checkAndUpdateLevel(String userId) async {
     try {
       final userDoc = await userCollection.doc(userId).get();
-      final reputation = userDoc.data()?['reputation'] ?? 0;
+      final data = userDoc.data() as Map<String, dynamic>?;
+  final reputation = data?['reputation'] ?? 0;
       
       String newLevel = 'Beginner';
       if (reputation >= 1000) newLevel = 'Expert';
       else if (reputation >= 500) newLevel = 'Advanced';
       else if (reputation >= 100) newLevel = 'Intermediate';
 
-      if (userDoc.data()?['level'] != newLevel) {
+      final data = userDoc.data() as Map<String, dynamic>?;
+  if (data?['level'] != newLevel) {
         await userCollection.doc(userId).update({'level': newLevel});
         _notifyLevelUp(userId, newLevel);
       }
@@ -1359,7 +1361,10 @@ class FirebaseService {
         .snapshots()
         .listen((snapshot) {
       for (var doc in snapshot.docs) {
-        onAchievement(doc.data()['message'] as String);
+        final data = doc.data() as Map<String, dynamic>?;
+  if (data?['message'] != null) {
+    onAchievement(data!['message'] as String);
+  }
       }
     });
   }

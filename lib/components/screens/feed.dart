@@ -48,7 +48,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   bool _showLeaderboard = false;
   List<UserInfoPopUp> _topContributors = [];
   AnimationController? _refreshAnimationController;
-  
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +58,20 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     );
     _loadTopContributors();
     _initializeGamification();
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      setState(() {});
+    });
+    _searchFocusNode.addListener(() {
+      if (_searchFocusNode.hasFocus) {
+        _panelController.animatePanelToPosition(
+          1.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+    _updateFutures();
   }
 
   Future<void> _loadTopContributors() async {
@@ -113,30 +127,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _refreshAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _loadTopContributors();
-    _initializeGamification();
-    _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(() {
-      setState(() {});
-    });
-    _searchFocusNode.addListener(() {
-      if (_searchFocusNode.hasFocus) {
-        _panelController.animatePanelToPosition(
-          1.0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
-    });
-    _updateFutures();
-  }
 
   Future<void> _updateFutures() async {
     // Determinar qué posts cargar basado en los filtros seleccionados
@@ -181,7 +171,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
 
 
-  
+
 
   Widget tagBubblePressed({
     required String tag,
@@ -270,7 +260,7 @@ Widget _buildSlidingUpPanelUI(
     body: _buildContentView(context, isMobile, screenWidth),
   );
 }
-  
+
 
   Widget _buildRegularUI(
       BuildContext context, bool isMobile, double screenWidth) {
