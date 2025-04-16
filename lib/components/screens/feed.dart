@@ -44,6 +44,44 @@ class Feed extends StatefulWidget {
 class _FeedState extends State<Feed> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   final FirebaseService _firebaseService = FirebaseService();
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey();
+  bool _showLeaderboard = false;
+  List<UserInfoPopUp> _topContributors = [];
+  AnimationController? _refreshAnimationController;
+  
+  @override
+  void initState() {
+    super.initState();
+    _refreshAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _loadTopContributors();
+    _initializeGamification();
+  }
+
+  Future<void> _loadTopContributors() async {
+    // Implement loading top contributors logic
+    _topContributors = await _firebaseService.getTopContributors();
+    setState(() {});
+  }
+
+  void _initializeGamification() {
+    // Initialize gamification features
+    _firebaseService.subscribeToUserAchievements(widget.user?.uid ?? '', (achievement) {
+      _showAchievementAnimation(achievement);
+    });
+  }
+
+  void _showAchievementAnimation(String achievement) {
+    showDialog(
+      context: context,
+      builder: (context) => AchievementDialog(
+        achievement: achievement,
+        onDismiss: () => Navigator.of(context).pop(),
+      ),
+    );
+  }
   final List<String> _modules = Modules.modules;
   List<PlatformFile> selectedFiles = [];
   final PanelController _panelController = PanelController();

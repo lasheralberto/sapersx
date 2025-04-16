@@ -6,6 +6,11 @@ class UserInfoPopUp {
   String username;
   String email;
   String? bio;
+  int reputation = 0;
+  String level = 'Beginner';
+  List<String> badges = [];
+  int weeklyPoints = 0;
+  Map<String, int> moduleExpertise = {};
   String? location;
   double? latitude;
   double? longitude;

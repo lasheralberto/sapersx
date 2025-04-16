@@ -43,7 +43,40 @@ class _PostCardState extends State<PostCard> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Card(
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          child: Card(
+            elevation: widget.post.replyCount > 10 ? 4 : 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: widget.post.isExpert 
+                  ? Theme.of(context).primaryColor.withOpacity(0.2)
+                  : Colors.transparent,
+                width: 1,
+              ),
+            ),
+            child: Stack(
+              children: [
+                if (widget.post.replyCount > 20)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.trending_up, size: 16),
+                          Text(' Trending'),
+                        ],
+                      ),
+                    ),
+                  ),
           color: Theme.of(context).cardColor,
           elevation: 0,
           child: Column(
