@@ -1310,8 +1310,8 @@ class FirebaseService {
       else if (reputation >= 500) newLevel = 'Advanced';
       else if (reputation >= 100) newLevel = 'Intermediate';
 
-      final data = userDoc.data() as Map<String, dynamic>?;
-  if (data?['level'] != newLevel) {
+      final userData = userDoc.data() as Map<String, dynamic>?;
+  if (userData?['level'] != newLevel) {
         await userCollection.doc(userId).update({'level': newLevel});
         _notifyLevelUp(userId, newLevel);
       }

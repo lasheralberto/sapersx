@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:sapers/components/widgets/achievement_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -46,7 +47,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   final FirebaseService _firebaseService = FirebaseService();
   final GlobalKey<AnimatedListState> _listKey = GlobalKey();
   bool _showLeaderboard = false;
-  List<UserInfoPopUp> _topContributors = [];
+  Stream<List<UserInfoPopUp>>? _topContributors;
   AnimationController? _refreshAnimationController;
 
   @override
