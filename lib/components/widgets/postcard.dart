@@ -57,7 +57,7 @@ class _PostCardState extends State<PostCard> {
               ),
             ),
             color: Theme.of(context).cardColor,
-          child: Stack(
+            child: Stack(
               children: [
                 if (widget.post.replyCount > 20)
                   Positioned(

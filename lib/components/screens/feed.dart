@@ -116,6 +116,12 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _refreshAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _loadTopContributors();
+    _initializeGamification();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
       setState(() {});
