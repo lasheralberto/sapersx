@@ -1,0 +1,148 @@
+📄 lib/components/widgets/postcard.dart
+Errores:
+Línea 61:
+
+dart
+Copy
+children: [
+Error: Falta cerrar el corchete ] de la lista de children.
+
+Solución: Asegúrate de que todos los widgets hijos estén correctamente cerrados y que el ] final exista.
+
+Línea 48:
+
+dart
+Copy
+child: Card(
+Error: Falta cerrar el paréntesis ) del widget Card.
+
+Solución: Revisa que el Card tenga su paréntesis de cierre y todos sus atributos estén bien definidos.
+
+Línea 46:
+
+dart
+Copy
+return AnimatedContainer(
+Error: Falta cerrar el paréntesis ) del AnimatedContainer.
+
+Solución: Verifica que el AnimatedContainer esté completo y bien anidado.
+
+Línea 81:
+
+dart
+Copy
+elevation: 0,
+Error:
+
+El getter elevation no está definido en _PostCardState.
+
+Falta un ) antes de esta línea.
+
+Solución:
+
+Si elevation es un atributo de un widget (como Card), asegúrate de que esté dentro del widget correcto.
+
+Si es un error de sintaxis, revisa que no falten ) o } en el código anterior.
+
+📄 lib/components/screens/feed.dart
+Errores:
+Líneas 53 y 117:
+
+dart
+Copy
+void initState() {
+Error: El método initState() está declarado dos veces en la misma clase.
+
+Solución: Elimina una de las declaraciones y combina la lógica si es necesario.
+
+Línea 65:
+
+dart
+Copy
+_topContributors = await _firebaseService.getTopContributors();
+Error:
+
+getTopContributors() devuelve un Stream<List<UserInfoPopUp>>, pero se intenta asignar a List<UserInfoPopUp>.
+
+Solución:
+
+dart
+Copy
+_topContributors = await _firebaseService.getTopContributors().first;
+(O usa StreamBuilder en el UI si prefieres manejar el stream directamente).
+
+Línea 79:
+
+dart
+Copy
+builder: (context) => AchievementDialog(
+Error: La clase _FeedState no tiene definido AchievementDialog.
+
+Solución:
+
+Asegúrate de que AchievementDialog esté importado correctamente.
+
+Si es un widget personalizado, verifica que esté definido en otro archivo y que la importación sea correcta (ej: import 'package:sapers/components/widgets/achievement_dialog.dart';).
+
+📄 lib/models/firebase_service.dart
+Errores:
+Línea 1305:
+
+dart
+Copy
+final reputation = userDoc.data()?['reputation'] ?? 0;
+Error: No se puede usar [] en userDoc.data() porque es de tipo Object (no es un Map).
+
+Solución: Haz un cast explícito a Map<String, dynamic>:
+
+dart
+Copy
+final data = userDoc.data() as Map<String, dynamic>?;
+final reputation = data?['reputation'] ?? 0;
+Línea 1312:
+
+dart
+Copy
+if (userDoc.data()?['level'] != newLevel) {
+Mismo error: userDoc.data() no es tratado como Map.
+
+Solución:
+
+dart
+Copy
+final data = userDoc.data() as Map<String, dynamic>?;
+if (data?['level'] != newLevel) {
+Línea 1362:
+
+dart
+Copy
+onAchievement(doc.data()['message'] as String);
+Error: doc.data() es de tipo Object? y no se puede indexar directamente.
+
+Solución:
+
+dart
+Copy
+final data = doc.data() as Map<String, dynamic>?;
+onAchievement(data?['message'] as String);
+🛠 Problemas generales:
+Compilación Web:
+
+El proyecto usa Flutter Web con WASM, pero hay errores de sintaxis que impiden la compilación.
+
+Solución: Corrige primero los errores mencionados arriba.
+
+Dependencias desactualizadas:
+
+El log muestra que hay 39 paquetes con versiones más nuevas.
+
+Solución: Ejecuta:
+
+bash
+Copy
+flutter pub upgrade
+(Pero verifica que no haya breaking changes en las nuevas versiones).
+
+Configuración de Firebase:
+
+Asegúrate de que firebase_core y los paquetes de Firebase estén bien configurados para web.
