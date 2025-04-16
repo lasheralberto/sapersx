@@ -56,7 +56,8 @@ class _PostCardState extends State<PostCard> {
                 width: 1,
               ),
             ),
-            child: Stack(
+            color: Theme.of(context).cardColor,
+          child: Stack(
               children: [
                 if (widget.post.replyCount > 20)
                   Positioned(
@@ -77,7 +78,6 @@ class _PostCardState extends State<PostCard> {
                       ),
                     ),
                   ),
-          color: Theme.of(context).cardColor,
           elevation: 0,
           child: Column(
             mainAxisSize: MainAxisSize.min,
