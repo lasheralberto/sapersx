@@ -24,21 +24,21 @@ class TrendingTagsSidebar extends StatefulWidget {
 }
 
 class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
-  int tagSelected = -1;
-  bool _closeTagSelected = false;
+  String? selectedTag;
 
-  String cleanText(String text) {
-    return text
-        .replaceAll('"', '')
-        .replaceAll("'", '')
-        .replaceAll('"', '')
-        .replaceAll('"', '')
-        .replaceAll('´', '')
-        .replaceAll('`', '')
-        .replaceAll('`', '')
-        .replaceAll('¨', '')
-        .replaceAll(',', '')
-        .trim();
+  void _handleTagSelection(String tag) {
+    print('Handling tag selection: $tag'); // Debug
+    setState(() {
+      // Si el tag ya está seleccionado, lo deseleccionamos
+      if (selectedTag == tag) {
+        selectedTag = null;
+        widget.onTagSelected('');
+      } else {
+        // Si no está seleccionado, lo seleccionamos
+        selectedTag = tag;
+        widget.onTagSelected(tag);
+      }
+    });
   }
 
   @override
@@ -60,72 +60,90 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Título del sidebar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              selectionColor: AppStyles.colorAvatarBorder,
               Texts.translate(
                   'trendingTags', LanguageProvider().currentLanguage),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppStyles.colorAvatarBorder),
+                    fontWeight: FontWeight.bold,
+                    color: AppStyles.colorAvatarBorder,
+                  ),
             ),
           ),
+          const Divider(height: 1, thickness: 1),
+
+          // Tag seleccionado (chip)
+          if (selectedTag != null) // Solo mostrar si hay un tag seleccionado
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Chip(
+                label: Text(
+                  selectedTag!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                backgroundColor: AppStyles.colorAvatarBorder,
+                deleteIcon: const Icon(
+                  Icons.close,
+                  size: AppStyles.iconSizeSmall,
+                  color: Colors.white,
+                ),
+                onDeleted: () => _handleTagSelection(selectedTag!),
+              ),
+            ),
+
+          // Lista de etiquetas
           Expanded(
             child: ListView.builder(
               itemCount: widget.trendingTags.length,
               itemBuilder: (context, index) {
+                final tag = widget.trendingTags[index];
+                final isSelected = selectedTag == tag;
+
                 return InkWell(
-                  onTap: () {
-                    setState(() {
-                      tagSelected = index;
-                      _closeTagSelected = false;
-                    });
-                    widget.onTagSelected(widget.trendingTags[index]);
-                  },
+                  onTap: () => _handleTagSelection(tag),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 8,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppStyles.colorAvatarBorder.withOpacity(0.1)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Row(
                             children: [
-                              index == tagSelected
-                                  ? _closeTagSelected == false
-                                      ? IconButton(
-                                          icon: const Icon(Icons.close),
-                                          onPressed: () {
-                                            setState(() {
-                                              _closeTagSelected = true;
-                                            });
-                                            widget.onTagSelected('null');
-                                          })
-                                      : const SizedBox.shrink()
-                                  : const SizedBox.shrink(),
                               Icon(
                                 Icons.trending_up_rounded,
-                                color: index < 2
+                                color: isSelected
                                     ? AppStyles.colorAvatarBorder
-                                    : Colors.white,
+                                    : Colors.grey,
+                                size: AppStyles.iconSizeSmall,
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                cleanText(widget.trendingTags[index])
-                                    .toUpperCase(),
-                                style: TextStyle(
-                                  color: (tagSelected == index &&
-                                          _closeTagSelected == false)
-                                      ? AppStyles.colorAvatarBorder
-                                      : Colors.black,
-                                  fontWeight: (tagSelected == index &&
-                                          _closeTagSelected == false)
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                              Expanded(
+                                child: Text(
+                                  tag,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? AppStyles.colorAvatarBorder
+                                        : Colors.black,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),

@@ -230,24 +230,6 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
     super.dispose();
   }
 
-  Widget _buildPanelHeader() {
-    return Container(
-      height: 40,
-      width: 40,
-      margin: const EdgeInsets.only(right: 8),
-      child: FloatingActionButton(
-        mini: true,
-        elevation: 2,
-        backgroundColor: AppStyles.colorAvatarBorder,
-        onPressed: _showCreateOptions,
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentLanguage =
@@ -258,63 +240,153 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
       child: widget.isPanelVisible
           ? Container(
               key: const ValueKey('chat-visible'),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color:
+                      Theme.of(context).colorScheme.outline.withOpacity(0.05),
+                ),
               ),
               child: Column(
                 children: [
+                  // Search bar and add button row
                   Row(
                     children: [
-                      _buildPanelHeader(),
                       Expanded(
-                        child: TextField(
-                          focusNode: widget.searchFocusNode,
-                          controller: _queryController,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor:
-                                Theme.of(context).colorScheme.surfaceVariant,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
-                            ),
-                            hintText: Texts.translate('askMe', currentLanguage),
-                            hintStyle: TextStyle(
-                              color: Theme.of(context).hintColor,
-                              fontSize: 14,
-                            ),
-                            suffixIcon: _isLoading
-                                ? AppStyles().progressIndicatorButton(context)
-                                : IconButton(
-                                    icon: const Icon(Symbols.send, size: 20),
-                                    onPressed: _sendQuery,
-                                  ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceVariant
+                                .withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          onSubmitted: (_) => _sendQuery(),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outline
+                                          .withOpacity(0.08),
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          focusNode: widget.searchFocusNode,
+                                          controller: _queryController,
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface,
+                                          ),
+                                          decoration: InputDecoration(
+                                            isDense: true,
+                                            hintText: Texts.translate(
+                                                'askMe', currentLanguage),
+                                            hintStyle: TextStyle(
+                                              fontSize: 13,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.5),
+                                            ),
+                                            contentPadding:
+                                                const EdgeInsets.fromLTRB(
+                                                    16, 14, 8, 14),
+                                            border: InputBorder.none,
+                                            enabledBorder: InputBorder.none,
+                                            focusedBorder: InputBorder.none,
+                                          ),
+                                          onSubmitted: (_) => _sendQuery(),
+                                        ),
+                                      ),
+                                      AnimatedSwitcher(
+                                        duration:
+                                            const Duration(milliseconds: 200),
+                                        child: _isLoading
+                                            ? Padding(
+                                                padding: const EdgeInsets.only(
+                                                    right: 12),
+                                                child: SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 1.5,
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation<
+                                                            Color>(
+                                                      AppStyles
+                                                          .colorAvatarBorder
+                                                          .withOpacity(0.8),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                            : IconButton(
+                                                icon: Icon(
+                                                  Symbols.send,
+                                                  size: 16,
+                                                  color: AppStyles
+                                                      .colorAvatarBorder
+                                                      .withOpacity(0.8),
+                                                ),
+                                                style: IconButton.styleFrom(
+                                                  padding:
+                                                      const EdgeInsets.all(8),
+                                                ),
+                                                onPressed: _sendQuery,
+                                              ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.add,
+                          color: AppStyles.colorAvatarBorder,
+                          size: 20,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor:
+                              AppStyles.colorAvatarBorder.withOpacity(0.1),
+                          padding: const EdgeInsets.all(8),
+                        ),
+                        onPressed: _showCreateOptions,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  _isLoading
-                      ? UtilsSapers().buildShimmerEffect(
-                          5, UtilsSapers().buildShimmerLine())
-                      : Expanded(
-                          child: Column(
+
+                  const SizedBox(height: 12),
+
+                  // Response and recommendations area
+                  Expanded(
+                    child: _isLoading
+                        ? Center(
+                            child: UtilsSapers().buildShimmerEffect(
+                              3,
+                              UtilsSapers().buildShimmerLine(),
+                            ),
+                          )
+                        : Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
@@ -323,19 +395,22 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                                 ),
                               ),
                               if (_recommendedPosts.isNotEmpty) ...[
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 12),
                                 Text(
                                   Texts.translate(
                                       'recommendedPosts', currentLanguage),
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.7),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
                                 SizedBox(
-                                  height: 40,
+                                  height: 32,
                                   child: ListView.builder(
                                     scrollDirection: Axis.horizontal,
                                     itemCount: _recommendedPosts.length,
@@ -344,16 +419,41 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                                       return Padding(
                                         padding:
                                             const EdgeInsets.only(right: 8),
-                                        child: ActionChip(
-                                          avatar:
-                                              Icon(Symbols.article, size: 16),
-                                          label: Text(
-                                            _getPostTitle(post),
-                                            style:
-                                                const TextStyle(fontSize: 12),
-                                          ),
-                                          onPressed: () =>
+                                        child: InkWell(
+                                          onTap: () =>
                                               PostPopup.show(context, post),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppStyles.colorAvatarBorder
+                                                  .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(
+                                                  Symbols.article,
+                                                  size: 14,
+                                                  color: AppStyles
+                                                      .colorAvatarBorder,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  _getPostTitle(post),
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: AppStyles
+                                                        .colorAvatarBorder,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                       );
                                     },
@@ -362,7 +462,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                               ],
                             ],
                           ),
-                        ),
+                  ),
                 ],
               ),
             )

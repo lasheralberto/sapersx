@@ -67,9 +67,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   bool _isPanelOpen = false;
   double _panelPosition = 0.0;
   final FocusNode _searchFocusNode = FocusNode();
-        final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    
+  bool isMobile = false;
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -83,7 +82,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-
     _tabController.addListener(() {
       setState(() {});
     });
@@ -96,7 +94,13 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         );
       }
     });
-    !isMobile ? _menuSidebarController.open(): _menuSidebarController.close();
+
+    if (isMobile != null && isMobile!) {
+      _menuSidebarController.open();
+    } else {
+      _menuSidebarController.close();
+    }
+
     _updateFutures();
   }
 
@@ -160,7 +164,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
             tag,
             style: const TextStyle(
               color: Colors.black,
-              fontSize: 14,
+              fontSize: AppStyles.fontSizeMedium, // Usando fontSizeMedium
             ),
           ),
           const SizedBox(width: 8),
@@ -168,7 +172,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
             onTap: onDelete,
             child: const Icon(
               Symbols.close,
-              size: 16,
+              size: AppStyles.iconSizeSmall, // Usando iconSizeSmall
               weight: 1150.0,
               color: Colors.blue,
             ),
@@ -178,10 +182,32 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildMinimalSidebarToggle() {
+    return IconButton(
+      icon: AnimatedBuilder(
+        animation: _sidebarController,
+        builder: (context, _) {
+          return Icon(
+            _sidebarController.isOpen ? Symbols.close : Symbols.tag,
+            color: AppStyles.colorAvatarBorder,
+            size: AppStyles.iconSizeMedium, // Usando iconSizeMedium
+          );
+        },
+      ),
+      onPressed: () {
+        _sidebarController.toggle();
+      },
+      splashRadius:
+          24.0, // Reduce el área de interacción para hacerlo más minimalista
+      tooltip: _sidebarController.isOpen ? 'Cerrar Sidebar' : 'Abrir Sidebar',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-
-
+    double screenWidth = 0.0;
+    isMobile = MediaQuery.of(context).size.width < 600;
+    screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       body: _tabController.index == 0
           ? _buildSlidingUpPanelUI(context, isMobile, screenWidth)
@@ -243,6 +269,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   Widget _buildNestedScrollView(
       BuildContext context, bool isMobile, double screenWidth) {
     return NestedScrollView(
+      controller:
+          PrimaryScrollController.of(context), // Usa el controlador principal
       headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
         return [
           _buildAppBar(context, isMobile),
@@ -257,11 +285,13 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   Widget _buildTabBarView(BuildContext context, bool isMobile) {
     return TabBarView(
       controller: _tabController,
+      physics:
+          const ClampingScrollPhysics(), // Evita conflictos de desplazamiento
       children: [
         _buildGeneralPostsTab(isMobile),
         _buildFollowingPostsTab(isMobile),
         _buildProjectsTab(isMobile),
-        const UserSearchScreen()
+        const UserSearchScreen(),
       ],
     );
   }
@@ -370,29 +400,15 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
           ),
           Row(
             children: [
-              FloatingActionButton(
-                elevation: 1,
-                backgroundColor: Colors.white,
-                mini: true,
-                onPressed: () {
-                  _sidebarController.toggle();
-                },
-                child: AnimatedBuilder(
-                  animation: _sidebarController,
-                  builder: (context, _) {
-                    return Icon(
-                      _sidebarController.isOpen ? Symbols.close : Symbols.tag,
-                      color: AppStyles.colorAvatarBorder,
-                      weight: 1150.0,
-                    );
-                  },
-                ),
-              ),
+              _buildMinimalSidebarToggle(),
               const SizedBox(width: 18),
-              InkWell(
-                child: const Icon(Symbols.search,
-                    weight: 1150.0, color: AppStyles.colorAvatarBorder),
-                onTap: () {
+              IconButton(
+                icon: const Icon(
+                  Symbols.search,
+                  size: AppStyles.iconSizeMedium,
+                  color: AppStyles.colorAvatarBorder,
+                ),
+                onPressed: () {
                   setState(() {
                     searchPressed = !searchPressed;
                   });
@@ -500,7 +516,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
             Texts.translate(textKey, languageProvider.currentLanguage),
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: AppStyles.fontSize,
+              fontSize: AppStyles.fontSize, // Usando fontSize
               fontWeight: FontWeight.w500,
             ),
           ),

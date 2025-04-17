@@ -89,29 +89,14 @@ class _PostCardState extends State<PostCard> {
                 children: [
                   _buildHeaderPostInfo(),
                   const SizedBox(height: 8),
-                  _buildPostContent(),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CommentButton(
-                        replyCount: widget.post.replyCount,
-                        iconSize: 15,
-                        iconColor: AppStyles.colorAvatarBorder,
-                      ),
-                      SAPAttachmentsViewerHeader(
-                        reply: widget.post,
-                        onAttachmentOpen: (attachment) {
-                          if (attachment['url'] != null) {
-                            launchUrl(
-                              Uri.parse(attachment['url']),
-                              mode: LaunchMode.externalApplication,
-                            );
-                          }
-                        },
-                      ),
-                    ],
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isExpanded ? 1.0 : 0.8,
+                    child: _buildPostContent(),
                   ),
+                  const SizedBox(height: 12),
+                  //const Divider(), // Separador entre contenido y acciones
+                  _buildActionsRow(),
                 ],
               ),
             ),
@@ -137,33 +122,32 @@ class _PostCardState extends State<PostCard> {
       children: [
         Row(
           children: [
-            const SizedBox(width: 6),
-
             // Módulo dentro de una burbuja redondeada
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.grey[200], // Color de fondo de la burbuja
-                borderRadius: BorderRadius.circular(8), // Bordes redondeados
+                color: AppStyles.cardBackgroundColor,
+                borderRadius:
+                    BorderRadius.circular(AppStyles.borderRadiusValue),
+                border: Border.all(color: AppStyles.borderColor),
               ),
               child: Text(
                 widget.post.module,
-                style: AppStyles().getTextStyle(context).copyWith(
-                      fontSize: 12, // Tamaño más pequeño
-                      fontWeight: FontWeight.bold, // Resaltado
-                    ),
+                style: const TextStyle(
+                  fontSize: AppStyles.fontSizeMedium,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 widget.post.title,
-                style: AppStyles().getTextStyle(context,
-                    fontSize: AppStyles.fontSizeMedium,
-                    fontWeight: FontWeight.bold),
-                overflow: TextOverflow
-                    .ellipsis, // Muestra "..." si el texto es muy largo
+                style: const TextStyle(
+                  fontSize: AppStyles.fontSizeLarge,
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -171,57 +155,36 @@ class _PostCardState extends State<PostCard> {
         const SizedBox(height: 5),
         Row(
           children: [
-            const SizedBox(width: 10),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(widget.post.author,
-                  style: AppStyles().getTextStyle(context,
-                      fontSize: AppStyles.fontSize,
-                      fontWeight: FontWeight.w100)),
+            Text(
+              widget.post.author,
+              style: const TextStyle(
+                fontSize: AppStyles.fontSize,
+                color: AppStyles.textColorDark,
+              ),
             ),
             const SizedBox(width: 10),
             _buildTimestamp(widget.post),
           ],
         ),
-        const Divider(
-          thickness: 0.0,
-          color: Colors.grey,
-        )
       ],
     );
   }
 
   Widget _buildTag(String tag) {
-    return InkWell(
-      onTap: () {
-        // Opcional: Añade aquí lógica adicional cuando se hace clic en una etiqueta
-        widget.tagPressed(tag);
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8, bottom: 8),
-        child: Chip(
-          label: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                tag.toUpperCase(),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
-            ],
-          ),
-          backgroundColor: Theme.of(context).cardColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-            side: BorderSide(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
-              width: 1,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    return Chip(
+      label: Text(
+        tag.toUpperCase(),
+        style: const TextStyle(
+          fontSize: AppStyles.fontSize,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      backgroundColor: AppStyles.cardBackgroundColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+        side: const BorderSide(
+          color: AppStyles.borderColor,
+          width: 1,
         ),
       ),
     );
@@ -233,32 +196,45 @@ class _PostCardState extends State<PostCard> {
       children: [
         Text(
           widget.post.content,
-          style: AppStyles().getTextStyle(context),
+          style: const TextStyle(
+            fontSize: AppStyles.fontSizeMedium,
+            color: AppStyles.textColor,
+          ),
           maxLines: isExpanded ? null : 4,
-          overflow: isExpanded ? TextOverflow.visible : TextOverflow.fade,
-        ),
-        // Añadir el carrusel de imágenes adjuntas
-        AttachmentsCarousel(
-          reply: widget.post,
-          onAttachmentOpen: (attachment) {
-            if (attachment['url'] != null) {
-              launchUrl(
-                Uri.parse(attachment['url']),
-                mode: LaunchMode.externalApplication,
-              );
-            }
-          },
+          overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
         ),
         if (widget.post.tags.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 12),
             child: Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
               spacing: 8,
               runSpacing: 8,
               children: widget.post.tags.map((tag) => _buildTag(tag)).toList(),
             ),
-          )
+          ),
+      ],
+    );
+  }
+
+  Widget _buildActionsRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.comment,
+                size: AppStyles.iconSizeSmall, color: Colors.grey),
+            const SizedBox(width: 4),
+            Text(
+              '${widget.post.replyCount}',
+              style: const TextStyle(
+                fontSize: AppStyles.fontSize,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+        
       ],
     );
   }

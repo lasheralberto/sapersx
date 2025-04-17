@@ -38,7 +38,7 @@ class AppStyles {
   static const Color postCardColor = Colors.transparent;
   static const Color postCardReplyColor = _pureWhite;
 
-  //Scaffold color
+  // Scaffold color
   static const Color scaffoldColor = _pureWhite;
 
   // Button colors
@@ -53,8 +53,8 @@ class AppStyles {
   static const double dialogBorderRadius = 12.0;
 
   // Typography
-  static const double fontSize = 12.0;
-  static const double fontSizeMedium = 14.0;
+  static const double fontSize = 11.0;
+  static const double fontSizeMedium = 12.0;
   static const double fontSizeLarge = 16.0;
   static const double fontSizeHeading = 20.0;
 
@@ -66,6 +66,12 @@ class AppStyles {
   static const double spacingSmall = 8.0;
   static const double spacingMedium = 16.0;
   static const double spacingLarge = 24.0;
+
+  // Icon sizes
+  static const double iconSizeSmall = 16.0;
+  static const double iconSizeMedium = 24.0;
+  static const double iconSizeLarge = 32.0;
+  static const double iconSizeExtraLarge = 40.0;
 
   Widget progressIndicatorCreatePostButton() {
     return const CircularProgressIndicator(
