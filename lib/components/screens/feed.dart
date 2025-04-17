@@ -62,16 +62,20 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   bool trendsPressed = false;
   bool searchPressed = false;
   final SidebarController _sidebarController = SidebarController();
+  final SidebarController _menuSidebarController = SidebarController();
   int takenTags = 10;
   bool _isPanelOpen = false;
   double _panelPosition = 0.0;
   final FocusNode _searchFocusNode = FocusNode();
-
+        final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    
   @override
   void dispose() {
     _tabController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _menuSidebarController.dispose();
     super.dispose();
   }
 
@@ -79,6 +83,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+
     _tabController.addListener(() {
       setState(() {});
     });
@@ -91,6 +96,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         );
       }
     });
+    !isMobile ? _menuSidebarController.open(): _menuSidebarController.close();
     _updateFutures();
   }
 
@@ -135,10 +141,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     });
   }
 
-
-
-  
-
   Widget tagBubblePressed({
     required String tag,
     required VoidCallback onDelete,
@@ -178,8 +180,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+
 
     return Scaffold(
       body: _tabController.index == 0
@@ -190,43 +191,44 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
 // En la clase _FeedState, actualiza este método:
 
-Widget _buildSlidingUpPanelUI(
-    BuildContext context, bool isMobile, double screenWidth) {
-  return SlidingUpPanel(
-    onPanelSlide: (position) {
-      setState(() {
-        _panelPosition = position;
-        _isPanelOpen = position > 0.5;
-      });
-    },
-    controller: _panelController,
-    minHeight: 75,
-    maxHeight: MediaQuery.of(context).size.height * 0.7,
-    parallaxEnabled: false,
-    parallaxOffset: 0.5,
-    borderRadius: const BorderRadius.only(
-      topLeft: Radius.circular(24.0),
-      topRight: Radius.circular(24.0),
-    ),
-    panel: Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: SAPAIAssistantWidget(
-            searchFocusNode: _searchFocusNode,
-            username: widget.user?.displayName ?? 'UsuarioDemo',
-            isPanelVisible: true,
-            onPostCreated: _updateFutures, // Actualiza los posts cuando se crea uno nuevo
-            onProjectCreated: _updateFutures, // Actualiza los proyectos cuando se crea uno nuevo
+  Widget _buildSlidingUpPanelUI(
+      BuildContext context, bool isMobile, double screenWidth) {
+    return SlidingUpPanel(
+      onPanelSlide: (position) {
+        setState(() {
+          _panelPosition = position;
+          _isPanelOpen = position > 0.5;
+        });
+      },
+      controller: _panelController,
+      minHeight: 75,
+      maxHeight: MediaQuery.of(context).size.height * 0.7,
+      parallaxEnabled: false,
+      parallaxOffset: 0.5,
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(24.0),
+        topRight: Radius.circular(24.0),
+      ),
+      panel: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: SAPAIAssistantWidget(
+              searchFocusNode: _searchFocusNode,
+              username: widget.user?.displayName ?? 'UsuarioDemo',
+              isPanelVisible: true,
+              onPostCreated:
+                  _updateFutures, // Actualiza los posts cuando se crea uno nuevo
+              onProjectCreated:
+                  _updateFutures, // Actualiza los proyectos cuando se crea uno nuevo
+            ),
           ),
-        ),
-      ],
-    ),
-    body: _buildContentView(context, isMobile, screenWidth),
-  );
-}
-  
+        ],
+      ),
+      body: _buildContentView(context, isMobile, screenWidth),
+    );
+  }
 
   Widget _buildRegularUI(
       BuildContext context, bool isMobile, double screenWidth) {
@@ -280,6 +282,7 @@ Widget _buildSlidingUpPanelUI(
         }
 
         return PostsListWithSidebar(
+            menuSidebarController: _menuSidebarController,
             sidebarController: _sidebarController,
             onRefresh: _updateFutures,
             onPostExpanded: (p0) {
@@ -311,6 +314,7 @@ Widget _buildSlidingUpPanelUI(
         }
 
         return PostsListWithSidebar(
+            menuSidebarController: _menuSidebarController,
             sidebarController: _sidebarController,
             onRefresh: _updateFutures,
             onPostExpanded: (p0) {
