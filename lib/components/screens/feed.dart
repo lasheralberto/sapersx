@@ -131,34 +131,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     super.dispose();
   }
 
-<<<<<<< HEAD
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(() {
-      setState(() {});
-    });
-    _searchFocusNode.addListener(() {
-      if (_searchFocusNode.hasFocus) {
-        _panelController.animatePanelToPosition(
-          1.0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
-    });
-
-    if (isMobile != null && isMobile!) {
-      _menuSidebarController.open();
-    } else {
-      _menuSidebarController.close();
-    }
-
-    _updateFutures();
-  }
-=======
->>>>>>> 5e84abac62706b8121144a97d22be76e9b849912
 
   Future<void> _updateFutures() async {
     // Determinar qué posts cargar basado en los filtros seleccionados
@@ -201,13 +173,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     });
   }
 
-<<<<<<< HEAD
-=======
-
-
-
-
->>>>>>> 5e84abac62706b8121144a97d22be76e9b849912
   Widget tagBubblePressed({
     required String tag,
     required VoidCallback onDelete,
@@ -313,21 +278,13 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   _updateFutures, // Actualiza los proyectos cuando se crea uno nuevo
             ),
           ),
-<<<<<<< HEAD
-        ],
-      ),
-      body: _buildContentView(context, isMobile, screenWidth),
-    );
-  }
-=======
-        ),
+       
       ],
     ),
     body: _buildContentView(context, isMobile, screenWidth),
   );
 }
 
->>>>>>> 5e84abac62706b8121144a97d22be76e9b849912
 
   Widget _buildRegularUI(
       BuildContext context, bool isMobile, double screenWidth) {

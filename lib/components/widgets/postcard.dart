@@ -13,149 +13,98 @@ import 'package:sapers/models/utils_sapers.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PostCard extends StatefulWidget {
- final SAPPost post;
- final Function(bool) onExpandChanged; // Callback para devolver el valor
- final Function(String?) tagPressed;
+  final SAPPost post;
+  final Function(bool) onExpandChanged; // Callback para devolver el valor
+  final Function(String?) tagPressed;
 
- const PostCard({
-   super.key,
-   required this.onExpandChanged,
-   required this.tagPressed,
-   required this.post,
- });
+  const PostCard({
+    super.key,
+    required this.onExpandChanged,
+    required this.tagPressed,
+    required this.post,
+  });
 
- @override
- State<PostCard> createState() => _PostCardState();
+  @override
+  State<PostCard> createState() => _PostCardState();
 }
 
 class _PostCardState extends State<PostCard> {
- bool isExpanded = false;
+  bool isExpanded = false;
 
- int counter = 0;
+  int counter = 0;
 
- @override
- void dispose() {
-   super.dispose();
- }
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
 // Dentro de _PostCardState en PostCard
- @override
- Widget build(BuildContext context) {
-   return LayoutBuilder(
-     builder: (context, constraints) {
-       return AnimatedContainer(
-         duration: const Duration(milliseconds: 300),
-         child: Card(
-           elevation: widget.post.replyCount > 10 ? 4 : 0,
-           shape: RoundedRectangleBorder(
-             borderRadius: BorderRadius.circular(16),
-             side: BorderSide(
-               color: widget.post.isExpert
-                   ? Theme.of(context).primaryColor.withOpacity(0.2)
-                   : Colors.transparent,
-               width: 1,
-             ),
-           ),
-           color: Theme.of(context).cardColor,
-           child: Stack(
-             children: [
-               if (widget.post.replyCount > 20)
-                 Positioned(
-                   top: 8,
-                   right: 8,
-                   child: Container(
-                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                     decoration: BoxDecoration(
-                       color: Theme.of(context).primaryColor.withOpacity(0.1),
-                       borderRadius: BorderRadius.circular(12),
-                     ),
-                     child: Row(
-                       mainAxisSize: MainAxisSize.min,
-                       children: [
-                         Icon(Icons.trending_up, size: 16),
-                         Text(' Trending'),
-                       ],
-                     ),
-                   ),
-                 ),
-               Column(
-                 mainAxisSize: MainAxisSize.min,
-                 children: [
-                   _buildPostHeader(constraints.maxWidth, widget.post.id),
-                   if (isExpanded) // Muestra replies solo cuando está expandido
-                     ReplySection(
-                       post: widget.post,
-                       maxWidth: constraints.maxWidth,
-                       postId: widget.post.id,
-                       replyId: '', // O usa widget.post.id si es necesario
-                       postAuthor: widget.post.author,
-                       replyCount: widget.post.replyCount,
-                       firebaseService:
-                       FirebaseService(), // Asegúrate de inyectar el servicio
-                     ),
-                   const SizedBox(height: 4),
-                 ],
-               ),
-             ],
-           ),
-         ),
-       );
-     },
-   );
- }
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          child: Card(
+            elevation: widget.post.replyCount > 10 ? 4 : 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: widget.post.isExpert
+                    ? Theme.of(context).primaryColor.withOpacity(0.2)
+                    : Colors.transparent,
+                width: 1,
+              ),
+            ),
+            color: Theme.of(context).cardColor,
+            child: Stack(
+              children: [
+                if (widget.post.replyCount > 20)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.trending_up, size: 16),
+                          Text(' Trending'),
+                        ],
+                      ),
+                    ),
+                  ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildPostHeader(constraints.maxWidth, widget.post.id),
+                    if (isExpanded) // Muestra replies solo cuando está expandido
+                      ReplySection(
+                        post: widget.post,
+                        maxWidth: constraints.maxWidth,
+                        postId: widget.post.id,
+                        replyId: '', // O usa widget.post.id si es necesario
+                        postAuthor: widget.post.author,
+                        replyCount: widget.post.replyCount,
+                        firebaseService:
+                            FirebaseService(), // Asegúrate de inyectar el servicio
+                      ),
+                    const SizedBox(height: 4),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
- Widget _buildPostHeader(double maxWidth, String postId) {
-   return InkWell(
-     onTap: () {
-       setState(() => isExpanded = !isExpanded);
-       widget.onExpandChanged(isExpanded);
-     },
-     child: Padding(
-       padding: const EdgeInsets.all(16.0),
-       child: Row(
-         crossAxisAlignment: CrossAxisAlignment.start,
-         children: [
-           _buildAuthorAvatar(),
-           const SizedBox(width: 12),
-           Expanded(
-             child: Column(
-               crossAxisAlignment: CrossAxisAlignment.start,
-               children: [
-                 _buildHeaderPostInfo(),
-                 const SizedBox(height: 8),
-                 _buildPostContent(),
-                 const SizedBox(height: 12),
-                 Row(
-                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                   children: [
-                     CommentButton(
-                       replyCount: widget.post.replyCount,
-                       iconSize: 15,
-                       iconColor: AppStyles.colorAvatarBorder,
-                     ),
-                     SAPAttachmentsViewerHeader(
-                       reply: widget.post,
-                       onAttachmentOpen: (attachment) {
-                         if (attachment['url'] != null) {
-                           launchUrl(
-                             Uri.parse(attachment['url']),
-                             mode: LaunchMode.externalApplication,
-                           );
-                         }
-                       },
-                     ),
-                   ],
-                 ),
-               ],
-             ),
-           ),
-         ],
-       ),
-     ),
-   );
- }
-
-<<<<<<< HEAD
   Widget _buildPostHeader(double maxWidth, String postId) {
     return InkWell(
       onTap: () {
@@ -175,14 +124,29 @@ class _PostCardState extends State<PostCard> {
                 children: [
                   _buildHeaderPostInfo(),
                   const SizedBox(height: 8),
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: isExpanded ? 1.0 : 0.8,
-                    child: _buildPostContent(),
-                  ),
+                  _buildPostContent(),
                   const SizedBox(height: 12),
-                  //const Divider(), // Separador entre contenido y acciones
-                  _buildActionsRow(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CommentButton(
+                        replyCount: widget.post.replyCount,
+                        iconSize: 15,
+                        iconColor: AppStyles.colorAvatarBorder,
+                      ),
+                      SAPAttachmentsViewerHeader(
+                        reply: widget.post,
+                        onAttachmentOpen: (attachment) {
+                          if (attachment['url'] != null) {
+                            launchUrl(
+                              Uri.parse(attachment['url']),
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -191,59 +155,50 @@ class _PostCardState extends State<PostCard> {
       ),
     );
   }
-=======
- Widget _buildAuthorAvatar() {
-   return UserProfileCardHover(
-     isExpert: widget.post.isExpert,
-     authorUsername: widget.post.author,
-     onProfileOpen: () {
-       // Opcional: Añade aquí lógica adicional cuando se abre el perfil
-     },
-   );
- }
->>>>>>> 5e84abac62706b8121144a97d22be76e9b849912
 
- Widget _buildHeaderPostInfo() {
-   return Column(
-     crossAxisAlignment: CrossAxisAlignment.start,
-     children: [
-       Row(
-         children: [
-           const SizedBox(width: 6),
+  Widget _buildAuthorAvatar() {
+    return UserProfileCardHover(
+      isExpert: widget.post.isExpert,
+      authorUsername: widget.post.author,
+      onProfileOpen: () {
+        // Opcional: Añade aquí lógica adicional cuando se abre el perfil
+      },
+    );
+  }
 
-<<<<<<< HEAD
   Widget _buildHeaderPostInfo() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
+            const SizedBox(width: 6),
+
             // Módulo dentro de una burbuja redondeada
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppStyles.cardBackgroundColor,
-                borderRadius:
-                    BorderRadius.circular(AppStyles.borderRadiusValue),
-                border: Border.all(color: AppStyles.borderColor),
+                color: Colors.grey[200], // Color de fondo de la burbuja
+                borderRadius: BorderRadius.circular(8), // Bordes redondeados
               ),
               child: Text(
                 widget.post.module,
-                style: const TextStyle(
-                  fontSize: AppStyles.fontSizeMedium,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: AppStyles().getTextStyle(context).copyWith(
+                      fontSize: 12, // Tamaño más pequeño
+                      fontWeight: FontWeight.bold, // Resaltado
+                    ),
               ),
             ),
+
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 widget.post.title,
-                style: const TextStyle(
-                  fontSize: AppStyles.fontSizeLarge,
-                  fontWeight: FontWeight.bold,
-                ),
-                overflow: TextOverflow.ellipsis,
+                style: AppStyles().getTextStyle(context,
+                    fontSize: AppStyles.fontSizeMedium,
+                    fontWeight: FontWeight.bold),
+                overflow: TextOverflow
+                    .ellipsis, // Muestra "..." si el texto es muy largo
               ),
             ),
           ],
@@ -251,36 +206,57 @@ class _PostCardState extends State<PostCard> {
         const SizedBox(height: 5),
         Row(
           children: [
-            Text(
-              widget.post.author,
-              style: const TextStyle(
-                fontSize: AppStyles.fontSize,
-                color: AppStyles.textColorDark,
-              ),
+            const SizedBox(width: 10),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(widget.post.author,
+                  style: AppStyles().getTextStyle(context,
+                      fontSize: AppStyles.fontSize,
+                      fontWeight: FontWeight.w100)),
             ),
             const SizedBox(width: 10),
             _buildTimestamp(widget.post),
           ],
         ),
+        const Divider(
+          thickness: 0.0,
+          color: Colors.grey,
+        )
       ],
     );
   }
 
   Widget _buildTag(String tag) {
-    return Chip(
-      label: Text(
-        tag.toUpperCase(),
-        style: const TextStyle(
-          fontSize: AppStyles.fontSize,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      backgroundColor: AppStyles.cardBackgroundColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-        side: const BorderSide(
-          color: AppStyles.borderColor,
-          width: 1,
+    return InkWell(
+      onTap: () {
+        // Opcional: Añade aquí lógica adicional cuando se hace clic en una etiqueta
+        widget.tagPressed(tag);
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(right: 8, bottom: 8),
+        child: Chip(
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                tag.toUpperCase(),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ],
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
+              width: 1,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
       ),
     );
@@ -292,192 +268,54 @@ class _PostCardState extends State<PostCard> {
       children: [
         Text(
           widget.post.content,
-          style: const TextStyle(
-            fontSize: AppStyles.fontSizeMedium,
-            color: AppStyles.textColor,
-          ),
+          style: AppStyles().getTextStyle(context),
           maxLines: isExpanded ? null : 4,
-          overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+          overflow: isExpanded ? TextOverflow.visible : TextOverflow.fade,
+        ),
+        // Añadir el carrusel de imágenes adjuntas
+        AttachmentsCarousel(
+          reply: widget.post,
+          onAttachmentOpen: (attachment) {
+            if (attachment['url'] != null) {
+              launchUrl(
+                Uri.parse(attachment['url']),
+                mode: LaunchMode.externalApplication,
+              );
+            }
+          },
         ),
         if (widget.post.tags.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 12),
             child: Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
               spacing: 8,
               runSpacing: 8,
               children: widget.post.tags.map((tag) => _buildTag(tag)).toList(),
             ),
+          )
+      ],
+    );
+  }
+
+  Widget _buildTimestamp(post) {
+    // Formatear la fecha y hora
+    final formattedDate = UtilsSapers().formatTimestamp(post.timestamp);
+
+    return Padding(
+      padding: const EdgeInsets.all(0.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          formattedDate,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.grey[600],
           ),
-      ],
-    );
-  }
-
-  Widget _buildActionsRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.comment,
-                size: AppStyles.iconSizeSmall, color: Colors.grey),
-            const SizedBox(width: 4),
-            Text(
-              '${widget.post.replyCount}',
-              style: const TextStyle(
-                fontSize: AppStyles.fontSize,
-                color: Colors.grey,
-              ),
-            ),
-          ],
         ),
-        
-      ],
+      ),
     );
   }
-=======
-           // Módulo dentro de una burbuja redondeada
-           Container(
-             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-             decoration: BoxDecoration(
-               color: Colors.grey[200], // Color de fondo de la burbuja
-               borderRadius: BorderRadius.circular(8), // Bordes redondeados
-             ),
-             child: Text(
-               widget.post.module,
-               style: AppStyles().getTextStyle(context).copyWith(
-                 fontSize: 12, // Tamaño más pequeño
-                 fontWeight: FontWeight.bold, // Resaltado
-               ),
-             ),
-           ),
-
-           const SizedBox(width: 10),
-           Expanded(
-             child: Text(
-               widget.post.title,
-               style: AppStyles().getTextStyle(context,
-                   fontSize: AppStyles.fontSizeMedium,
-                   fontWeight: FontWeight.bold),
-               overflow: TextOverflow
-                   .ellipsis, // Muestra "..." si el texto es muy largo
-             ),
-           ),
-         ],
-       ),
-       const SizedBox(height: 5),
-       Row(
-         children: [
-           const SizedBox(width: 10),
-           Padding(
-             padding: const EdgeInsets.all(8.0),
-             child: Text(widget.post.author,
-                 style: AppStyles().getTextStyle(context,
-                     fontSize: AppStyles.fontSize,
-                     fontWeight: FontWeight.w100)),
-           ),
-           const SizedBox(width: 10),
-           _buildTimestamp(widget.post),
-         ],
-       ),
-       const Divider(
-         thickness: 0.0,
-         color: Colors.grey,
-       )
-     ],
-   );
- }
-
- Widget _buildTag(String tag) {
-   return InkWell(
-     onTap: () {
-       // Opcional: Añade aquí lógica adicional cuando se hace clic en una etiqueta
-       widget.tagPressed(tag);
-     },
-     child: Padding(
-       padding: const EdgeInsets.only(right: 8, bottom: 8),
-       child: Chip(
-         label: Row(
-           mainAxisSize: MainAxisSize.min,
-           children: [
-             Text(
-               tag.toUpperCase(),
-               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                 color: Colors.black,
-                 fontWeight: FontWeight.w500,
-               ),
-             ),
-           ],
-         ),
-         backgroundColor: Theme.of(context).cardColor,
-         shape: RoundedRectangleBorder(
-           borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-           side: BorderSide(
-             color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
-             width: 1,
-           ),
-         ),
-         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-       ),
-     ),
-   );
- }
-
- Widget _buildPostContent() {
-   return Column(
-     crossAxisAlignment: CrossAxisAlignment.start,
-     children: [
-       Text(
-         widget.post.content,
-         style: AppStyles().getTextStyle(context),
-         maxLines: isExpanded ? null : 4,
-         overflow: isExpanded ? TextOverflow.visible : TextOverflow.fade,
-       ),
-       // Añadir el carrusel de imágenes adjuntas
-       AttachmentsCarousel(
-         reply: widget.post,
-         onAttachmentOpen: (attachment) {
-           if (attachment['url'] != null) {
-             launchUrl(
-               Uri.parse(attachment['url']),
-               mode: LaunchMode.externalApplication,
-             );
-           }
-         },
-       ),
-       if (widget.post.tags.isNotEmpty)
-         Padding(
-           padding: const EdgeInsets.only(top: 12),
-           child: Wrap(
-             crossAxisAlignment: WrapCrossAlignment.center,
-             spacing: 8,
-             runSpacing: 8,
-             children: widget.post.tags.map((tag) => _buildTag(tag)).toList(),
-           ),
-         )
-     ],
-   );
- }
-
- Widget _buildTimestamp(post) {
-   // Formatear la fecha y hora
-   final formattedDate = UtilsSapers().formatTimestamp(post.timestamp);
->>>>>>> 5e84abac62706b8121144a97d22be76e9b849912
-
-   return Padding(
-     padding: const EdgeInsets.all(0.0),
-     child: Align(
-       alignment: Alignment.centerLeft,
-       child: Text(
-         formattedDate,
-         style: TextStyle(
-           fontSize: 10,
-           color: Colors.grey[600],
-         ),
-       ),
-     ),
-   );
- }
 }
 
 class ReplyBottomSheet extends StatefulWidget {
