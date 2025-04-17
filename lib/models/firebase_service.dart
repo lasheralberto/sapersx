@@ -1284,4 +1284,116 @@ class FirebaseService {
       rethrow; // Relanzar el error para manejarlo en la UI
     }
   }
+
+  // Gamification Methods
+  
+  Future<void> updateUserReputation(String userId, int points) async {
+    try {
+      await userCollection.doc(userId).update({
+        'reputation': FieldValue.increment(points),
+        'weeklyPoints': FieldValue.increment(points)
+      });
+      await _checkAndUpdateLevel(userId);
+    } catch (e) {
+      print('Error updating reputation: $e');
+    }
+  }
+
+  Future<void> _checkAndUpdateLevel(String userId) async {
+    try {
+      final userDoc = await userCollection.doc(userId).get();
+      final data = userDoc.data() as Map<String, dynamic>?;
+  final reputation = data?['reputation'] ?? 0;
+      
+      String newLevel = 'Beginner';
+      if (reputation >= 1000) newLevel = 'Expert';
+      else if (reputation >= 500) newLevel = 'Advanced';
+      else if (reputation >= 100) newLevel = 'Intermediate';
+
+      final userData = userDoc.data() as Map<String, dynamic>?;
+  if (userData?['level'] != newLevel) {
+        await userCollection.doc(userId).update({'level': newLevel});
+        _notifyLevelUp(userId, newLevel);
+      }
+    } catch (e) {
+      print('Error checking level: $e');
+    }
+  }
+
+  Future<void> _notifyLevelUp(String userId, String newLevel) async {
+    try {
+      await messagesCollection.add({
+        'to': userId,
+        'type': 'achievement',
+        'message': 'Congratulations! You\'ve reached $newLevel level!',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error sending level up notification: $e');
+    }
+  }
+
+  Future<void> updateModuleExpertise(String userId, String module, int points) async {
+    try {
+      await userCollection.doc(userId).update({
+        'moduleExpertise.$module': FieldValue.increment(points)
+      });
+    } catch (e) {
+      print('Error updating module expertise: $e');
+    }
+  }
+
+  Stream<List<UserInfoPopUp>> getTopContributors() {
+    return userCollection
+        .orderBy('weeklyPoints', descending: true)
+        .limit(10)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => UserInfoPopUp.fromMap(doc.data() as Map<String, dynamic>))
+            .toList());
+  }
+
+  void subscribeToUserAchievements(String userId, Function(String) onAchievement) {
+    messagesCollection
+        .where('to', isEqualTo: userId)
+        .where('type', isEqualTo: 'achievement')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>?;
+  if (data?['message'] != null) {
+    onAchievement(data!['message'] as String);
+  }
+      }
+    });
+  }
+
+  Future<void> resetWeeklyPoints() async {
+    final batch = _firestore.batch();
+    final users = await userCollection.get();
+    
+    for (var user in users.docs) {
+      batch.update(user.reference, {'weeklyPoints': 0});
+    }
+    
+    await batch.commit();
+  }
+
+  Future<void> awardBadge(String userId, String badge) async {
+    try {
+      await userCollection.doc(userId).update({
+        'badges': FieldValue.arrayUnion([badge])
+      });
+      
+      await messagesCollection.add({
+        'to': userId,
+        'type': 'achievement',
+        'message': 'You\'ve earned the $badge badge!',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error awarding badge: $e');
+    }
+  }
 }

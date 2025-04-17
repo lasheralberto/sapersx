@@ -1,0 +1,8 @@
+modules = ["dart-3.5"]
+run = "run"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "run"]

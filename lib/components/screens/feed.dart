@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:sapers/components/widgets/achievement_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -44,6 +45,58 @@ class Feed extends StatefulWidget {
 class _FeedState extends State<Feed> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   final FirebaseService _firebaseService = FirebaseService();
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey();
+  bool _showLeaderboard = false;
+  Stream<List<UserInfoPopUp>>? _topContributors;
+  AnimationController? _refreshAnimationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _loadTopContributors();
+    _initializeGamification();
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      setState(() {});
+    });
+    _searchFocusNode.addListener(() {
+      if (_searchFocusNode.hasFocus) {
+        _panelController.animatePanelToPosition(
+          1.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+    _updateFutures();
+  }
+
+  Future<void> _loadTopContributors() async {
+    // Implement loading top contributors logic
+    _topContributors = await _firebaseService.getTopContributors();
+    setState(() {});
+  }
+
+  void _initializeGamification() {
+    // Initialize gamification features
+    _firebaseService.subscribeToUserAchievements(widget.user?.uid ?? '', (achievement) {
+      _showAchievementAnimation(achievement);
+    });
+  }
+
+  void _showAchievementAnimation(String achievement) {
+    showDialog(
+      context: context,
+      builder: (context) => AchievementDialog(
+        achievement: achievement,
+        onDismiss: () => Navigator.of(context).pop(),
+      ),
+    );
+  }
   final List<String> _modules = Modules.modules;
   List<PlatformFile> selectedFiles = [];
   final PanelController _panelController = PanelController();
@@ -78,6 +131,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     super.dispose();
   }
 
+<<<<<<< HEAD
   @override
   void initState() {
     super.initState();
@@ -103,6 +157,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
     _updateFutures();
   }
+=======
+>>>>>>> 5e84abac62706b8121144a97d22be76e9b849912
 
   Future<void> _updateFutures() async {
     // Determinar qué posts cargar basado en los filtros seleccionados
@@ -145,6 +201,13 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     });
   }
 
+<<<<<<< HEAD
+=======
+
+
+
+
+>>>>>>> 5e84abac62706b8121144a97d22be76e9b849912
   Widget tagBubblePressed({
     required String tag,
     required VoidCallback onDelete,
@@ -250,11 +313,21 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   _updateFutures, // Actualiza los proyectos cuando se crea uno nuevo
             ),
           ),
+<<<<<<< HEAD
         ],
       ),
       body: _buildContentView(context, isMobile, screenWidth),
     );
   }
+=======
+        ),
+      ],
+    ),
+    body: _buildContentView(context, isMobile, screenWidth),
+  );
+}
+
+>>>>>>> 5e84abac62706b8121144a97d22be76e9b849912
 
   Widget _buildRegularUI(
       BuildContext context, bool isMobile, double screenWidth) {
