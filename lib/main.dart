@@ -18,6 +18,7 @@ import 'package:sapers/models/router.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'package:location/location.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -26,7 +27,7 @@ void main() async {
 
   // Inicializar Firebase
   if (kIsWeb) {
-   // await dotenv.load();
+    // await dotenv.load();
     await Firebase.initializeApp(
       options: FirebaseOptions(
         apiKey: DefaultFirebaseOptions.web.apiKey,
@@ -42,10 +43,10 @@ void main() async {
     );
   }
 
-  makePostRequest(
-      'https://hook.eu2.make.com/cudppako45cwb99ovmhuuyyy63i6ssr6', {
-    "user": "Inició la app",
-  });
+  // makePostRequest(
+  //     'https://hook.eu2.make.com/cudppako45cwb99ovmhuuyyy63i6ssr6', {
+  //   "user": "Inició la app",
+  // });
 
   //globalLanguage = 'es';
 

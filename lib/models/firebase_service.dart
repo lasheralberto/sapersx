@@ -737,6 +737,7 @@ class FirebaseService {
   Future<void> createPost(SAPPost post) async {
     final postIndexer = PostIndexer();
     final postMap = {
+      'id': post.id,
       'title': post.title,
       'content': post.content,
       'author': post.author,
@@ -747,7 +748,7 @@ class FirebaseService {
       'tags': post.tags,
       'attachments': post.attachments,
     };
-    final result = await postIndexer.indexPost(postMap);
+    await postIndexer.indexPost(postMap);
     await postsCollection.add(postMap);
   }
 
