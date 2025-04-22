@@ -726,8 +726,11 @@ class FirebaseService {
     try {
       final userCollection = FirebaseFirestore.instance.collection('userinfo');
 
+      Map<String, dynamic> userMap = userInfo.toMap();
       // Usar el uid del usuario como el ID del documento
-      await userCollection.doc(userInfo.uid).set(userInfo.toMap());
+      await UserIndexer().indexUser(userMap); // Indexar el usuario
+
+      await userCollection.doc(userInfo.uid).set(userMap);
     } catch (e) {
       rethrow;
     }

@@ -70,7 +70,7 @@ class AuthService {
           email: emailCleaned, password: pass);
 
       // Añadir delay
-      await Future.delayed(const Duration(seconds: 3));
+      await Future.delayed(const Duration(seconds: 1));
       return userCredential.user != null;
     } on FirebaseAuthException catch (e) {
       rethrow;
