@@ -12,7 +12,7 @@ import 'package:sapers/models/make_api.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/theme.dart';
 import 'package:sapers/models/user.dart';
-import 'firebase_options.dart';
+import 'components/widgets/firebase_options.dart';
 import 'package:sapers/models/auth_provider.dart' as zauth;
 import 'package:sapers/models/router.dart';
 import 'package:url_strategy/url_strategy.dart';

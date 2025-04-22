@@ -19,6 +19,7 @@ import 'package:sapers/components/widgets/like_button.dart';
 import 'package:sapers/components/widgets/mesmorphic_popup.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/auth_provider.dart';
+import 'package:sapers/models/indexer.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/project.dart';
@@ -734,7 +735,8 @@ class FirebaseService {
 
   // Método para crear un nuevo post
   Future<void> createPost(SAPPost post) async {
-    await postsCollection.add({
+    final postIndexer = PostIndexer();
+    final postMap = {
       'title': post.title,
       'content': post.content,
       'author': post.author,
@@ -744,7 +746,9 @@ class FirebaseService {
       'lang': LanguageProvider().currentLanguage,
       'tags': post.tags,
       'attachments': post.attachments,
-    });
+    };
+    final result = await postIndexer.indexPost(postMap);
+    await postsCollection.add(postMap);
   }
 
   Future<List<SAPPost>> getPostsByKeywordAI(String keyword) async {
@@ -1286,7 +1290,7 @@ class FirebaseService {
   }
 
   // Gamification Methods
-  
+
   Future<void> updateUserReputation(String userId, int points) async {
     try {
       await userCollection.doc(userId).update({
@@ -1303,15 +1307,17 @@ class FirebaseService {
     try {
       final userDoc = await userCollection.doc(userId).get();
       final data = userDoc.data() as Map<String, dynamic>?;
-  final reputation = data?['reputation'] ?? 0;
-      
+      final reputation = data?['reputation'] ?? 0;
+
       String newLevel = 'Beginner';
-      if (reputation >= 1000) newLevel = 'Expert';
-      else if (reputation >= 500) newLevel = 'Advanced';
+      if (reputation >= 1000)
+        newLevel = 'Expert';
+      else if (reputation >= 500)
+        newLevel = 'Advanced';
       else if (reputation >= 100) newLevel = 'Intermediate';
 
       final userData = userDoc.data() as Map<String, dynamic>?;
-  if (userData?['level'] != newLevel) {
+      if (userData?['level'] != newLevel) {
         await userCollection.doc(userId).update({'level': newLevel});
         _notifyLevelUp(userId, newLevel);
       }
@@ -1333,11 +1339,12 @@ class FirebaseService {
     }
   }
 
-  Future<void> updateModuleExpertise(String userId, String module, int points) async {
+  Future<void> updateModuleExpertise(
+      String userId, String module, int points) async {
     try {
-      await userCollection.doc(userId).update({
-        'moduleExpertise.$module': FieldValue.increment(points)
-      });
+      await userCollection
+          .doc(userId)
+          .update({'moduleExpertise.$module': FieldValue.increment(points)});
     } catch (e) {
       print('Error updating module expertise: $e');
     }
@@ -1349,11 +1356,13 @@ class FirebaseService {
         .limit(10)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => UserInfoPopUp.fromMap(doc.data() as Map<String, dynamic>))
+            .map((doc) =>
+                UserInfoPopUp.fromMap(doc.data() as Map<String, dynamic>))
             .toList());
   }
 
-  void subscribeToUserAchievements(String userId, Function(String) onAchievement) {
+  void subscribeToUserAchievements(
+      String userId, Function(String) onAchievement) {
     messagesCollection
         .where('to', isEqualTo: userId)
         .where('type', isEqualTo: 'achievement')
@@ -1362,9 +1371,9 @@ class FirebaseService {
         .listen((snapshot) {
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>?;
-  if (data?['message'] != null) {
-    onAchievement(data!['message'] as String);
-  }
+        if (data?['message'] != null) {
+          onAchievement(data!['message'] as String);
+        }
       }
     });
   }
@@ -1372,11 +1381,11 @@ class FirebaseService {
   Future<void> resetWeeklyPoints() async {
     final batch = _firestore.batch();
     final users = await userCollection.get();
-    
+
     for (var user in users.docs) {
       batch.update(user.reference, {'weeklyPoints': 0});
     }
-    
+
     await batch.commit();
   }
 
@@ -1385,7 +1394,7 @@ class FirebaseService {
       await userCollection.doc(userId).update({
         'badges': FieldValue.arrayUnion([badge])
       });
-      
+
       await messagesCollection.add({
         'to': userId,
         'type': 'achievement',
