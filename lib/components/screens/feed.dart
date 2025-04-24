@@ -83,7 +83,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
   void _initializeGamification() {
     // Initialize gamification features
-    _firebaseService.subscribeToUserAchievements(widget.user?.uid ?? '', (achievement) {
+    _firebaseService.subscribeToUserAchievements(widget.user?.uid ?? '',
+        (achievement) {
       _showAchievementAnimation(achievement);
     });
   }
@@ -97,6 +98,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       ),
     );
   }
+
   final List<String> _modules = Modules.modules;
   List<PlatformFile> selectedFiles = [];
   final PanelController _panelController = PanelController();
@@ -130,7 +132,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     _menuSidebarController.dispose();
     super.dispose();
   }
-
 
   Future<void> _updateFutures() async {
     // Determinar qué posts cargar basado en los filtros seleccionados
@@ -278,13 +279,11 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   _updateFutures, // Actualiza los proyectos cuando se crea uno nuevo
             ),
           ),
-       
-      ],
-    ),
-    body: _buildContentView(context, isMobile, screenWidth),
-  );
-}
-
+        ],
+      ),
+      body: _buildContentView(context, isMobile, screenWidth),
+    );
+  }
 
   Widget _buildRegularUI(
       BuildContext context, bool isMobile, double screenWidth) {

@@ -22,6 +22,7 @@ import 'package:sapers/components/widgets/sapers_ai_icon.dart';
 import 'package:sapers/components/widgets/searchbar.dart';
 import 'package:sapers/components/widgets/user_avatar.dart';
 import 'package:sapers/main.dart';
+import 'package:sapers/models/askassistant.dart';
 import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
@@ -66,39 +67,39 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
   bool _isLoading = false;
   List<dynamic> _recommendedPosts = [];
   Timer? _animationTimer;
+  Timer? _debounceTimer;
   bool _shouldNebulaMove = false;
   bool _isPanelOpen = false;
   final PanelController _panelController = PanelController();
+  final assistantService = AskAssistantService(
+      baseUrl: 'https://sapersx-568424820796.us-west1.run.app');
 
   Future<void> _sendQuery() async {
     if (_queryController.text.trim().isEmpty) return;
 
-    setState(() {
-      _isLoading = true;
-      _fullResponse = '';
-      _animationProgress = 0.0;
-      _recommendedPosts = [];
-      _shouldNebulaMove = true;
-    });
+    // Cancel any previous debounce timer
+    _debounceTimer?.cancel();
+
+    // Simple loading state
+    setState(() => _isLoading = true);
 
     try {
-      final (response, posts) = await _assistantService.generateAIResponse(
-          query: _queryController.text, username: widget.username);
+      final result = await assistantService.askQuestion(_queryController.text);
 
-      setState(() {
-        _fullResponse = response;
-        _recommendedPosts = posts;
-        _shouldNebulaMove = false;
-        _isLoading = false;
-      });
-
-      _startSweepAnimation();
+      if (mounted) {
+        setState(() {
+          _fullResponse = result.responseChat;
+          _isLoading = false;
+        });
+        _startSweepAnimation();
+      }
     } catch (e) {
-      setState(() {
-        _fullResponse = 'Error al procesar la solicitud';
-        _isLoading = false;
-        _shouldNebulaMove = false;
-      });
+      if (mounted) {
+        setState(() {
+          _fullResponse = 'Error al procesar la solicitud';
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -228,6 +229,15 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
     _animationTimer?.cancel();
     _queryController.dispose();
     super.dispose();
+  }
+
+  String _getPostTitle(dynamic post) {
+    if (post is SAPPost) {
+      return post.title ?? 'Sin título';
+    } else if (post is Map) {
+      return post['title'] ?? 'Sin título';
+    }
+    return 'Sin título';
   }
 
   @override
@@ -476,27 +486,104 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 100),
-      child: SelectableText.rich(
-        TextSpan(
-          children: UtilsSapers.parsePostContent(visibleText),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          ),
         ),
-        key: ValueKey(_animationProgress),
-        style: TextStyle(
-          fontSize: 12,
-          height: 1.6,
-          color: Theme.of(context).colorScheme.onSurface,
+        child: SelectableText.rich(
+          TextSpan(
+            children: _parseFormattedText(visibleText),
+          ),
+          key: ValueKey(_animationProgress),
+          style: TextStyle(
+            fontSize: 13,
+            height: 1.6,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
       ),
     );
   }
 
-  String _getPostTitle(dynamic post) {
-    if (post is SAPPost) {
-      return post.title;
-    } else if (post is Map) {
-      return post['title'] ?? 'Post relacionado';
+  List<TextSpan> _parseFormattedText(String text) {
+    List<TextSpan> spans = [];
+    final paragraphs = text.split('\n\n');
+
+    for (var paragraph in paragraphs) {
+      if (paragraph.trim().isEmpty) continue;
+
+      // Manejo de títulos numerados con viñetas
+      if (RegExp(r'^\d+\.\s+\*\*.*\*\*').hasMatch(paragraph)) {
+        var parts = paragraph.split('**');
+        spans.add(TextSpan(
+          text: '${String.fromCharCode(0x2022)} ${parts[0]}', // Bullet point
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            height: 2.0,
+          ),
+        ));
+        if (parts.length > 2) {
+          spans.add(TextSpan(
+            text: parts[2],
+            style: const TextStyle(fontSize: 15),
+          ));
+        }
+        spans.add(const TextSpan(text: '\n\n'));
+        continue;
+      }
+
+      // Manejo de bullets
+      if (paragraph.contains('•') || paragraph.contains('###')) {
+        var lines = paragraph.split('\n');
+        for (var line in lines) {
+          var cleanLine = line.replaceAll('###', '').trim();
+          if (line.trim().startsWith('•') || line.trim().startsWith('###')) {
+            spans.add(TextSpan(
+              text: '${String.fromCharCode(0x2022)} ', // Bullet point
+              style: const TextStyle(
+                height: 1.8,
+                fontSize: 15,
+              ),
+            ));
+            spans.add(TextSpan(
+              text: '${cleanLine.replaceAll('•', '').trim()}\n',
+              style: const TextStyle(height: 1.8),
+            ));
+          }
+        }
+        spans.add(const TextSpan(text: '\n'));
+        continue;
+      }
+
+      // Manejo de texto en negrita dentro de párrafos normales
+      if (paragraph.contains('**')) {
+        var parts = paragraph.split('**');
+        for (var i = 0; i < parts.length; i++) {
+          spans.add(TextSpan(
+            text: parts[i],
+            style: TextStyle(
+              fontWeight: i % 2 == 1 ? FontWeight.bold : FontWeight.normal,
+              height: 1.8,
+            ),
+          ));
+        }
+      } else {
+        // Párrafo normal
+        spans.add(TextSpan(
+          text: '$paragraph\n\n',
+          style: const TextStyle(height: 1.8),
+        ));
+      }
     }
-    return 'Post relacionado';
+
+    return spans;
   }
 }
 
