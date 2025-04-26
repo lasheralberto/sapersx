@@ -261,7 +261,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
               ),
               child: Column(
                 children: [
-                  // Search bar and add button row
+                  // Search bar and add button - Always visible
                   Row(
                     children: [
                       Expanded(
@@ -385,98 +385,93 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                     ],
                   ),
 
-                  const SizedBox(height: 12),
-
-                  // Response and recommendations area
-                  Expanded(
-                    child: _isLoading
-                        ? Center(
-                            child: UtilsSapers().buildShimmerEffect(
-                              3,
-                              UtilsSapers().buildShimmerLine(),
-                            ),
-                          )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  child: _buildAnimatedText(),
-                                ),
+                  // Response area - Only visible when there's content
+                  if (_isLoading || _fullResponse.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: _isLoading
+                          ? Center(
+                              child: UtilsSapers().buildShimmerEffect(
+                                6,
+                                UtilsSapers().buildShimmerLine(),
                               ),
-                              if (_recommendedPosts.isNotEmpty) ...[
-                                const SizedBox(height: 12),
-                                Text(
-                                  Texts.translate(
-                                      'recommendedPosts', currentLanguage),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withOpacity(0.7),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                SizedBox(
-                                  height: 32,
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: _recommendedPosts.length,
-                                    itemBuilder: (context, index) {
-                                      final post = _recommendedPosts[index];
-                                      return Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 8),
-                                        child: InkWell(
-                                          onTap: () =>
-                                              PostPopup.show(context, post),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 6,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppStyles.colorAvatarBorder
-                                                  .withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Icon(
-                                                  Symbols.article,
-                                                  size: 14,
-                                                  color: AppStyles
-                                                      .colorAvatarBorder,
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Text(
-                                                  _getPostTitle(post),
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: AppStyles
-                                                        .colorAvatarBorder,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                  ),
+                            )
+                          : _buildResponseArea(currentLanguage),
+                    ),
+                  ],
                 ],
               ),
             )
           : Container(key: const ValueKey('chat-hidden')),
+    );
+  }
+
+  Widget _buildResponseArea(String currentLanguage) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: _buildAnimatedText(),
+          ),
+        ),
+        if (_recommendedPosts.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Text(
+            Texts.translate('recommendedPosts', currentLanguage),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 32,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _recommendedPosts.length,
+              itemBuilder: (context, index) {
+                final post = _recommendedPosts[index];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: InkWell(
+                    onTap: () => PostPopup.show(context, post),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppStyles.colorAvatarBorder.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Symbols.article,
+                            size: 14,
+                            color: AppStyles.colorAvatarBorder,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _getPostTitle(post),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppStyles.colorAvatarBorder,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 

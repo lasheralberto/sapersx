@@ -59,10 +59,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     );
     _loadTopContributors();
     _initializeGamification();
-    _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(() {
-      setState(() {});
-    });
     _searchFocusNode.addListener(() {
       if (_searchFocusNode.hasFocus) {
         _panelController.animatePanelToPosition(
@@ -103,7 +99,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   List<PlatformFile> selectedFiles = [];
   final PanelController _panelController = PanelController();
 
-  late TabController _tabController;
   String _selectedModule = '';
   Future<List<SAPPost>>? _postsFutureGeneral;
   Future<List<SAPPost>>? _postsFutureFollowing;
@@ -123,10 +118,10 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   double _panelPosition = 0.0;
   final FocusNode _searchFocusNode = FocusNode();
   bool isMobile = false;
+  int _currentIndex = 0; // Replace TabController with simple index
 
   @override
   void dispose() {
-    _tabController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
     _menuSidebarController.dispose();
@@ -238,90 +233,203 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     isMobile = MediaQuery.of(context).size.width < 600;
     screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
-      body: _tabController.index == 0
-          ? _buildSlidingUpPanelUI(context, isMobile, screenWidth)
-          : _buildRegularUI(context, isMobile, screenWidth),
+      body: _buildSlidingUpPanelUI(context, isMobile, screenWidth),
+      bottomNavigationBar: isMobile ? _buildBottomNav() : null,
     );
   }
 
-// En la clase _FeedState, actualiza este método:
+  Widget _buildBottomNav() {
+    return NavigationBar(
+      selectedIndex: _currentIndex,
+      elevation: 0,
+      shadowColor: Colors.white,
+      height: 50,
+      onDestinationSelected: (index) => setState(() => _currentIndex = index),
+      destinations: [
+        NavigationDestination(
+          icon: Icon(Symbols.home_filled,
+              size: AppStyles.iconSizeSmall,
+              color: _currentIndex == 0
+                  ? AppStyles.colorAvatarBorder
+                  : AppStyles.textColor),
+          label: 'Feed',
+        ),
+        NavigationDestination(
+          icon: Icon(Symbols.category,
+              size: AppStyles.iconSizeSmall,
+              color: _currentIndex == 1
+                  ? AppStyles.colorAvatarBorder
+                  : AppStyles.textColor),
+          label: 'Proyectos',
+        ),
+        NavigationDestination(
+          icon: Icon(Symbols.group,
+              size: AppStyles.iconSizeSmall,
+              color: _currentIndex == 2
+                  ? AppStyles.colorAvatarBorder
+                  : AppStyles.textColor),
+          label: 'Personas',
+        ),
+      ],
+    );
+  }
 
   Widget _buildSlidingUpPanelUI(
       BuildContext context, bool isMobile, double screenWidth) {
-    return SlidingUpPanel(
-      onPanelSlide: (position) {
-        setState(() {
-          _panelPosition = position;
-          _isPanelOpen = position > 0.5;
-        });
-      },
-      controller: _panelController,
-      minHeight: 75,
-      maxHeight: MediaQuery.of(context).size.height * 0.7,
-      parallaxEnabled: false,
-      parallaxOffset: 0.5,
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(24.0),
-        topRight: Radius.circular(24.0),
-      ),
-      panel: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: SAPAIAssistantWidget(
-              searchFocusNode: _searchFocusNode,
-              username: widget.user?.displayName ?? 'UsuarioDemo',
-              isPanelVisible: true,
-              onPostCreated:
-                  _updateFutures, // Actualiza los posts cuando se crea uno nuevo
-              onProjectCreated:
-                  _updateFutures, // Actualiza los proyectos cuando se crea uno nuevo
+    return Row(
+      children: [
+        if (!isMobile)
+          Container(
+            width: 250,
+            height: MediaQuery.of(context).size.height,
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: _buildSideMenu(),
+          ),
+        Expanded(
+          child: Stack(
+            children: [
+              Padding(
+                padding: EdgeInsets.only(
+                  left: isMobile ? 16 : 0,
+                  right: 16,
+                  top: 16,
+                  bottom: isMobile ? kBottomNavigationBarHeight : 0,
+                ),
+                child: _getCurrentView(isMobile),
+              ),
+              if (_currentIndex == 0) // Solo mostrar en la vista de feed
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: SlidingUpPanel(
+                    backdropEnabled: true,
+                    backdropOpacity: 0.5,
+                    onPanelSlide: (position) {
+                      setState(() {
+                        _panelPosition = position;
+                        _isPanelOpen = position > 0;
+                      });
+                    },
+                    controller: _panelController,
+                    minHeight: 75,
+                    maxHeight: MediaQuery.of(context).size.height * 0.7,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(24.0),
+                      topRight: Radius.circular(24.0),
+                    ),
+                    panel: SAPAIAssistantWidget(
+                      searchFocusNode: _searchFocusNode,
+                      username: widget.user?.displayName ?? 'UsuarioDemo',
+                      isPanelVisible: true,
+                      onPostCreated: _updateFutures,
+                      onProjectCreated: _updateFutures,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _getCurrentView(bool isMobile) {
+    switch (_currentIndex) {
+      case 0:
+        return _buildGeneralPostsTab(isMobile);
+      case 1:
+        return _buildProjectsTab(isMobile);
+      case 2:
+        return const UserSearchScreen();
+      default:
+        return _buildGeneralPostsTab(isMobile);
+    }
+  }
+
+  Widget _buildSideMenu() {
+    return Column(
+      children: [
+        const SizedBox(height: 32),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Image.asset(
+            AppStyles.logoImage,
+            height: 40,
+          ),
+        ),
+        const SizedBox(height: 32),
+        _buildSideMenuItem(
+          icon: Symbols.home_filled,
+          label: 'Feed',
+          isSelected: _currentIndex == 0,
+          onTap: () => setState(() => _currentIndex = 0),
+        ),
+        _buildSideMenuItem(
+          icon: Symbols.category,
+          label: 'Proyectos',
+          isSelected: _currentIndex == 1,
+          onTap: () => setState(() => _currentIndex = 1),
+        ),
+        _buildSideMenuItem(
+          icon: Symbols.group,
+          label: 'Personas',
+          isSelected: _currentIndex == 2,
+          onTap: () => setState(() => _currentIndex = 2),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSideMenuItem({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppStyles.colorAvatarBorder.withOpacity(0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected
+                      ? AppStyles.colorAvatarBorder
+                      : AppStyles.textColor,
+                  size: 24,
+                  weight: 700,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected
+                        ? AppStyles.colorAvatarBorder
+                        : AppStyles.textColor,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
-      body: _buildContentView(context, isMobile, screenWidth),
-    );
-  }
-
-  Widget _buildRegularUI(
-      BuildContext context, bool isMobile, double screenWidth) {
-    return _buildContentView(context, isMobile, screenWidth);
-  }
-
-  Widget _buildContentView(
-      BuildContext context, bool isMobile, double screenWidth) {
-    return _buildNestedScrollView(context, isMobile, screenWidth);
-  }
-
-  Widget _buildNestedScrollView(
-      BuildContext context, bool isMobile, double screenWidth) {
-    return NestedScrollView(
-      controller:
-          PrimaryScrollController.of(context), // Usa el controlador principal
-      headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-        return [
-          _buildAppBar(context, isMobile),
-          _buildSearchBarHeader(context, isMobile, screenWidth),
-          _buildTabBarHeader(),
-        ];
-      },
-      body: _buildTabBarView(context, isMobile),
-    );
-  }
-
-  Widget _buildTabBarView(BuildContext context, bool isMobile) {
-    return TabBarView(
-      controller: _tabController,
-      physics:
-          const ClampingScrollPhysics(), // Evita conflictos de desplazamiento
-      children: [
-        _buildGeneralPostsTab(isMobile),
-        _buildFollowingPostsTab(isMobile),
-        _buildProjectsTab(isMobile),
-        const UserSearchScreen(),
-      ],
     );
   }
 
@@ -350,38 +458,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
               });
             },
             future: _postsFutureGeneral!,
-            isMobile: isMobile,
-            trendingTags: trendingTags,
-            onTagSelected: (tag) {
-              setState(() {
-                tagPressed = tag;
-                _updateFutures();
-              });
-            });
-      },
-    );
-  }
-
-  Widget _buildFollowingPostsTab(bool isMobile) {
-    return FutureBuilder<List<String>>(
-      future: _futureTags,
-      builder: (context, snapshot) {
-        List<String> trendingTags = ['PP']; // Valor por defecto
-
-        if (snapshot.hasData) {
-          trendingTags = snapshot.data!;
-        }
-
-        return PostsListWithSidebar(
-            menuSidebarController: _menuSidebarController,
-            sidebarController: _sidebarController,
-            onRefresh: _updateFutures,
-            onPostExpanded: (p0) {
-              setState(() {
-                isPostExpanded = p0;
-              });
-            },
-            future: _postsFutureFollowing!,
             isMobile: isMobile,
             trendingTags: trendingTags,
             onTagSelected: (tag) {
@@ -500,59 +576,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       ),
     );
   }
-
-  SliverPersistentHeader _buildTabBarHeader() {
-    return SliverPersistentHeader(
-      pinned: true,
-      delegate: SliverTabBarDelegate(
-        TabBar(
-          isScrollable: true,
-          tabAlignment: TabAlignment.center,
-          indicatorPadding: const EdgeInsets.all(10.0),
-          indicatorSize: TabBarIndicatorSize.tab,
-          controller: _tabController,
-          indicator: const BoxDecoration(
-            image: DecorationImage(
-              alignment: Alignment.center,
-              opacity: 0.8,
-              scale: 0.5,
-              image: AssetImage(AppStyles.tabMarkerImage),
-              fit: BoxFit.scaleDown,
-            ),
-          ),
-          labelColor: AppStyles.colorAvatarBorder,
-          unselectedLabelColor: Theme.of(context).disabledColor,
-          indicatorColor: AppStyles.colorAvatarBorder,
-          dividerColor: Colors.transparent,
-          tabs: [
-            _buildTab('feedGeneralTab'),
-            _buildTab('FollowingTab'),
-            _buildTab('projectsTab'),
-            _buildTab('genteTab')
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTab(String textKey) {
-    return Tab(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 80),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Text(
-            Texts.translate(textKey, languageProvider.currentLanguage),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: AppStyles.fontSize, // Usando fontSize
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // Header Delegate Classes
@@ -585,37 +608,6 @@ class SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
     return maxHeight != oldDelegate.maxHeight ||
         minHeight != oldDelegate.minHeight ||
         child != oldDelegate.child;
-  }
-}
-
-class SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar tabBar;
-
-  SliverTabBarDelegate(this.tabBar);
-
-  @override
-  double get minExtent => tabBar.preferredSize.height;
-
-  @override
-  double get maxExtent => tabBar.preferredSize.height;
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      child: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: tabBar,
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(SliverTabBarDelegate oldDelegate) {
-    return tabBar != oldDelegate.tabBar;
   }
 }
 

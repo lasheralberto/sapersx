@@ -133,117 +133,161 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   @override
   Widget build(BuildContext context) {
     return isLoading == true
-        ? const Center(
-            child: CircularProgressIndicator(),
-          )
+        ? const Center(child: CircularProgressIndicator())
         : Scaffold(
-            backgroundColor: AppStyles.scaffoldColor,
-            body: Column(
-              children: [
-                Expanded(
-                  child: NestedScrollView(
-                      body: TabBarView(controller: _tabController, children: [
-                        _buildProjectDescription(context),
-                        _buildChatSection(context),
-                        _attachmentSection(),
-                      ]),
-                      headerSliverBuilder:
-                          (BuildContext context, bool innerBoxIsScrolled) {
-                        return [
-                          SliverAppBar(
-                            expandedHeight:
-                                MediaQuery.of(context).size.height * 0.3,
-                            pinned: true,
-                            flexibleSpace: FlexibleSpaceBar(
-                              background: _buildHeader(context),
-                            ),
-                            leading: IconButton(
-                                icon: const Icon(Icons.arrow_back),
-                                onPressed: () => context.canPop()
-                                    ? context.pop()
-                                    : context.push('/home')
-                                // Navigator.pop(context),
-                                ),
-                            actions: [
-                              if (isOwner)
-                                IconButton(
-                                  icon: const Icon(Icons.edit),
-                                  onPressed: () => _editProjectDetails(context),
-                                ),
-                            ],
-                          ),
-                          SliverPersistentHeader(
-                            pinned: true,
-                            delegate: SliverTabBarDelegate(
-                              TabBar(
-                                isScrollable: false,
-                                tabAlignment: TabAlignment.center,
-                                indicatorSize: TabBarIndicatorSize.tab,
-                                controller: _tabController,
-                                indicator: const BoxDecoration(
-                                  image: DecorationImage(
-                                    alignment: Alignment.center,
-                                    opacity: 0.8,
-                                    scale: 1,
-                                    image: AssetImage(AppStyles.tabMarkerImage),
-                                    fit: BoxFit.scaleDown,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            body: NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                SliverAppBar(
+                  expandedHeight: MediaQuery.of(context).size.height * 0.30, // Reduced from 0.2
+                  toolbarHeight: 45, // Added fixed toolbar height
+                  pinned: true,
+                  stretch: true,
+                  backgroundColor: AppStyles().getProjectCardColor(widget.project.projectid),
+                  flexibleSpace: FlexibleSpaceBar(
+                    expandedTitleScale: 1.1, // Reduced from 1.2
+                    stretchModes: const [StretchMode.zoomBackground],
+                    background: Container(
+                      padding: const EdgeInsets.only(bottom: 8), // Reduced padding
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppStyles().getProjectCardColor(widget.project.projectid),
+                            AppStyles().getProjectCardColor(widget.project.projectid).withOpacity(0.8),
+                          ],
+                        ),
+                      ),
+                      child: SafeArea(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    widget.project.projectName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 20, // Reduced from 24
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                ),
-                                labelColor: AppStyles.colorAvatarBorder,
-                                unselectedLabelColor:
-                                    Theme.of(context).disabledColor,
-                                indicatorColor: AppStyles.colorAvatarBorder,
-                                dividerColor: Colors.transparent,
-                                tabs: [
-                                  _buildTab(
-                                      true,
-                                      Texts.translate('descripcionTab',
-                                          LanguageProvider().currentLanguage),
-                                      Icons.abc),
-                                  _buildTab(
-                                      true,
-                                      Texts.translate('chatTab',
-                                          LanguageProvider().currentLanguage),
-                                      Icons.chat),
-                                  _buildTab(
-                                      true,
-                                      Texts.translate('filesTab',
-                                          LanguageProvider().currentLanguage),
-                                      Icons.file_copy_sharp),
+                                  const SizedBox(height: 2), // Reduced spacing
+                                  Text(
+                                    'Creado por ${widget.project.createdBy}',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 12, // Reduced from 13
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
-                          ),
-                        ];
-                      }),
+                            const SizedBox(height: 4), // Reduced spacing
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                children: [
+                                  StackedAvatars(
+                                    members: widget.project.members,
+                                    minAvatarSize: 24,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${widget.project.members.length} miembros',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _SliverTabBarDelegate(
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: AppStyles.colorAvatarBorder,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorColor: AppStyles.colorAvatarBorder,
+                      indicatorWeight: 3,
+                      tabs: [
+                        Tab(
+                            text: Texts.translate('descripcionTab',
+                                LanguageProvider().currentLanguage)),
+                        Tab(
+                            text: Texts.translate(
+                                'chatTab', LanguageProvider().currentLanguage)),
+                        Tab(
+                            text: Texts.translate('filesTab',
+                                LanguageProvider().currentLanguage)),
+                      ],
+                    ),
+                  ),
                 ),
               ],
+              body: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: _buildProjectDescription(context),
+                      ),
+                    ),
+                    _buildChatSection(context),
+                    _attachmentSection(),
+                  ],
+                ),
+              ),
             ),
             bottomSheet: _buildChatInput(),
-            resizeToAvoidBottomInset: true,
-            floatingActionButton: _tabController.index == 2
-                ? FloatingActionButton(
-                    onPressed: () async {
-                      setState(() {
-                        _isUploading = true;
-                      });
-                      final uploadedFiles = await FirebaseService()
-                          .pickAndUploadFileProject(widget.project.projectid,
-                              currentUser!.username.toString());
+            floatingActionButton: _buildFloatingActionButton(),
+          );
+  }
 
-                      if (uploadedFiles.isNotEmpty && mounted) {
-                        setState(() {
-                          _isUploading = false;
-                        });
-                      } else {
-                        setState(() {
-                          _isUploading = false;
-                        });
-                      }
-                    },
-                    child: const Icon(Icons.upload),
-                  )
-                : const SizedBox.shrink());
+  Widget _buildFloatingActionButton() {
+    if (_tabController.index != 2) return const SizedBox.shrink();
+
+    return FloatingActionButton.extended(
+      onPressed: _uploadFile,
+      icon: const Icon(Icons.upload_file),
+      label: const Text('Subir archivo'),
+      backgroundColor:
+          AppStyles().getProjectCardColor(widget.project.projectid),
+    );
+  }
+
+  Future<void> _uploadFile() async {
+    setState(() => _isUploading = true);
+    try {
+      final uploadedFiles = await FirebaseService().pickAndUploadFileProject(
+          widget.project.projectid, currentUser!.username.toString());
+
+      if (uploadedFiles.isNotEmpty && mounted) {
+        SnackBarCustom().showSuccessSnackBar(context, widget.project.projectid);
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
   }
 
   Widget _attachmentSection() {
@@ -483,69 +527,25 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppStyles().getProjectCardColor(widget.project.projectid),
-            AppStyles().getProjectCardColor(widget.project.projectid),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(
-                widget.project.projectName,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(2, 2),
-                    )
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: StackedAvatars(members: widget.project.members),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildProjectDescription(BuildContext context) {
     return Card(
-      color: Colors.white,
+      margin: EdgeInsets.zero,
+      color: Theme.of(context).cardColor,
       elevation: AppStyles().getCardElevation(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(50.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               Texts.translate(
                   'projectDescr', _languageProvider.currentLanguage),
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               widget.project.description,
               style: Theme.of(context).textTheme.bodyMedium,
@@ -587,8 +587,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return Center(
-                      child: Text(Texts.translate(
-                          'noMessagesChat', LanguageProvider().currentLanguage)));
+                      child: Text(Texts.translate('noMessagesChat',
+                          LanguageProvider().currentLanguage)));
                 }
 
                 final messages = snapshot.data!.docs;
@@ -768,5 +768,32 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
 
   void _editProjectDetails(BuildContext context) {
     // Implementar lógica para editar detalles del proyecto
+  }
+}
+
+// Create a new delegate class for the tab bar
+class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar tabBar;
+
+  _SliverTabBarDelegate(this.tabBar);
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
+    return tabBar != oldDelegate.tabBar;
   }
 }
