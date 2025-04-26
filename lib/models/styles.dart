@@ -356,16 +356,19 @@ class AppTheme {
         onError: AppStyles._pureWhite,
       ),
       cardTheme: CardThemeData(
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         color: AppStyles.cardBackgroundColor,
-        elevation: AppStyles.cardElevation,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         ),
-        margin: const EdgeInsets.all(AppStyles.spacingSmall),
+        margin: EdgeInsets.zero,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        shadowColor: Colors.transparent,
         centerTitle: true,
         iconTheme: IconThemeData(
           color: AppStyles.iconColor,
@@ -464,7 +467,7 @@ class AppTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppStyles.colorAvatarBorder,
         foregroundColor: AppStyles._pureWhite,
-        elevation: AppStyles.cardElevation,
+        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppStyles.dialogBorderRadius),
         ),
@@ -495,8 +498,10 @@ class AppTheme {
 
       // Dark theme specific overrides
       cardTheme: CardThemeData(
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         color: AppStyles._darkGray,
-        elevation: AppStyles.cardElevation,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         ),

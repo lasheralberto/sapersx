@@ -46,7 +46,9 @@ class _PostCardState extends State<PostCard> {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           child: Card(
-            elevation: widget.post.replyCount > 10 ? 4 : 0,
+            elevation: 0, // Eliminada elevación
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(
@@ -67,10 +69,10 @@ class _PostCardState extends State<PostCard> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        //color: Theme.of(context).primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.trending_up, size: 16),

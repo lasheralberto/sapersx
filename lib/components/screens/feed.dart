@@ -242,7 +242,9 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     return NavigationBar(
       selectedIndex: _currentIndex,
       elevation: 0,
-      shadowColor: Colors.white,
+      backgroundColor: Colors.white,
+      shadowColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
       height: 50,
       onDestinationSelected: (index) => setState(() => _currentIndex = index),
       destinations: [
@@ -279,54 +281,79 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     return Row(
       children: [
         if (!isMobile)
-          Container(
-            width: 250,
-            height: MediaQuery.of(context).size.height,
+          Material(
+            elevation: 0,
             color: Theme.of(context).scaffoldBackgroundColor,
-            child: _buildSideMenu(),
+            surfaceTintColor: Colors.white,
+            child: SizedBox(
+              width: 250,
+              height: MediaQuery.of(context).size.height,
+              child: _buildSideMenu(),
+            ),
           ),
         Expanded(
-          child: Stack(
+          child: Column(
             children: [
-              Padding(
-                padding: EdgeInsets.only(
-                  left: isMobile ? 16 : 0,
-                  right: 16,
-                  top: 16,
-                  bottom: isMobile ? kBottomNavigationBarHeight : 0,
-                ),
-                child: _getCurrentView(isMobile),
-              ),
-              if (_currentIndex == 0) // Solo mostrar en la vista de feed
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: SlidingUpPanel(
-                    backdropEnabled: true,
-                    backdropOpacity: 0.5,
-                    onPanelSlide: (position) {
-                      setState(() {
-                        _panelPosition = position;
-                        _isPanelOpen = position > 0;
-                      });
-                    },
-                    controller: _panelController,
-                    minHeight: 75,
-                    maxHeight: MediaQuery.of(context).size.height * 0.7,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(24.0),
-                      topRight: Radius.circular(24.0),
-                    ),
-                    panel: SAPAIAssistantWidget(
-                      searchFocusNode: _searchFocusNode,
-                      username: widget.user?.displayName ?? 'UsuarioDemo',
-                      isPanelVisible: true,
-                      onPostCreated: _updateFutures,
-                      onProjectCreated: _updateFutures,
-                    ),
+              if (isMobile)
+                AppBar(
+                  elevation: 0,
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                  title: Image.asset(
+                    AppStyles.logoImage,
+                    height: 50,
+                    width: 50,
                   ),
+                  centerTitle: true,
                 ),
+              Expanded(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: isMobile ? kBottomNavigationBarHeight : 0,
+                      ),
+                      child: _getCurrentView(isMobile),
+                    ),
+                    if (_currentIndex == 0)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: SlidingUpPanel(
+                          maxHeight: MediaQuery.of(context).size.height * 0.7,
+                          minHeight: isMobile ? 75 : 85,
+
+                          onPanelSlide: (position) {
+                            setState(() {
+                              _panelPosition = position;
+                              _isPanelOpen = position > 0;
+                            });
+                          },
+                          backdropEnabled: true,
+                          backdropOpacity: 0.5,
+                          boxShadow: const [],
+                          renderPanelSheet: true, // Cambiado a true
+                          panel: ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(24.0)),
+                            child: Material(
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              child: SAPAIAssistantWidget(
+                                searchFocusNode: _searchFocusNode,
+                                username:
+                                    widget.user?.displayName ?? 'UsuarioDemo',
+                                isPanelVisible: true,
+                                onPostCreated: _updateFutures,
+                                onProjectCreated: _updateFutures,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -349,33 +376,86 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
   Widget _buildSideMenu() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        const SizedBox(height: 32),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        // Logo section
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
           child: Image.asset(
             AppStyles.logoImage,
-            height: 40,
+            height: 70,
+            width: 70,
           ),
         ),
-        const SizedBox(height: 32),
-        _buildSideMenuItem(
-          icon: Symbols.home_filled,
-          label: 'Feed',
-          isSelected: _currentIndex == 0,
-          onTap: () => setState(() => _currentIndex = 0),
+
+        // User profile section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.grey.withOpacity(0.1),
+                width: 0,
+              ),
+              color: Colors.transparent,
+            ),
+            child: Row(
+              children: [
+                UserAvatar(
+                  user: widget.user,
+                  size: AppStyles.avatarSize,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    Provider.of<AuthProviderSapers>(context, listen: false)
+                            .userInfo
+                            ?.username ??
+                        Texts.translate('iniciarSesion',
+                            LanguageProvider().currentLanguage),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        _buildSideMenuItem(
-          icon: Symbols.category,
-          label: 'Proyectos',
-          isSelected: _currentIndex == 1,
-          onTap: () => setState(() => _currentIndex = 1),
-        ),
-        _buildSideMenuItem(
-          icon: Symbols.group,
-          label: 'Personas',
-          isSelected: _currentIndex == 2,
-          onTap: () => setState(() => _currentIndex = 2),
+
+        const SizedBox(height: 24),
+
+        // Menu items section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Column(
+            children: [
+              _buildSideMenuItem(
+                icon: Symbols.home_filled,
+                label: 'Feed',
+                isSelected: _currentIndex == 0,
+                onTap: () => setState(() => _currentIndex = 0),
+              ),
+              _buildSideMenuItem(
+                icon: Symbols.category,
+                label: 'Proyectos',
+                isSelected: _currentIndex == 1,
+                onTap: () => setState(() => _currentIndex = 1),
+              ),
+              _buildSideMenuItem(
+                icon: Symbols.group,
+                label: 'Personas',
+                isSelected: _currentIndex == 2,
+                onTap: () => setState(() => _currentIndex = 2),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -499,8 +579,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
             ),
             child: Image.asset(
               AppStyles.logoImage,
-              width: isMobile ? 80.0 : 100.0,
-              height: isMobile ? 80.0 : 100.0,
+              width: isMobile ? 100.0 : 100.0,
+              height: isMobile ? 100.0 : 100.0,
             ),
           ),
           Row(

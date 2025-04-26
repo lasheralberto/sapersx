@@ -15,8 +15,9 @@ import 'package:sapers/models/auth_provider.dart' as zauth;
 
 class UserAvatar extends StatelessWidget {
   final User? user;
+  final double size;
 
-  const UserAvatar({super.key, required this.user});
+  const UserAvatar({super.key, required this.user, this.size = 36});
 
   @override
   Widget build(BuildContext context) {
@@ -57,14 +58,14 @@ class UserAvatar extends StatelessWidget {
               PopupMenuItem(
                 value: 'profile',
                 child: ListTile(
-                  leading: Icon(Icons.person),
+                  leading: const Icon(Icons.person),
                   title: Text(user.email),
                 ),
               ),
               PopupMenuItem(
                 value: 'logout',
                 child: ListTile(
-                  leading: Icon(Icons.exit_to_app),
+                  leading: const Icon(Icons.exit_to_app),
                   title: Text(
                     Texts.translate('cerrarSesion', LanguageProvider().currentLanguage),
                   ),
@@ -74,7 +75,7 @@ class UserAvatar extends StatelessWidget {
             child: ProfileAvatar(
               isProfileMenuButton: true,
               userInfoPopUp: user,
-              size: AppStyles.avatarSize,
+              size: this.size.toDouble(),
               seed: user.email,
               showBorder: user.isExpert as bool,
             ),

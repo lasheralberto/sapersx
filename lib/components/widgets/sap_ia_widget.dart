@@ -291,36 +291,19 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                                   ),
                                   child: Row(
                                     children: [
-                                      Expanded(
-                                        child: TextField(
-                                          focusNode: widget.searchFocusNode,
-                                          controller: _queryController,
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurface,
-                                          ),
-                                          decoration: InputDecoration(
-                                            isDense: true,
-                                            hintText: Texts.translate(
-                                                'askMe', currentLanguage),
-                                            hintStyle: TextStyle(
-                                              fontSize: 13,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface
-                                                  .withOpacity(0.5),
-                                            ),
-                                            contentPadding:
-                                                const EdgeInsets.fromLTRB(
-                                                    16, 14, 8, 14),
-                                            border: InputBorder.none,
-                                            enabledBorder: InputBorder.none,
-                                            focusedBorder: InputBorder.none,
-                                          ),
-                                          onSubmitted: (_) => _sendQuery(),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.add,
+                                          color: AppStyles.colorAvatarBorder,
+                                          size: 20,
                                         ),
+                                        style: IconButton.styleFrom(
+                                          backgroundColor: AppStyles
+                                              .colorAvatarBorder
+                                              .withOpacity(0.1),
+                                          padding: const EdgeInsets.all(8),
+                                        ),
+                                        onPressed: _showCreateOptions,
                                       ),
                                       AnimatedSwitcher(
                                         duration:
@@ -360,6 +343,37 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                                                 onPressed: _sendQuery,
                                               ),
                                       ),
+                                      Expanded(
+                                        child: TextField(
+                                          focusNode: widget.searchFocusNode,
+                                          controller: _queryController,
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface,
+                                          ),
+                                          decoration: InputDecoration(
+                                            isDense: true,
+                                            hintText: Texts.translate(
+                                                'askMe', currentLanguage),
+                                            hintStyle: TextStyle(
+                                              fontSize: 13,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.5),
+                                            ),
+                                            contentPadding:
+                                                const EdgeInsets.fromLTRB(
+                                                    16, 14, 8, 14),
+                                            border: InputBorder.none,
+                                            enabledBorder: InputBorder.none,
+                                            focusedBorder: InputBorder.none,
+                                          ),
+                                          onSubmitted: (_) => _sendQuery(),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -367,20 +381,6 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.add,
-                          color: AppStyles.colorAvatarBorder,
-                          size: 20,
-                        ),
-                        style: IconButton.styleFrom(
-                          backgroundColor:
-                              AppStyles.colorAvatarBorder.withOpacity(0.1),
-                          padding: const EdgeInsets.all(8),
-                        ),
-                        onPressed: _showCreateOptions,
                       ),
                     ],
                   ),
