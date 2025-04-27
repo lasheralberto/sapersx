@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:sapers/components/widgets/postcard.dart';
+import 'package:sapers/components/widgets/user_profile_hover.dart';
+import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:sapers/models/texts.dart';
+import 'package:sapers/models/user.dart';
 
 // Tu widget TrendingTagsSidebar existente
 class TrendingTagsSidebar extends StatefulWidget {
@@ -164,7 +167,7 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
 // Clase para gestionar el estado del sidebar (con mejoras)
 class SidebarController extends ChangeNotifier {
   bool _isOpen = false;
-  bool _isFixed = false; // Nueva propiedad para mantener el sidebar fijo
+  bool _isFixed = false;
 
   bool get isOpen => _isOpen;
   bool get isFixed => _isFixed;
@@ -175,21 +178,22 @@ class SidebarController extends ChangeNotifier {
   }
 
   void close() {
-    _isOpen = false;
-    notifyListeners();
+    if (_isOpen) {
+      _isOpen = false;
+      notifyListeners();
+    }
   }
 
   void open() {
-    _isOpen = true;
-    notifyListeners();
+    if (!_isOpen) {
+      _isOpen = true;
+      notifyListeners();
+    }
   }
 
-  // Nuevo método para alternar el modo fijo
   void toggleFixed() {
-    //  _isFixed = !_isFixed;
-    // if (_isFixed) {
-    _isOpen = true; // Si está fijo, asegurarse de que esté abierto
-    //   }
+    _isFixed = !_isFixed;
+    _isOpen = true;
     notifyListeners();
   }
 }
@@ -216,13 +220,27 @@ class _XMenuSidebarState extends State<XMenuSidebar> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     widget.sidebarController.addListener(() {
-      if (!widget.sidebarController.isOpen) {
-        setState(() {
-          widget.sidebarController.open();
-        });
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.sidebarController.removeListener(() {});
+    super.dispose();
+  }
+
+  void _handleMenuOptionTap(int index) {
+    if (!mounted) return;
+    setState(() {
+      _selectedOption = index;
+      widget.onMenuOptionSelected(index);
+      if (widget.isMobile) {
+        widget.sidebarController.close();
       }
     });
   }
@@ -239,19 +257,11 @@ class _XMenuSidebarState extends State<XMenuSidebar> {
           topRight: Radius.circular(20),
           bottomRight: Radius.circular(20),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(5, 0),
-          ),
-        ],
       ),
       child: Column(
         children: [
           const SizedBox(height: 50),
-
-          // Perfil de usuario
+          // User profile section
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Row(
@@ -286,53 +296,15 @@ class _XMenuSidebarState extends State<XMenuSidebar> {
               ],
             ),
           ),
-
           const Divider(),
-
-          // Opciones del menú
+          // Menu items
           _buildMenuItem(0, Icons.home_rounded, 'Inicio'),
           _buildMenuItem(1, Icons.search, 'Explorar'),
           _buildMenuItem(2, Icons.notifications_outlined, 'Notificaciones'),
           _buildMenuItem(3, Icons.mail_outline, 'Mensajes'),
           _buildMenuItem(4, Icons.bookmark_border, 'Guardados'),
-
           const Spacer(),
-
-          // Botón para fijar el sidebar (pin)
-          if (!widget.isMobile) // Solo en pantallas grandes
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GestureDetector(
-                onTap: () {
-                  widget.sidebarController.toggleFixed();
-                },
-                child: Row(
-                  children: [
-                    Icon(
-                      widget.sidebarController.isFixed
-                          ? Icons.push_pin
-                          : Icons.push_pin_outlined,
-                      color: widget.sidebarController.isFixed
-                          ? AppStyles.colorAvatarBorder
-                          : Colors.grey,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      widget.sidebarController.isFixed
-                          ? 'Fijar menú'
-                          : 'Desfijar menú',
-                      style: TextStyle(
-                        color: widget.sidebarController.isFixed
-                            ? AppStyles.colorAvatarBorder
-                            : Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-          // Configuración en la parte inferior
+          // Settings option
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: GestureDetector(
@@ -355,15 +327,7 @@ class _XMenuSidebarState extends State<XMenuSidebar> {
     final isSelected = _selectedOption == index;
 
     return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedOption = index;
-        });
-        widget.onMenuOptionSelected(index);
-        if (widget.isMobile && !widget.sidebarController.isFixed) {
-          widget.sidebarController.close();
-        }
-      },
+      onTap: () => _handleMenuOptionTap(index),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
@@ -481,6 +445,21 @@ class PostsListWithSidebar extends StatefulWidget {
 class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
   bool _isRefreshing = false;
   int _selectedMenuOption = 0;
+  Stream<List<UserInfoPopUp>>? _topContributors;
+  final FirebaseService _firebaseService = FirebaseService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTopContributors();
+  }
+
+  Future<void> _loadTopContributors() async {
+    setState(() {
+      _topContributors =
+          _firebaseService.getTopContributors().asBroadcastStream();
+    });
+  }
 
   Future<void> _handleRefresh() async {
     setState(() {
@@ -523,6 +502,87 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTopContributorsRow() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Text(
+            Texts.translate(
+                'TopContributors', LanguageProvider().currentLanguage),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 80,
+          child: StreamBuilder<List<UserInfoPopUp>>(
+            stream: _topContributors,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const SizedBox.shrink();
+              }
+
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: snapshot.data!.length,
+                itemBuilder: (context, index) {
+                  final contributor = snapshot.data![index];
+                  return Container(
+                    margin: const EdgeInsets.only(right: 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                spreadRadius: 1,
+                                blurRadius: 3,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: UserProfileCardHover(
+                            authorUsername: contributor.username,
+                            isExpert: contributor.isExpert as bool,
+                            onProfileOpen: () {},
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          contributor.username,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -575,6 +635,10 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
                     child: CustomScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       slivers: [
+                        // Add top contributors as first sliver
+                        SliverToBoxAdapter(
+                          child: _buildTopContributorsRow(),
+                        ),
                         if (_isRefreshing)
                           const SliverToBoxAdapter(
                             child: Padding(

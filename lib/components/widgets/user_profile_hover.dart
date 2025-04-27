@@ -54,14 +54,12 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
     try {
       final UserInfoPopUp? userData =
           await FirebaseService().getUserInfoByUsername(widget.authorUsername);
-      print('UserData type: ${userData.runtimeType}');
+
       if (mounted) {
         UserCacheManager.cacheUser(widget.authorUsername, userData!);
         setState(() {});
       }
-    } catch (e) {
-      debugPrint('Error loading user profile: $e');
-    }
+    } catch (e) {}
   }
 
   @override
@@ -118,7 +116,7 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        //color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
       ),
       child: Column(
@@ -129,7 +127,7 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
             children: [
               ProfileAvatar(
                 userInfoPopUp: user,
-                showBorder: user.isExpert as bool,
+                showBorder: widget.isExpert, // Usar isExpert del widget
                 seed: user.email,
                 size: 60,
               ),
@@ -267,7 +265,7 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
 
   Widget _buildProfileAvatar() => ProfileAvatar(
         userInfoPopUp: _cachedUser,
-        showBorder: _cachedUser!.isExpert as bool,
+        showBorder: _cachedUser!.isExpert ?? false, // Usar isExpert del widget
         seed: _cachedUser!.email,
         size: AppStyles.avatarSize - 5,
       );

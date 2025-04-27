@@ -6,6 +6,7 @@ import 'package:sapers/components/widgets/reply_section.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
+import 'package:sapers/models/lifecycle_mixin.dart';
 import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
@@ -28,13 +29,13 @@ class PostCard extends StatefulWidget {
   State<PostCard> createState() => _PostCardState();
 }
 
-class _PostCardState extends State<PostCard> {
+class _PostCardState extends State<PostCard> with LifecycleMixin {
   bool isExpanded = false;
-
   int counter = 0;
 
   @override
   void dispose() {
+    // Add any additional cleanup here
     super.dispose();
   }
 

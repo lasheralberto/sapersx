@@ -31,6 +31,7 @@ class AppStyles {
   // Avatar and selection colors
   static const bool showAvatars = false;
   static const Color colorAvatarBorder = _orangePrimary;
+  static const Color colorAvatarBordeNoExpert = Color.fromARGB(255, 150, 202, 237);
   static const Color colorAvatarBorderLighter = Color(0xFFFFCCB3);
 
   // Card colors

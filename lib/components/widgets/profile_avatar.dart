@@ -26,15 +26,14 @@ class ProfileAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
-      // Añadido RepaintBoundary principal
       child: Container(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: showBorder == true
-                ? AppStyles.colorAvatarBorder
-                : const Color.fromARGB(255, 150, 202, 237),
-            width: 4,
+            color: showBorder
+                ? AppStyles.colorAvatarBorder // naranja para expertos
+                : AppStyles.colorAvatarBordeNoExpert, // azul para no expertos
+            width: 2,
           ),
         ),
         child: CircleAvatar(

@@ -739,20 +739,61 @@ class FirebaseService {
   // Método para crear un nuevo post
   Future<void> createPost(SAPPost post) async {
     final postIndexer = PostIndexer();
-    final postMap = {
-      'id': post.id,
-      'title': post.title,
-      'content': post.content,
-      'author': post.author,
-      'timestamp': Timestamp.fromDate(post.timestamp),
-      'module': post.module,
-      'isQuestion': post.isQuestion,
-      'lang': LanguageProvider().currentLanguage,
-      'tags': post.tags,
-      'attachments': post.attachments,
-    };
-    await postIndexer.indexPost(postMap);
-    await postsCollection.add(postMap);
+
+    try {
+      // Fetch current user points
+      final userDoc = await userCollection
+          .where('username', isEqualTo: post.author)
+          .limit(1)
+          .get();
+
+      if (userDoc.docs.isNotEmpty) {
+        final userData = userDoc.docs.first;
+        final userDataMap = userData.data() as Map<String, dynamic>;
+        if (userDataMap.containsKey('weeklyPoints')) {
+          userDataMap['weeklyPoints'] = userDataMap['weeklyPoints'] ?? 0;
+        } else {
+          userDataMap['weeklyPoints'] =
+              0; // Default to 0 if field doesn't exist
+        }
+
+        int currentPoints = userDataMap['weeklyPoints'];
+
+        final uid = userData['uid'];
+
+        // Create post with updated points
+        final postMap = {
+          'id': post.id,
+          'title': post.title,
+          'content': post.content,
+          'author': post.author,
+          'timestamp': Timestamp.fromDate(post.timestamp),
+          'module': post.module,
+          'isQuestion': post.isQuestion,
+          'lang': LanguageProvider().currentLanguage,
+          'tags': post.tags,
+          'attachments': post.attachments,
+          'weeklyPoints': currentPoints + 10,
+        };
+
+        // Run both operations in a transaction
+        await FirebaseFirestore.instance.runTransaction((transaction) async {
+          // Update post
+          await postIndexer.indexPost(postMap);
+          transaction.set(postsCollection.doc(), postMap);
+
+          // Initialize or update user points
+          transaction.set(
+              userCollection.doc(uid),
+              {'weeklyPoints': currentPoints + 10},
+              SetOptions(merge: true) // This will merge with existing data
+              );
+        });
+      }
+    } catch (e) {
+      print('Error creating post: $e');
+      rethrow;
+    }
   }
 
   Future<List<SAPPost>> getPostsByKeywordAI(String keyword) async {

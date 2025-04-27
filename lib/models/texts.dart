@@ -99,6 +99,7 @@ class Texts {
       'askMe': 'Pregúntame algo sobre SAP',
       'recommendedPosts': 'Posts recomendados',
       'noMessagesChat': 'Sin mensajes',
+      'TopContributors': 'Top Sapers',
     },
     'en': {
       'allmodules': 'All modules',
@@ -195,6 +196,7 @@ class Texts {
       'projectFiles': 'Files',
       'selectProject': 'Select a project',
       'noMessagesChat': 'No messages',
+      'TopContributors': 'Top Sapers',
     },
   };
 

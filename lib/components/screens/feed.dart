@@ -20,6 +20,7 @@ import 'package:sapers/components/widgets/project_list.dart';
 import 'package:sapers/components/widgets/sap_ia_widget.dart';
 import 'package:sapers/components/widgets/searchbar.dart';
 import 'package:sapers/components/widgets/user_avatar.dart';
+import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
 import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
@@ -47,7 +48,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   final FirebaseService _firebaseService = FirebaseService();
   final GlobalKey<AnimatedListState> _listKey = GlobalKey();
   bool _showLeaderboard = false;
-  Stream<List<UserInfoPopUp>>? _topContributors;
+
   AnimationController? _refreshAnimationController;
 
   @override
@@ -57,8 +58,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _loadTopContributors();
-    _initializeGamification();
+
     _searchFocusNode.addListener(() {
       if (_searchFocusNode.hasFocus) {
         _panelController.animatePanelToPosition(
@@ -69,30 +69,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       }
     });
     _updateFutures();
-  }
-
-  Future<void> _loadTopContributors() async {
-    // Implement loading top contributors logic
-    _topContributors = await _firebaseService.getTopContributors();
-    setState(() {});
-  }
-
-  void _initializeGamification() {
-    // Initialize gamification features
-    _firebaseService.subscribeToUserAchievements(widget.user?.uid ?? '',
-        (achievement) {
-      _showAchievementAnimation(achievement);
-    });
-  }
-
-  void _showAchievementAnimation(String achievement) {
-    showDialog(
-      context: context,
-      builder: (context) => AchievementDialog(
-        achievement: achievement,
-        onDismiss: () => Navigator.of(context).pop(),
-      ),
-    );
   }
 
   final List<String> _modules = Modules.modules;
@@ -234,130 +210,147 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       body: _buildSlidingUpPanelUI(context, isMobile, screenWidth),
-      bottomNavigationBar: isMobile ? _buildBottomNav() : null,
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return NavigationBar(
-      selectedIndex: _currentIndex,
-      elevation: 0,
-      backgroundColor: Colors.white,
-      shadowColor: Colors.transparent,
-      surfaceTintColor: Colors.transparent,
-      height: 50,
-      onDestinationSelected: (index) => setState(() => _currentIndex = index),
-      destinations: [
-        NavigationDestination(
-          icon: Icon(Symbols.home_filled,
-              size: AppStyles.iconSizeSmall,
-              color: _currentIndex == 0
-                  ? AppStyles.colorAvatarBorder
-                  : AppStyles.textColor),
-          label: 'Feed',
-        ),
-        NavigationDestination(
-          icon: Icon(Symbols.category,
-              size: AppStyles.iconSizeSmall,
-              color: _currentIndex == 1
-                  ? AppStyles.colorAvatarBorder
-                  : AppStyles.textColor),
-          label: 'Proyectos',
-        ),
-        NavigationDestination(
-          icon: Icon(Symbols.group,
-              size: AppStyles.iconSizeSmall,
-              color: _currentIndex == 2
-                  ? AppStyles.colorAvatarBorder
-                  : AppStyles.textColor),
-          label: 'Personas',
-        ),
-      ],
     );
   }
 
   Widget _buildSlidingUpPanelUI(
       BuildContext context, bool isMobile, double screenWidth) {
-    return Row(
-      children: [
-        if (!isMobile)
-          Material(
-            elevation: 0,
-            color: Theme.of(context).scaffoldBackgroundColor,
-            surfaceTintColor: Colors.white,
-            child: SizedBox(
-              width: 250,
-              height: MediaQuery.of(context).size.height,
-              child: _buildSideMenu(),
-            ),
-          ),
-        Expanded(
-          child: Column(
+    return Material(
+      child: Stack(
+        children: [
+          Row(
             children: [
-              if (isMobile)
-                AppBar(
+              if (!isMobile)
+                Material(
                   elevation: 0,
-                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                  title: Image.asset(
-                    AppStyles.logoImage,
-                    height: 50,
-                    width: 50,
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  surfaceTintColor: Colors.white,
+                  child: SizedBox(
+                    width: 250,
+                    height: MediaQuery.of(context).size.height,
+                    child: _buildSideMenu(),
                   ),
-                  centerTitle: true,
                 ),
               Expanded(
-                child: Stack(
-                  clipBehavior: Clip.none,
+                child: Column(
                   children: [
-                    Padding(
-                      padding: EdgeInsets.only(
-                        bottom: isMobile ? kBottomNavigationBarHeight : 0,
-                      ),
-                      child: _getCurrentView(isMobile),
-                    ),
-                    if (_currentIndex == 0)
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: SlidingUpPanel(
-                          maxHeight: MediaQuery.of(context).size.height * 0.7,
-                          minHeight: isMobile ? 75 : 85,
-
-                          onPanelSlide: (position) {
+                    if (isMobile)
+                      AppBar(
+                        elevation: 0,
+                        backgroundColor:
+                            Theme.of(context).scaffoldBackgroundColor,
+                        leading: IconButton(
+                          icon: Icon(
+                            Symbols.menu,
+                            color: AppStyles.colorAvatarBorder,
+                            size: AppStyles.iconSizeMedium,
+                          ),
+                          onPressed: () {
                             setState(() {
-                              _panelPosition = position;
-                              _isPanelOpen = position > 0;
+                              _menuSidebarController.toggle();
                             });
                           },
-                          backdropEnabled: true,
-                          backdropOpacity: 0.5,
-                          boxShadow: const [],
-                          renderPanelSheet: true, // Cambiado a true
-                          panel: ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(24.0)),
-                            child: Material(
-                              color: Theme.of(context).scaffoldBackgroundColor,
-                              child: SAPAIAssistantWidget(
-                                searchFocusNode: _searchFocusNode,
-                                username:
-                                    widget.user?.displayName ?? 'UsuarioDemo',
-                                isPanelVisible: true,
-                                onPostCreated: _updateFutures,
-                                onProjectCreated: _updateFutures,
-                              ),
-                            ),
-                          ),
+                        ),
+                        centerTitle: true,
+                        title: Image.asset(
+                          AppStyles.logoImage,
+                          height: 40,
                         ),
                       ),
+                    Expanded(
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(
+                              bottom: isMobile ? kBottomNavigationBarHeight : 0,
+                            ),
+                            child: _getCurrentView(isMobile),
+                          ),
+                          if (_currentIndex == 0)
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              child: SlidingUpPanel(
+                                maxHeight:
+                                    MediaQuery.of(context).size.height * 0.7,
+                                minHeight: isMobile ? 75 : 85,
+
+                                onPanelSlide: (position) {
+                                  setState(() {
+                                    _panelPosition = position;
+                                    _isPanelOpen = position > 0;
+                                  });
+                                },
+                                backdropEnabled: true,
+                                backdropOpacity: 0.5,
+                                boxShadow: const [],
+                                renderPanelSheet: true, // Cambiado a true
+                                panel: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(24.0)),
+                                  child: Material(
+                                    color: Theme.of(context)
+                                        .scaffoldBackgroundColor,
+                                    child: SAPAIAssistantWidget(
+                                      searchFocusNode: _searchFocusNode,
+                                      username: widget.user?.displayName ??
+                                          'UsuarioDemo',
+                                      isPanelVisible: true,
+                                      onPostCreated: _updateFutures,
+                                      onProjectCreated: _updateFutures,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-        ),
-      ],
+          if (isMobile)
+            AnimatedBuilder(
+              animation: _menuSidebarController,
+              builder: (context, _) {
+                return Stack(
+                  children: [
+                    if (_menuSidebarController.isOpen)
+                      GestureDetector(
+                        onTap: () => _menuSidebarController.close(),
+                        child: Container(
+                          color: Colors.black54,
+                          width: MediaQuery.of(context).size.width,
+                          height: MediaQuery.of(context).size.height,
+                        ),
+                      ),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      transform: Matrix4.translationValues(
+                        _menuSidebarController.isOpen ? 0 : -250,
+                        0,
+                        0,
+                      ),
+                      child: Material(
+                        elevation: 8,
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        child: SizedBox(
+                          width: 250,
+                          height: MediaQuery.of(context).size.height,
+                          child: _buildSideMenu(),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 
@@ -474,7 +467,12 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
+          onTap: () {
+            onTap();
+            if (isMobile) {
+              _menuSidebarController.close();
+            }
+          },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -522,30 +520,37 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
               .buildShimmerEffect(5, UtilsSapers().buildShimmerPost(context));
         }
 
-        List<String> trendingTags = ['PP']; // Valor por defecto
+        List<String> trendingTags = ['PP'];
 
         if (snapshot.hasData) {
           trendingTags = snapshot.data!;
         }
 
-        return PostsListWithSidebar(
-            menuSidebarController: _menuSidebarController,
-            sidebarController: _sidebarController,
-            onRefresh: _updateFutures,
-            onPostExpanded: (p0) {
-              setState(() {
-                isPostExpanded = p0;
-              });
-            },
-            future: _postsFutureGeneral!,
-            isMobile: isMobile,
-            trendingTags: trendingTags,
-            onTagSelected: (tag) {
-              setState(() {
-                tagPressed = tag;
-                _updateFutures();
-              });
-            });
+        return Column(
+          children: [
+            Expanded(
+              child: PostsListWithSidebar(
+                menuSidebarController: _menuSidebarController,
+                sidebarController: _sidebarController,
+                onRefresh: _updateFutures,
+                onPostExpanded: (p0) {
+                  setState(() {
+                    isPostExpanded = p0;
+                  });
+                },
+                future: _postsFutureGeneral!,
+                isMobile: isMobile,
+                trendingTags: trendingTags,
+                onTagSelected: (tag) {
+                  setState(() {
+                    tagPressed = tag;
+                    _updateFutures();
+                  });
+                },
+              ),
+            ),
+          ],
+        );
       },
     );
   }
@@ -557,103 +562,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       onRefresh: () {
         _updateFutures();
       },
-    );
-  }
-
-  SliverAppBar _buildAppBar(BuildContext context, bool isMobile) {
-    return SliverAppBar(
-      floating: true,
-      snap: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      elevation: 4,
-      shadowColor: Theme.of(context).shadowColor.withOpacity(0.1),
-      surfaceTintColor: Colors.transparent,
-      centerTitle: false,
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: Theme.of(context).scaffoldBackgroundColor,
-            ),
-            child: Image.asset(
-              AppStyles.logoImage,
-              width: isMobile ? 100.0 : 100.0,
-              height: isMobile ? 100.0 : 100.0,
-            ),
-          ),
-          Row(
-            children: [
-              _buildMinimalSidebarToggle(),
-              const SizedBox(width: 18),
-              IconButton(
-                icon: const Icon(
-                  Symbols.search,
-                  size: AppStyles.iconSizeMedium,
-                  color: AppStyles.colorAvatarBorder,
-                ),
-                onPressed: () {
-                  setState(() {
-                    searchPressed = !searchPressed;
-                  });
-                },
-              ),
-            ],
-          )
-        ],
-      ),
-      actions: [
-        Padding(
-          padding: EdgeInsets.only(right: isMobile ? 8.0 : 16.0),
-          child: UserAvatar(user: widget.user),
-        ),
-      ],
-    );
-  }
-
-  SliverPersistentHeader _buildSearchBarHeader(
-      BuildContext context, bool isMobile, double screenWidth) {
-    return SliverPersistentHeader(
-      pinned: false,
-      floating: true,
-      delegate: AnimatedSliverHeaderDelegate(
-        visible: searchPressed,
-        child: Container(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 8.0 : 16.0,
-              vertical: 8.0,
-            ),
-            child: Center(
-              child: SizedBox(
-                width: screenWidth >= 600 ? screenWidth / 2 : screenWidth * 0.9,
-                child: SearchBarCustom(
-                  onDeleteTag: () {
-                    setState(() {
-                      tagPressed = null;
-                      _updateFutures();
-                    });
-                  },
-                  tag: tagPressed.toString(),
-                  controller: _searchController,
-                  onSearch: _performSearch,
-                  onModuleSelected: (module) {
-                    setState(() {
-                      _selectedModule = module;
-                      searchPressed = !searchPressed;
-                      _updateFutures();
-                    });
-                  },
-                  modules: _modules,
-                  selectedModule: _selectedModule,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

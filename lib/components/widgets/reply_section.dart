@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_highlighting/flutter_highlighting.dart';
 import 'package:flutter_highlighting/themes/github.dart';
- 
+
 // Add other languages as needed
 import 'package:pasteboard/pasteboard.dart';
 import 'package:provider/provider.dart';
@@ -15,8 +15,6 @@ import 'package:sapers/components/widgets/custombutton.dart';
 import 'package:sapers/components/widgets/like_button.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/text_editor.dart';
-
- 
 
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/main.dart';
@@ -280,13 +278,6 @@ class _ReplySectionState extends State<ReplySection> {
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: _accentOrange.withOpacity(isUploading ? 0 : 0.2),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
             child: isUploading
                 ? const Padding(
@@ -359,13 +350,6 @@ class _ReplySectionState extends State<ReplySection> {
             color: _replyCardColor,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(color: _borderColor, width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: _accentOrange.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
@@ -430,178 +414,164 @@ class _ReplySectionState extends State<ReplySection> {
       ],
     );
   }
-Widget _buildCodeContent(String content) {
-  // Safety check for null or empty content
-  if (content == null || content.isEmpty) {
-    return const SizedBox.shrink();
-  }
-  
-  debugPrint(content.toString());
-  // Debug print to verify content
-  
-  
-  // If no code block markers are found, return the content as regular text
-  if (!content.contains('```')) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Text(
-        content,
-        style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize),
-      ),
-    );
-  }
 
-  try {
-    // Process content with code blocks
-    final List<Widget> contentWidgets = [];
-    bool insideCodeBlock = false;
-    String currentBlockContent = '';
-    
-    // Split content by lines for more precise handling
-    final lines = content.split('\n');
-    for (int i = 0; i < lines.length; i++) {
-      String line = lines[i];
-      
-      // Check for code block delimiters
-      if (line.trim().startsWith('```')) {
-        if (insideCodeBlock) {
-          // End of code block
-          contentWidgets.add(_buildCodeBlock(currentBlockContent));
-          currentBlockContent = '';
-          insideCodeBlock = false;
-        } else {
-          // Start of code block
-          // Add any text before this code block
-          if (currentBlockContent.isNotEmpty) {
-            contentWidgets.add(Text(
-              currentBlockContent,
-              style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize),
-            ));
-            currentBlockContent = '';
-          }
-          
-          // Extract language if specified
-          String language = line.trim().substring(3).trim();
-          currentBlockContent = language.isNotEmpty ? language + '\n' : '';
-          insideCodeBlock = true;
-        }
-      } else {
-        // Add to current block content
-        currentBlockContent += line + '\n';
-      }
+  Widget _buildCodeContent(String content) {
+    // Safety check for null or empty content
+    if (content == null || content.isEmpty) {
+      return const SizedBox.shrink();
     }
-    
-    // Add any remaining content
-    if (currentBlockContent.isNotEmpty) {
-      if (insideCodeBlock) {
-        contentWidgets.add(_buildCodeBlock(currentBlockContent));
-      } else {
-        contentWidgets.add(Text(
-          currentBlockContent,
-          style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize),
-        ));
-      }
-    }
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: contentWidgets,
-    );
-  } catch (e, stackTrace) {
-    // If parsing fails, display the original content with error indication
-    debugPrint('Error parsing code blocks: $e\n$stackTrace');
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Error rendering code blocks',
-          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(
+
+    debugPrint(content.toString());
+    // Debug print to verify content
+
+    // If no code block markers are found, return the content as regular text
+    if (!content.contains('```')) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Text(
           content,
-          style: AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize),
+          style:
+              AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize),
         ),
-      ],
-    );
-  }
-}
-
-
-Widget _buildCodeBlock(String content) {
-  try {
-    String language = 'text';
-    String codeContent = content;
-    final lines = content.split('\n');
-    
-    if (lines.isNotEmpty) {
-      final firstLine = lines[0].trim();
-      if (firstLine.isNotEmpty && !firstLine.contains(' ')) {
-        final extractedLang = firstLine.toLowerCase();
-        
-        // Lista blanca de lenguajes soportados
-        const supportedLanguages = {
-          'dart', 'python', 'javascript', 'abap' // Añade abap si creaste el parser
-        };
-        
-        language = supportedLanguages.contains(extractedLang)
-            ? extractedLang
-            : 'text';
-            
-        codeContent = lines.sublist(1).join('\n');
-      }
+      );
     }
 
-    // Si es ABAP y no tenemos soporte, forzar texto plano
-   
-      return _buildPlainText(codeContent);
- 
-    
-    // Resto del código...
-  } catch (e) {
-    return _buildPlainText(content);
+    try {
+      // Process content with code blocks
+      final List<Widget> contentWidgets = [];
+      bool insideCodeBlock = false;
+      String currentBlockContent = '';
+
+      // Split content by lines for more precise handling
+      final lines = content.split('\n');
+      for (int i = 0; i < lines.length; i++) {
+        String line = lines[i];
+
+        // Check for code block delimiters
+        if (line.trim().startsWith('```')) {
+          if (insideCodeBlock) {
+            // End of code block
+            contentWidgets.add(_buildCodeBlock(currentBlockContent));
+            currentBlockContent = '';
+            insideCodeBlock = false;
+          } else {
+            // Start of code block
+            // Add any text before this code block
+            if (currentBlockContent.isNotEmpty) {
+              contentWidgets.add(Text(
+                currentBlockContent,
+                style: AppStyles()
+                    .getTextStyle(context, fontSize: AppStyles.fontSize),
+              ));
+              currentBlockContent = '';
+            }
+
+            // Extract language if specified
+            String language = line.trim().substring(3).trim();
+            currentBlockContent = language.isNotEmpty ? language + '\n' : '';
+            insideCodeBlock = true;
+          }
+        } else {
+          // Add to current block content
+          currentBlockContent += line + '\n';
+        }
+      }
+
+      // Add any remaining content
+      if (currentBlockContent.isNotEmpty) {
+        if (insideCodeBlock) {
+          contentWidgets.add(_buildCodeBlock(currentBlockContent));
+        } else {
+          contentWidgets.add(Text(
+            currentBlockContent,
+            style:
+                AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize),
+          ));
+        }
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: contentWidgets,
+      );
+    } catch (e, stackTrace) {
+      // If parsing fails, display the original content with error indication
+      debugPrint('Error parsing code blocks: $e\n$stackTrace');
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Error rendering code blocks',
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style:
+                AppStyles().getTextStyle(context, fontSize: AppStyles.fontSize),
+          ),
+        ],
+      );
+    }
   }
-}
 
-Widget _buildPlainText(String code) {
-  return Padding(
-    padding: const EdgeInsets.all(16),
-    child: Text(
-      code,
-      style: const TextStyle(
-        fontFamily: 'monospace',
-        fontSize: 14,
-      ),
-    ),
-  );
-}
+  Widget _buildCodeBlock(String content) {
+    try {
+      String language = 'text';
+      String codeContent = content;
+      final lines = content.split('\n');
 
-Widget _buildHighlightedCode(String code, String language) {
-  try {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+      if (lines.isNotEmpty) {
+        final firstLine = lines[0].trim();
+        if (firstLine.isNotEmpty && !firstLine.contains(' ')) {
+          final extractedLang = firstLine.toLowerCase();
+
+          // Lista blanca de lenguajes soportados
+          const supportedLanguages = {
+            'dart', 'python', 'javascript',
+            'abap' // Añade abap si creaste el parser
+          };
+
+          language = supportedLanguages.contains(extractedLang)
+              ? extractedLang
+              : 'text';
+
+          codeContent = lines.sublist(1).join('\n');
+        }
+      }
+
+      // Si es ABAP y no tenemos soporte, forzar texto plano
+
+      return _buildPlainText(codeContent);
+
+      // Resto del código...
+    } catch (e) {
+      return _buildPlainText(content);
+    }
+  }
+
+  Widget _buildPlainText(String code) {
+    return Padding(
       padding: const EdgeInsets.all(16),
-      child: HighlightView(
+      child: Text(
         code,
-        // Try with the provided language first
-        languageId: language,
-        theme: githubTheme,
-        textStyle: const TextStyle(
+        style: const TextStyle(
           fontFamily: 'monospace',
           fontSize: 14,
         ),
       ),
     );
-  } catch (e) {
-    debugPrint('Error using language "$language", falling back to "text": $e');
+  }
+
+  Widget _buildHighlightedCode(String code, String language) {
     try {
-      // If the first language fails, try with plain text
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.all(16),
         child: HighlightView(
           code,
-          languageId: 'text',
+          // Try with the provided language first
+          languageId: language,
           theme: githubTheme,
           textStyle: const TextStyle(
             fontFamily: 'monospace',
@@ -609,51 +579,68 @@ Widget _buildHighlightedCode(String code, String language) {
           ),
         ),
       );
-    } catch (finalError) {
-      // If all highlighting attempts fail, show plain text
-      debugPrint('Highlighting completely failed: $finalError');
-      return Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          code,
-          style: const TextStyle(
-            fontFamily: 'monospace',
-            fontSize: 14,
+    } catch (e) {
+      debugPrint(
+          'Error using language "$language", falling back to "text": $e');
+      try {
+        // If the first language fails, try with plain text
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.all(16),
+          child: HighlightView(
+            code,
+            languageId: 'text',
+            theme: githubTheme,
+            textStyle: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 14,
+            ),
           ),
+        );
+      } catch (finalError) {
+        // If all highlighting attempts fail, show plain text
+        debugPrint('Highlighting completely failed: $finalError');
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            code,
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 14,
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildSyntaxHighlighter(String code, String language) {
+    try {
+      return HighlightView(
+        code,
+        languageId: language,
+        theme: githubTheme,
+        padding: const EdgeInsets.all(16),
+        textStyle: const TextStyle(
+          fontFamily: 'monospace',
+          fontSize: 14,
+        ),
+      );
+    } catch (e) {
+      // Fallback if language not supported
+      return HighlightView(
+        code,
+        languageId: 'text',
+        theme: githubTheme,
+        padding: const EdgeInsets.all(16),
+        textStyle: const TextStyle(
+          fontFamily: 'monospace',
+          fontSize: 14,
         ),
       );
     }
   }
-}
 
-
-Widget _buildSyntaxHighlighter(String code, String language) {
-  try {
-    return HighlightView(
-      code,
-      languageId: language,
-      theme: githubTheme,
-      padding: const EdgeInsets.all(16),
-      textStyle: const TextStyle(
-        fontFamily: 'monospace',
-        fontSize: 14,
-      ),
-    );
-  } catch (e) {
-    // Fallback if language not supported
-    return HighlightView(
-      code,
-      languageId: 'text',
-      theme: githubTheme,
-      padding: const EdgeInsets.all(16),
-      textStyle: const TextStyle(
-        fontFamily: 'monospace',
-        fontSize: 14,
-      ),
-    );
-  }
-}
- 
   Widget _buildCodeHeader(String language, String code) {
     return Padding(
       padding: const EdgeInsets.all(8.0),

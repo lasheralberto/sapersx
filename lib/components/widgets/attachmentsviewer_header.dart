@@ -104,7 +104,7 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
                   // Evita que los clics en el popup lo cierren
                   onTap: () {},
                   child: Material(
-                    elevation: 8,
+                    // elevation: 8,
                     borderRadius:
                         BorderRadius.circular(AppStyles.borderRadiusValue),
                     child: ClipRRect(
@@ -126,7 +126,9 @@ class _SAPAttachmentsViewerHeaderState extends State<SAPAttachmentsViewerHeader>
                                       children: [
                                         Text(
                                           Texts.translate(
-                                              'attachments', LanguageProvider().currentLanguage),
+                                              'attachments',
+                                              LanguageProvider()
+                                                  .currentLanguage),
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleSmall,
