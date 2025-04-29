@@ -29,6 +29,7 @@ import 'package:sapers/models/user_reviews.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:sapers/models/utils_sapers.dart';
+import 'package:sapers/models/vote.dart';
 
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -1449,5 +1450,102 @@ class FirebaseService {
     } catch (e) {
       print('Error awarding badge: $e');
     }
+  }
+
+  Future<void> handleVote(
+      String postId, String userId, VoteType voteType) async {
+    final postRef = postsCollection.doc(postId);
+
+    await _firestore.runTransaction((transaction) async {
+      final post = await transaction.get(postRef);
+      if (!post.exists) return;
+
+      final data = post.data() as Map<String, dynamic>;
+
+      // Get existing votes if any
+      final Map<String, String> currentVotes = data.containsKey('userVotes')
+          ? (data['userVotes'] as Map<dynamic, dynamic>)
+              .map((key, value) => MapEntry(key.toString(), value.toString()))
+          : {};
+
+      final previousVote = currentVotes.containsKey(userId)
+          ? VoteType.values.byName(currentVotes[userId]!)
+          : VoteType.none;
+
+      // Only update if vote is changing
+      if (voteType != previousVote) {
+        int upvotes = data['upvotes'] ?? 0;
+        int downvotes = data['downvotes'] ?? 0;
+
+        if (previousVote == VoteType.up) upvotes--;
+        if (previousVote == VoteType.down) downvotes--;
+        if (voteType == VoteType.up) upvotes++;
+        if (voteType == VoteType.down) downvotes++;
+
+        // Get or initialize the arrays of usernames who voted
+        List<String> upvoters = List<String>.from(data['upvoters'] ?? []);
+        List<String> downvoters = List<String>.from(data['downvoters'] ?? []);
+
+        // Remove user from previous vote list if any
+        upvoters.remove(userId);
+        downvoters.remove(userId);
+
+        // Add user to new vote list
+        if (voteType == VoteType.up) {
+          upvoters.add(userId);
+        } else if (voteType == VoteType.down) {
+          downvoters.add(userId);
+        }
+
+        Map<String, dynamic> updateData = {
+          'upvotes': upvotes,
+          'downvotes': downvotes,
+          'upvoters': upvoters,
+          'downvoters': downvoters,
+        };
+
+        transaction.update(postRef, updateData);
+
+        // Check for penalty
+        if (downvotes >= 5) {
+          final authorDoc = await userCollection
+              .where('username', isEqualTo: data['author'])
+              .limit(1)
+              .get();
+
+          if (authorDoc.docs.isNotEmpty) {
+            transaction.update(userCollection.doc(authorDoc.docs.first.id), {
+              'weeklyPoints': FieldValue.increment(-20),
+              'reputation': FieldValue.increment(-10)
+            });
+          }
+        }
+      }
+    });
+  }
+
+  Stream<Map<String, dynamic>> getPostVotesStream(String postId) {
+    return _firestore
+        .collection('posts')
+        .doc(postId)
+        .snapshots()
+        .map((snapshot) {
+      if (!snapshot.exists) {
+        return {
+          'upvotes': 0,
+          'downvotes': 0,
+          'upvoters': <String>[],
+          'downvoters': <String>[],
+        };
+      }
+
+      final data = snapshot.data()!;
+      return {
+        'upvotes': data['upvotes'] ?? 0,
+        'downvotes': data['downvotes'] ?? 0,
+        'upvoters': List<String>.from(data['upvoters'] ?? []),
+        'downvoters': List<String>.from(data['downvoters'] ?? []),
+      };
+    });
   }
 }

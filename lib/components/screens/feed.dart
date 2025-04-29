@@ -240,7 +240,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                         backgroundColor:
                             Theme.of(context).scaffoldBackgroundColor,
                         leading: IconButton(
-                          icon: Icon(
+                          icon:const Icon(
                             Symbols.menu,
                             color: AppStyles.colorAvatarBorder,
                             size: AppStyles.iconSizeMedium,

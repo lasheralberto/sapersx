@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sapers/components/widgets/attachments_carousel.dart';
 import 'package:sapers/components/widgets/attachmentsviewer_header.dart';
 import 'package:sapers/components/widgets/commentButton.dart';
 import 'package:sapers/components/widgets/reply_section.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
+import 'package:sapers/models/auth_provider.dart';
+import 'package:sapers/models/auth_service.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/lifecycle_mixin.dart';
@@ -11,6 +14,7 @@ import 'package:sapers/models/posts.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/utils_sapers.dart';
+import 'package:sapers/models/vote.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PostCard extends StatefulWidget {
@@ -29,91 +33,57 @@ class PostCard extends StatefulWidget {
   State<PostCard> createState() => _PostCardState();
 }
 
-class _PostCardState extends State<PostCard> with LifecycleMixin {
-  bool isExpanded = false;
-  int counter = 0;
+class _PostCardState extends State<PostCard> {
+  bool _isExpanded = false;
 
-  @override
-  void dispose() {
-    // Add any additional cleanup here
-    super.dispose();
-  }
-
-// Dentro de _PostCardState en PostCard
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          child: Card(
-            elevation: 0, // Eliminada elevación
-            surfaceTintColor: Colors.transparent,
-            shadowColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(
-                color: widget.post.isExpert
-                    ? Theme.of(context).primaryColor.withOpacity(0.2)
-                    : Colors.transparent,
-                width: 1,
-              ),
-            ),
-            color: Theme.of(context).cardColor,
-            child: Stack(
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 2,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.black12,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: widget.post.isExpert
+              ? Theme.of(context).primaryColor.withOpacity(0.2)
+              : Colors.grey.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      color: Theme.of(context).cardColor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          _buildPostHeader(context),
+          _buildPostContent(context),
+          const Divider(),
+          // Bottom section with comments and votes
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                if (widget.post.replyCount > 20)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        //color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.trending_up, size: 16),
-                          Text(' Trending'),
-                        ],
-                      ),
-                    ),
-                  ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildPostHeader(constraints.maxWidth, widget.post.id),
-                    if (isExpanded) // Muestra replies solo cuando está expandido
-                      ReplySection(
-                        post: widget.post,
-                        maxWidth: constraints.maxWidth,
-                        postId: widget.post.id,
-                        replyId: '', // O usa widget.post.id si es necesario
-                        postAuthor: widget.post.author,
-                        replyCount: widget.post.replyCount,
-                        firebaseService:
-                            FirebaseService(), // Asegúrate de inyectar el servicio
-                      ),
-                    const SizedBox(height: 4),
-                  ],
+                CommentButton(
+                  replyCount: widget.post.replyCount,
+                  iconSize: 15,
+                  iconColor: AppStyles.colorAvatarBorder,
                 ),
+                const SizedBox(width: 16),
+                _buildVoteButtons(context),
               ],
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
-  Widget _buildPostHeader(double maxWidth, String postId) {
+  Widget _buildPostHeader(BuildContext context) {
     return InkWell(
-      onTap: () {
-        setState(() => isExpanded = !isExpanded);
-        widget.onExpandChanged(isExpanded);
-      },
+      onTap: () => widget.onExpandChanged(true),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -125,18 +95,12 @@ class _PostCardState extends State<PostCard> with LifecycleMixin {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeaderPostInfo(),
+                  _buildHeaderPostInfo(context),
                   const SizedBox(height: 8),
-                  _buildPostContent(),
-                  const SizedBox(height: 12),
+                  // Moved attachments viewer to top right
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      CommentButton(
-                        replyCount: widget.post.replyCount,
-                        iconSize: 15,
-                        iconColor: AppStyles.colorAvatarBorder,
-                      ),
                       SAPAttachmentsViewerHeader(
                         reply: widget.post,
                         onAttachmentOpen: (attachment) {
@@ -169,7 +133,7 @@ class _PostCardState extends State<PostCard> with LifecycleMixin {
     );
   }
 
-  Widget _buildHeaderPostInfo() {
+  Widget _buildHeaderPostInfo(context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -184,13 +148,8 @@ class _PostCardState extends State<PostCard> with LifecycleMixin {
                 color: Colors.grey[200], // Color de fondo de la burbuja
                 borderRadius: BorderRadius.circular(8), // Bordes redondeados
               ),
-              child: Text(
-                widget.post.module,
-                style: AppStyles().getTextStyle(context).copyWith(
-                      fontSize: 12, // Tamaño más pequeño
-                      fontWeight: FontWeight.bold, // Resaltado
-                    ),
-              ),
+              child: Text(widget.post.module,
+                  style: AppStyles().getTextStyle(context)),
             ),
 
             const SizedBox(width: 10),
@@ -221,15 +180,11 @@ class _PostCardState extends State<PostCard> with LifecycleMixin {
             _buildTimestamp(widget.post),
           ],
         ),
-        const Divider(
-          thickness: 0.0,
-          color: Colors.grey,
-        )
       ],
     );
   }
 
-  Widget _buildTag(String tag) {
+  Widget _buildTag(String tag, BuildContext context) {
     return InkWell(
       onTap: () {
         // Opcional: Añade aquí lógica adicional cuando se hace clic en una etiqueta
@@ -265,38 +220,88 @@ class _PostCardState extends State<PostCard> with LifecycleMixin {
     );
   }
 
-  Widget _buildPostContent() {
+  Widget _buildPostContent(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.post.content,
-          style: AppStyles().getTextStyle(context),
-          maxLines: isExpanded ? null : 4,
-          overflow: isExpanded ? TextOverflow.visible : TextOverflow.fade,
-        ),
-        // Añadir el carrusel de imágenes adjuntas
-        AttachmentsCarousel(
-          reply: widget.post,
-          onAttachmentOpen: (attachment) {
-            if (attachment['url'] != null) {
-              launchUrl(
-                Uri.parse(attachment['url']),
-                mode: LaunchMode.externalApplication,
-              );
-            }
-          },
-        ),
-        if (widget.post.tags.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
-              children: widget.post.tags.map((tag) => _buildTag(tag)).toList(),
+        // Content section with different background
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.grey.withOpacity(0.1),
+                width: 1,
+              ),
             ),
-          )
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SelectableText(
+                  widget.post.content,
+                  style: AppStyles().getTextStyle(context),
+                  maxLines: _isExpanded ? null : 4,
+                ),
+              ),
+              if (!_isExpanded)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _isExpanded = true;
+                        widget.onExpandChanged(true);
+                      });
+                    },
+                    child: Text(
+                      'Ver más',
+                      style: TextStyle(
+                        color: AppStyles.colorAvatarBorder,
+                        fontSize: AppStyles.fontSize,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+        // Attachments and tags section
+        Container(
+          color: Colors.grey.withOpacity(0.05),
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AttachmentsCarousel(
+                reply: widget.post,
+                onAttachmentOpen: (attachment) {
+                  if (attachment['url'] != null) {
+                    launchUrl(
+                      Uri.parse(attachment['url']),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  }
+                },
+              ),
+              if (widget.post.tags.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: widget.post.tags
+                        .map((tag) => _buildTag(tag, context))
+                        .toList(),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -317,6 +322,85 @@ class _PostCardState extends State<PostCard> with LifecycleMixin {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildVoteButtons(BuildContext context) {
+    final user = Provider.of<AuthProviderSapers>(context).userInfo;
+
+    return StreamBuilder<Map<String, dynamic>>(
+      stream: FirebaseService().getPostVotesStream(widget.post.id),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox(width: 80, child: Center(child: Text('...')));
+        }
+
+        final votes = snapshot.data!;
+        final upvoters = List<String>.from(votes['upvoters'] ?? []);
+        final downvoters = List<String>.from(votes['downvoters'] ?? []);
+
+        VoteType currentVote = VoteType.none;
+        if (user != null) {
+          if (upvoters.contains(user.username)) {
+            currentVote = VoteType.up;
+          } else if (downvoters.contains(user.username)) {
+            currentVote = VoteType.down;
+          }
+        }
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+                iconSize: 15,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(
+                  Icons.arrow_upward,
+                  color:
+                      currentVote == VoteType.up ? Colors.green : Colors.grey,
+                ),
+                onPressed: () {
+                  bool isUserLoggedIn = AuthService().isUserLoggedIn(context);
+                  if (!isUserLoggedIn) return;
+
+                  FirebaseService().handleVote(
+                    widget.post.id,
+                    user?.username ?? '',
+                    currentVote == VoteType.up ? VoteType.none : VoteType.up,
+                  );
+                }),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                '${(votes['upvotes'] ?? 0) - (votes['downvotes'] ?? 0)}',
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
+            IconButton(
+                iconSize: 15,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(
+                  Icons.arrow_downward,
+                  color:
+                      currentVote == VoteType.down ? Colors.red : Colors.grey,
+                ),
+                onPressed: () {
+                  bool isUserLoggedIn = AuthService().isUserLoggedIn(context);
+                  if (!isUserLoggedIn) return;
+
+                  FirebaseService().handleVote(
+                    widget.post.id,
+                    user?.username ?? '',
+                    currentVote == VoteType.down
+                        ? VoteType.none
+                        : VoteType.down,
+                  );
+                }),
+          ],
+        );
+      },
     );
   }
 }

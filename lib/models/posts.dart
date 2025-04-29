@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:sapers/models/vote.dart';
 
 class SAPPost {
   final String id;
@@ -13,23 +14,34 @@ class SAPPost {
   final String lang;
   final bool isExpert;
   final List<Map<String, dynamic>>? attachments;
+  final Map<String, VoteType> userVotes;
+  final int upvotes;
+  final int downvotes;
 
-  SAPPost(
-      {required this.id,
-      required this.title,
-      required this.content,
-      required this.author,
-      required this.timestamp,
-      required this.module,
-      this.lang = 'en',
-      required this.isExpert,
-      this.isQuestion = false,
-      required this.replyCount, // Ya no tiene valor por defecto
-      required this.tags,
-      this.attachments});
+  SAPPost({
+    required this.id,
+    required this.title,
+    required this.content,
+    required this.author,
+    required this.timestamp,
+    required this.module,
+    this.lang = 'en',
+    required this.isExpert,
+    this.isQuestion = false,
+    required this.replyCount, // Ya no tiene valor por defecto
+    required this.tags,
+    this.attachments,
+    this.userVotes = const {},
+    this.upvotes = 0,
+    this.downvotes = 0,
+  });
 
   // Añade el método fromMap para crear el objeto desde Firestore
   factory SAPPost.fromMap(Map<String, dynamic> map, String id) {
+    final votes = (map['userVotes'] as Map<String, dynamic>? ?? {}).map(
+      (key, value) => MapEntry(key, VoteType.fromString(value as String)),
+    );
+
     return SAPPost(
       id: id,
       title: map['title'] ?? '',
@@ -52,6 +64,9 @@ class SAPPost {
       replyCount: map['replyCount'] ?? 0,
       tags: List<String>.from(map['tags'] ?? []),
       attachments: List<Map<String, dynamic>>.from(map['attachments'] ?? []),
+      userVotes: votes,
+      upvotes: map['upvotes'] ?? 0,
+      downvotes: map['downvotes'] ?? 0,
     );
   }
 
@@ -68,6 +83,10 @@ class SAPPost {
       'isQuestion': isQuestion,
       'replyCount': replyCount,
       'tags': tags,
+      'userVotes':
+          userVotes.map((k, v) => MapEntry(k, v.toString().split('.').last)),
+      'upvotes': upvotes,
+      'downvotes': downvotes,
     };
   }
 }

@@ -487,7 +487,7 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
         boxShadow: null,
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
-          width: 0.5,
+          width: 0.2,
         ),
       ),
       child: ClipRRect(
