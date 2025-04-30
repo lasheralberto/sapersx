@@ -83,188 +83,84 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 600;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _isSignUp
-              ? Texts.translate(
-                  'crearCuenta', LanguageProvider().currentLanguage)
-              : Texts.translate(
-                  'iniciarSesion', LanguageProvider().currentLanguage),
-          style: TextStyle(
-            color: AppStyles().getButtonColor(context),
+      backgroundColor: Theme.of(context).colorScheme.background,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+          child: AppBar(
+            centerTitle: true,
+            title: Text(
+              _isSignUp
+                  ? Texts.translate(
+                      'crearCuenta', LanguageProvider().currentLanguage)
+                  : Texts.translate(
+                      'iniciarSesion', LanguageProvider().currentLanguage),
+              style: TextStyle(
+                color: AppStyles().getButtonColor(context),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
           ),
         ),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
       ),
-      body: SafeArea(
+      body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width < 500
-                  ? double.infinity
-                  : MediaQuery.of(context).size.width * 0.4,
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Image.asset(
-                        AppStyles.tabMarkerImage,
-                        height: 120,
-                        width: 120,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    _buildTextField(
-                      controller: _emailController,
-                      label: Texts.translate(
-                          'emailField', LanguageProvider().currentLanguage),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return Texts.translate('emailValidate',
-                              LanguageProvider().currentLanguage);
-                        }
-                        if (!value.contains('@')) {
-                          return Texts.translate(
-                              'emailWrong', LanguageProvider().currentLanguage);
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _passwordController,
-                      label: Texts.translate(
-                          'Password', LanguageProvider().currentLanguage),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return Texts.translate(
-                              'passError', LanguageProvider().currentLanguage);
-                        }
-                        if (_isSignUp && value.length < 6) {
-                          return Texts.translate('passErrorLen',
-                              LanguageProvider().currentLanguage);
-                        }
-                        return null;
-                      },
-                    ),
-                    if (_isSignUp) ...[
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _confirmPasswordController,
-                        label: Texts.translate('confirmarContraseña',
-                            LanguageProvider().currentLanguage),
-                        obscureText: true,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return Texts.translate(
-                                'porFavorConfirmaTuContraseña',
-                                LanguageProvider().currentLanguage);
-                          }
-                          if (value != _passwordController.text) {
-                            return Texts.translate('lasContraseñasNoCoinciden',
-                                LanguageProvider().currentLanguage);
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                    if (_errorMessage != null) ...[
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.red[50],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(
-                            color: Colors.red[700],
-                            fontSize: 13,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (_isLoading == false) {
-                          var isLogued = await _submitForm(
-                            _emailController.text,
-                            _passwordController.text,
-                          );
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: isSmallScreen ? size.width : 400,
+            margin: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 24 : 0,
+              vertical: isSmallScreen ? 0 : 32,
+            ),
+            child: Card(
+              elevation: AppStyles().getCardElevation(context),
+              shadowColor: Colors.black.withOpacity(0.1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Logo section
+                      _buildLogoSection(),
+                      const SizedBox(height: 32),
 
-                          if (isLogued == true) {
-                            Navigator.pop(context, true);
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppStyles().getButtonColor(context),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                              AppStyles.borderRadiusValue),
-                        ),
-                        elevation: 4,
-                        shadowColor: Colors.black.withOpacity(0.2),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : Text(
-                              _isSignUp
-                                  ? Texts.translate('crearCuenta',
-                                      LanguageProvider().currentLanguage)
-                                  : Texts.translate('iniciarSesion',
-                                      LanguageProvider().currentLanguage),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: _isLoading ? null : _toggleMode,
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: Text(
-                        _isSignUp
-                            ? Texts.translate('iniciarSesion',
-                                LanguageProvider().currentLanguage)
-                            : Texts.translate('crearCuenta',
-                                LanguageProvider().currentLanguage),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                  ],
+                      // Form fields section
+                      _buildFormFields(),
+
+                      // Error message
+                      if (_errorMessage != null) _buildErrorMessage(),
+                      const SizedBox(height: 32),
+
+                      // Action buttons
+                      _buildActionButtons(),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -274,35 +170,213 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildLogoSection() {
+    return Hero(
+      tag: 'login_logo',
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Theme.of(context).colorScheme.surface,
+        ),
+        child: Image.asset(
+          AppStyles.tabMarkerImage,
+          height: 80,
+          width: 80,
+          fit: BoxFit.contain,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormFields() {
+    return Column(
+      children: [
+        _buildAnimatedTextField(
+          controller: _emailController,
+          label:
+              Texts.translate('emailField', LanguageProvider().currentLanguage),
+          icon: Icons.email_outlined,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return Texts.translate(
+                  'emailValidate', LanguageProvider().currentLanguage);
+            }
+            if (!value.contains('@')) {
+              return Texts.translate(
+                  'emailWrong', LanguageProvider().currentLanguage);
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildAnimatedTextField(
+          controller: _passwordController,
+          label:
+              Texts.translate('Password', LanguageProvider().currentLanguage),
+          icon: Icons.lock_outline,
+          obscureText: true,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return Texts.translate(
+                  'passError', LanguageProvider().currentLanguage);
+            }
+            if (_isSignUp && value.length < 6) {
+              return Texts.translate(
+                  'passErrorLen', LanguageProvider().currentLanguage);
+            }
+            return null;
+          },
+        ),
+        if (_isSignUp) ...[
+          const SizedBox(height: 16),
+          _buildAnimatedTextField(
+            controller: _confirmPasswordController,
+            label: Texts.translate(
+                'confirmarContraseña', LanguageProvider().currentLanguage),
+            icon: Icons.lock_outline,
+            obscureText: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return Texts.translate('porFavorConfirmaTuContraseña',
+                    LanguageProvider().currentLanguage);
+              }
+              if (value != _passwordController.text) {
+                return Texts.translate('lasContraseñasNoCoinciden',
+                    LanguageProvider().currentLanguage);
+              }
+              return null;
+            },
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAnimatedTextField({
     required TextEditingController controller,
     required String label,
+    required IconData icon,
     bool obscureText = false,
     required String? Function(String?) validator,
   }) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-        boxShadow: null,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.1),
+        ),
       ),
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-              borderSide: BorderSide.none),
-          filled: true,
-          fillColor: Theme.of(context).colorScheme.surface,
+          prefixIcon: Icon(icon, size: 20),
+          border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
-        style: AppStyles().getTextStyle(context,
-            fontSize: AppStyles.fontSizeMedium, fontWeight: FontWeight.w100),
+        style: TextStyle(fontSize: 15),
         obscureText: obscureText,
         validator: validator,
       ),
+    );
+  }
+
+  Widget _buildErrorMessage() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red.shade100),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _errorMessage!,
+                style: TextStyle(
+                  color: Colors.red.shade700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ElevatedButton(
+          onPressed: _isLoading
+              ? null
+              : () async {
+                  if (_isLoading == false) {
+                    var isLogued = await _submitForm(
+                      _emailController.text,
+                      _passwordController.text,
+                    );
+                    if (isLogued == true) {
+                      Navigator.pop(context, true);
+                    }
+                  }
+                },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppStyles().getButtonColor(context),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 0,
+          ),
+          child: _isLoading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Text(
+                  _isSignUp
+                      ? Texts.translate(
+                          'crearCuenta', LanguageProvider().currentLanguage)
+                      : Texts.translate(
+                          'iniciarSesion', LanguageProvider().currentLanguage),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+        ),
+        TextButton(
+          onPressed: _isLoading ? null : _toggleMode,
+          child: Text(
+            _isSignUp
+                ? Texts.translate(
+                    'iniciarSesion', LanguageProvider().currentLanguage)
+                : Texts.translate(
+                    'crearCuenta', LanguageProvider().currentLanguage),
+            style: TextStyle(
+              fontSize: 14,
+              color: AppStyles().getButtonColor(context),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
