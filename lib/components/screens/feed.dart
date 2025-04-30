@@ -240,7 +240,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                         backgroundColor:
                             Theme.of(context).scaffoldBackgroundColor,
                         leading: IconButton(
-                          icon:const Icon(
+                          icon: const Icon(
                             Symbols.menu,
                             color: AppStyles.colorAvatarBorder,
                             size: AppStyles.iconSizeMedium,
@@ -431,19 +431,22 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
             children: [
               _buildSideMenuItem(
                 icon: Symbols.home_filled,
-                label: 'Feed',
+                label: Texts.translate(
+                    'feedTab', LanguageProvider().currentLanguage),
                 isSelected: _currentIndex == 0,
                 onTap: () => setState(() => _currentIndex = 0),
               ),
               _buildSideMenuItem(
                 icon: Symbols.category,
-                label: 'Proyectos',
+                label: Texts.translate(
+                    'projectsTab', LanguageProvider().currentLanguage),
                 isSelected: _currentIndex == 1,
                 onTap: () => setState(() => _currentIndex = 1),
               ),
               _buildSideMenuItem(
                 icon: Symbols.group,
-                label: 'Personas',
+                label: Texts.translate(
+                    'personasTab', LanguageProvider().currentLanguage),
                 isSelected: _currentIndex == 2,
                 onTap: () => setState(() => _currentIndex = 2),
               ),
@@ -530,6 +533,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
           children: [
             Expanded(
               child: PostsListWithSidebar(
+                selectedTag: tagPressed,
                 menuSidebarController: _menuSidebarController,
                 sidebarController: _sidebarController,
                 onRefresh: _updateFutures,

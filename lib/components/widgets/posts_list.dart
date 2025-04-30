@@ -30,7 +30,6 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
   String? selectedTag;
 
   void _handleTagSelection(String tag) {
-    print('Handling tag selection: $tag'); // Debug
     setState(() {
       // Si el tag ya está seleccionado, lo deseleccionamos
       if (selectedTag == tag) {
@@ -77,28 +76,6 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
           ),
           const Divider(height: 1, thickness: 1),
 
-          // Tag seleccionado (chip)
-          if (selectedTag != null) // Solo mostrar si hay un tag seleccionado
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Chip(
-                label: Text(
-                  selectedTag!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                backgroundColor: AppStyles.colorAvatarBorder,
-                deleteIcon: const Icon(
-                  Icons.close,
-                  size: AppStyles.iconSizeSmall,
-                  color: Colors.white,
-                ),
-                onDeleted: () => _handleTagSelection(selectedTag!),
-              ),
-            ),
-
           // Lista de etiquetas
           Expanded(
             child: ListView.builder(
@@ -116,7 +93,7 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppStyles.colorAvatarBorder.withOpacity(0.1)
+                          ? Colors.green.withOpacity(0.1)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -128,9 +105,7 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
                             children: [
                               Icon(
                                 Icons.trending_up_rounded,
-                                color: isSelected
-                                    ? AppStyles.colorAvatarBorder
-                                    : Colors.grey,
+                                color: isSelected ? Colors.green : Colors.grey,
                                 size: AppStyles.iconSizeSmall,
                               ),
                               const SizedBox(width: 8),
@@ -419,7 +394,8 @@ class PostsListWithSidebar extends StatefulWidget {
   final Future<List<SAPPost>> future;
   final bool isMobile;
   final List<String> trendingTags;
-  final Function(String) onTagSelected;
+  final String? selectedTag;
+  final Function(String?) onTagSelected;
   final Function(bool) onPostExpanded;
   final Function onRefresh;
   final SidebarController sidebarController;
@@ -432,6 +408,7 @@ class PostsListWithSidebar extends StatefulWidget {
     required this.isMobile,
     required this.trendingTags,
     required this.onTagSelected,
+    required this.selectedTag,
     required this.onPostExpanded,
     required this.onRefresh,
     required this.sidebarController,
@@ -497,7 +474,9 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
           child: PostCard(
             key: ValueKey(post.id),
             onExpandChanged: (p0) => setState(() => widget.onPostExpanded(p0)),
-            tagPressed: (tag) => widget.onTagSelected(tag.toString()),
+            tagPressed:
+                widget.onTagSelected, // Simply pass through the callback
+            selectedTag: widget.selectedTag, // Use widget prop directly
             post: post,
           ),
         ),

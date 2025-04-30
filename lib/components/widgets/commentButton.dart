@@ -3,47 +3,40 @@ import 'package:sapers/models/styles.dart';
 
 class CommentButton extends StatelessWidget {
   final int replyCount;
-  final VoidCallback? onTap;
-  final Color? iconColor;
   final double iconSize;
-  final EdgeInsetsGeometry padding;
+  final Color iconColor;
+  final VoidCallback? onPressed; // Add this line
 
   const CommentButton({
-    super.key,
+    Key? key,
     required this.replyCount,
-    this.onTap,
-    this.iconColor,
-    this.iconSize = 20.0,
-    this.padding = const EdgeInsets.all(8.0),
-  });
+    required this.iconSize,
+    required this.iconColor,
+    this.onPressed, // Add this line
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-      child: Padding(
-        padding: padding,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.mode_comment_outlined,
-              size: iconSize,
-              weight: 100.0,
-              color: iconColor ?? Theme.of(context).iconTheme.color,
+      onTap: onPressed, // Add this line
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.mode_comment_outlined,
+            size: iconSize,
+            weight: 100.0,
+            color: iconColor ?? Theme.of(context).iconTheme.color,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            replyCount.toString(),
+            style: TextStyle(
+              color: iconColor ?? Theme.of(context).textTheme.bodyMedium?.color,
+              fontSize: iconSize * 0.8,
             ),
-            const SizedBox(width: 5),
-            Text(
-              replyCount.toString(),
-              style: TextStyle(
-                color:
-                    iconColor ?? Theme.of(context).textTheme.bodyMedium?.color,
-                fontSize: iconSize * 0.8,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

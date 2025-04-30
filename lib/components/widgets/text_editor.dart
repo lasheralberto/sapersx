@@ -186,7 +186,7 @@ class _TextEditorWithCodeState extends State<TextEditorWithCode> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: theme.dividerColor))),
+          border: Border(top: BorderSide(color: Colors.grey.shade300))),
       child: Row(
         children: [
           IconButton(

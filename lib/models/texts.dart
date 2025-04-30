@@ -4,6 +4,7 @@ class Texts {
 
   static final Map<String, Map<String, String>> _texts = {
     'es': {
+      'verMas': 'Ver más',
       'expertTab': 'Perfil de experto',
       'tarife': 'Tarifa/Hora',
       'view_on_map': 'Ver en mapa',
@@ -100,8 +101,13 @@ class Texts {
       'recommendedPosts': 'Posts recomendados',
       'noMessagesChat': 'Sin mensajes',
       'TopContributors': 'Top Sapers',
+      'feedTab': 'Feed',
+      'personasTab': 'Personas',
     },
     'en': {
+      'feedTab': 'Feed',
+      'personasTab': 'People',
+      'verMas': 'See more',
       'allmodules': 'All modules',
       'recommendedPosts': 'Recommended posts',
       'expertTab': 'Expert profile',

@@ -31,23 +31,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 class ReplySection extends StatefulWidget {
   final SAPPost post;
-  final double maxWidth;
-  final String postId;
-  final int replyCount;
-  final String replyId;
-
-  final String postAuthor;
-  final FirebaseService firebaseService;
+  final Function()? onClose;
 
   const ReplySection({
     Key? key,
     required this.post,
-    required this.maxWidth,
-    required this.postId,
-    required this.replyId,
-    required this.replyCount,
-    required this.postAuthor,
-    required this.firebaseService,
+    this.onClose,
   }) : super(key: key);
 
   @override
@@ -55,9 +44,9 @@ class ReplySection extends StatefulWidget {
 }
 
 class _ReplySectionState extends State<ReplySection> {
+  final FirebaseService _firebaseService = FirebaseService();
   final TextEditingController _replyController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final FirebaseService _firebaseService = FirebaseService();
   List<PlatformFile> selectedFiles = [];
   bool isUploading = false;
   Image? _pastedImage;
@@ -76,7 +65,7 @@ class _ReplySectionState extends State<ReplySection> {
     super.dispose();
   }
 
-  Future<void> _handleReply(String postId, String replyId) async {
+  Future<void> _handleReply() async {
     if (_replyController.text.isEmpty && selectedFiles.isEmpty) return;
 
     bool isLoguedIn = AuthService().isUserLoggedIn(context);
@@ -88,14 +77,14 @@ class _ReplySectionState extends State<ReplySection> {
         List<Map<String, dynamic>> attachmentsList = [];
         UserInfoPopUp? userInfo =
             Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
-        ;
+
         if (selectedFiles.isNotEmpty) {
           attachmentsList = await _firebaseService.addAttachments(
-              postId, replyId, userInfo!.username, selectedFiles);
+              widget.post.id, '', userInfo!.username, selectedFiles);
         }
 
-        await _firebaseService.createReply(userInfo!.username, widget.postId,
-            _replyController.text, widget.replyCount + 1,
+        await _firebaseService.createReply(userInfo!.username, widget.post.id,
+            _replyController.text, widget.post.replyCount + 1,
             attachments: attachmentsList);
 
         setState(() {
@@ -189,7 +178,7 @@ class _ReplySectionState extends State<ReplySection> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _buildReplyInput(widget.postId, widget.replyId),
+        _buildReplyInput(),
         Divider(
           height: 30,
           thickness: 1,
@@ -202,7 +191,7 @@ class _ReplySectionState extends State<ReplySection> {
     );
   }
 
-  Widget _buildReplyInput(String postId, String replyId) {
+  Widget _buildReplyInput() {
     return Shortcuts(
       shortcuts: <LogicalKeySet, Intent>{
         // Define la combinación Ctrl+V (o Command+V en Mac) para disparar PasteIntent
@@ -260,7 +249,7 @@ class _ReplySectionState extends State<ReplySection> {
                 ),
               ),
               _buildAttachmentUploadedReply(),
-              _buildReplyControls(postId, replyId),
+              _buildReplyControls(),
             ],
           ),
         ),
@@ -268,7 +257,7 @@ class _ReplySectionState extends State<ReplySection> {
     );
   }
 
-  Widget _buildReplyControls(String postId, String replyId) {
+  Widget _buildReplyControls() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -297,7 +286,7 @@ class _ReplySectionState extends State<ReplySection> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
                     ),
-                    onPressed: () => _handleReply(postId, replyId),
+                    onPressed: _handleReply,
                     child: Text(
                       Texts.translate(
                           'responder', LanguageProvider().currentLanguage),
@@ -316,7 +305,7 @@ class _ReplySectionState extends State<ReplySection> {
 
   Widget _buildRepliesList() {
     return StreamBuilder<List<SAPReply>>(
-      stream: widget.firebaseService.getRepliesForPost(widget.postId),
+      stream: FirebaseService().getRepliesForPost(widget.post.id),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _buildErrorMessage(snapshot.error.toString());
@@ -380,7 +369,7 @@ class _ReplySectionState extends State<ReplySection> {
                     ],
                     const SizedBox(height: 16),
                     LikeButton(
-                      postId: widget.postId,
+                      postId: widget.post.id,
                       replyId: reply.id,
                       initialLikeCount: reply.replyVotes,
                     ),

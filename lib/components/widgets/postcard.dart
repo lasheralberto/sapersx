@@ -21,12 +21,14 @@ class PostCard extends StatefulWidget {
   final SAPPost post;
   final Function(bool) onExpandChanged; // Callback para devolver el valor
   final Function(String?) tagPressed;
+  final String? selectedTag; // Add this line
 
   const PostCard({
     super.key,
     required this.onExpandChanged,
     required this.tagPressed,
     required this.post,
+    this.selectedTag, // Add this line
   });
 
   @override
@@ -35,6 +37,68 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   bool _isExpanded = false;
+  bool _showComments = false;
+
+  void _expandPost() {
+    setState(() {
+      _isExpanded = true;
+      _showComments = true;
+      widget.onExpandChanged(true);
+    });
+  }
+
+  Widget _buildTag(String tag, BuildContext context) {
+    final bool isSelected = tag ==
+        widget.post.tags.firstWhere(
+          (t) => t == widget.selectedTag,
+          orElse: () => '',
+        );
+
+    return InkWell(
+      onTap: () {
+        if (isSelected) {
+          widget.tagPressed(null);
+        } else {
+          widget.tagPressed(tag);
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(right: 8, bottom: 8),
+        child: Chip(
+          avatar: isSelected
+              ? const Icon(Icons.close, size: 16, color: Colors.deepOrange)
+              : null,
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                tag.toUpperCase(),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isSelected ? Colors.deepOrange : Colors.black,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+              ),
+            ],
+          ),
+          backgroundColor: isSelected
+              ? Colors.deepOrange.withOpacity(0.1)
+              : Theme.of(context).cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+            side: BorderSide(
+              color: isSelected
+                  ? Colors.deepOrange.withOpacity(0.5)
+                  : Theme.of(context).colorScheme.primary.withOpacity(0.9),
+              width: isSelected ? 1.5 : 1,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,12 +134,21 @@ class _PostCardState extends State<PostCard> {
                   replyCount: widget.post.replyCount,
                   iconSize: 15,
                   iconColor: AppStyles.colorAvatarBorder,
+                  onPressed: _expandPost, // Add this line
                 ),
                 const SizedBox(width: 16),
                 _buildVoteButtons(context),
               ],
             ),
           ),
+          if (_showComments)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ReplySection(
+                post: widget.post,
+                onClose: () => setState(() => _showComments = false),
+              ),
+            ),
         ],
       ),
     );
@@ -184,42 +257,6 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _buildTag(String tag, BuildContext context) {
-    return InkWell(
-      onTap: () {
-        // Opcional: Añade aquí lógica adicional cuando se hace clic en una etiqueta
-        widget.tagPressed(tag);
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8, bottom: 8),
-        child: Chip(
-          label: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                tag.toUpperCase(),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
-            ],
-          ),
-          backgroundColor: Theme.of(context).cardColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-            side: BorderSide(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
-              width: 1,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-      ),
-    );
-  }
-
   Widget _buildPostContent(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,14 +287,10 @@ class _PostCardState extends State<PostCard> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _isExpanded = true;
-                        widget.onExpandChanged(true);
-                      });
-                    },
+                    onPressed: _expandPost, // Change this line
                     child: Text(
-                      'Ver más',
+                      Texts.translate(
+                          'verMas', LanguageProvider().currentLanguage),
                       style: TextStyle(
                         color: AppStyles.colorAvatarBorder,
                         fontSize: AppStyles.fontSize,
