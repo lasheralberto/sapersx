@@ -304,7 +304,7 @@ class _PostCardState extends State<PostCard> {
 
         // Attachments and tags section
         Container(
-          color: Colors.grey.withOpacity(0.05),
+          color: Theme.of(context).cardColor,
           padding: const EdgeInsets.all(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
