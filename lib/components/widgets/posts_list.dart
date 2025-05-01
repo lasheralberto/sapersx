@@ -613,8 +613,7 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
                   Expanded(
                     flex: 10,
                     child: CustomScrollView(
-                      physics:
-                          const NeverScrollableScrollPhysics(), // Add this line
+                      physics: const AlwaysScrollableScrollPhysics(),
                       slivers: [
                         // Add top contributors as first sliver
                         SliverToBoxAdapter(
