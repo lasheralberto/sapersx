@@ -1318,20 +1318,50 @@ class FirebaseService {
           FirebaseFirestore.instance.collection('posts').doc(postId);
 
       await FirebaseFirestore.instance.runTransaction((transaction) async {
-        // Añadir la respuesta a la subcolección
+        // Get post data to find the author
+        final postDoc = await transaction.get(postRef);
+        final postData = postDoc.data() as Map<String, dynamic>;
+        final postAuthor = postData['author'] as String;
+
+        // Add reply to subcollection
         transaction.set(
           postRef.collection('replies').doc(),
           reply,
         );
 
-        // Actualizar el contador de respuestas en el post principal
+        // Update reply count
         transaction.update(postRef, {
-          'replyCount':
-              FieldValue.increment(1), // Usar increment para evitar conflictos
+          'replyCount': FieldValue.increment(1),
         });
+
+        // Award reputation points to the replier
+        final replierDoc = await userCollection
+            .where('username', isEqualTo: username)
+            .limit(1)
+            .get();
+
+        if (replierDoc.docs.isNotEmpty) {
+          transaction.update(userCollection.doc(replierDoc.docs.first.id), {
+            'weeklyPoints': FieldValue.increment(5),
+            'reputation': FieldValue.increment(2)
+          });
+        }
+
+        // Award points to post author for receiving a reply
+        final authorDoc = await userCollection
+            .where('username', isEqualTo: postAuthor)
+            .limit(1)
+            .get();
+
+        if (authorDoc.docs.isNotEmpty) {
+          transaction.update(userCollection.doc(authorDoc.docs.first.id), {
+            'weeklyPoints': FieldValue.increment(3),
+            'reputation': FieldValue.increment(1)
+          });
+        }
       });
     } catch (e) {
-      rethrow; // Relanzar el error para manejarlo en la UI
+      rethrow;
     }
   }
 
@@ -1452,7 +1482,7 @@ class FirebaseService {
     }
   }
 
-  Future<void> handleVote(
+  Future<void> addToWeeklyPointsFromPost(
       String postId, String userId, VoteType voteType) async {
     final postRef = postsCollection.doc(postId);
 
@@ -1504,22 +1534,39 @@ class FirebaseService {
           'downvoters': downvoters,
         };
 
-        transaction.update(postRef, updateData);
+        // Add reputation update logic for author
+        final authorDoc = await userCollection
+            .where('username', isEqualTo: data['author'])
+            .limit(1)
+            .get();
 
-        // Check for penalty
-        if (downvotes >= 5) {
-          final authorDoc = await userCollection
-              .where('username', isEqualTo: data['author'])
-              .limit(1)
-              .get();
+        if (authorDoc.docs.isNotEmpty) {
+          final authorRef = userCollection.doc(authorDoc.docs.first.id);
 
-          if (authorDoc.docs.isNotEmpty) {
-            transaction.update(userCollection.doc(authorDoc.docs.first.id), {
+          // Update author's reputation based on vote type
+          if (voteType == VoteType.up && !upvoters.contains(userId)) {
+            transaction.update(authorRef, {
+              'weeklyPoints': FieldValue.increment(10),
+              'reputation': FieldValue.increment(5)
+            });
+          } else if (voteType == VoteType.down &&
+              !downvoters.contains(userId)) {
+            transaction.update(authorRef, {
+              'weeklyPoints': FieldValue.increment(-5),
+              'reputation': FieldValue.increment(-2)
+            });
+          }
+
+          // Additional penalty check remains the same
+          if (downvotes >= 5) {
+            transaction.update(authorRef, {
               'weeklyPoints': FieldValue.increment(-20),
               'reputation': FieldValue.increment(-10)
             });
           }
         }
+
+        transaction.update(postRef, updateData);
       }
     });
   }

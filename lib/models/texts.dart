@@ -104,6 +104,7 @@ class Texts {
       'TopContributors': 'Top Sapers',
       'feedTab': 'Feed',
       'personasTab': 'Personas',
+      'customModule': 'Módulo personalizado',
     },
     'en': {
       'verMenos': 'See less',
@@ -205,7 +206,9 @@ class Texts {
       'selectProject': 'Select a project',
       'noMessagesChat': 'No messages',
       'TopContributors': 'Top Sapers',
+      'customModule': 'Custom Module',
     },
+   
   };
 
   static String translate(String key, String language) {

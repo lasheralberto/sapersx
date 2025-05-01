@@ -9,7 +9,6 @@ class UserInfoPopUp {
   int reputation = 0;
   String level = 'Beginner';
   List<String> badges = [];
-  int weeklyPoints = 0;
   Map<String, int> moduleExpertise = {};
   String? location;
   double? latitude;
@@ -24,6 +23,7 @@ class UserInfoPopUp {
   List<String>? following;
   List<String>? followers;
   List<Map<String, dynamic>>? reviews;
+  int? weeklyPoints;
 
   UserInfoPopUp(
       {required this.uid,
@@ -42,6 +42,7 @@ class UserInfoPopUp {
       this.experience,
       this.following,
       this.followers,
+      this.weeklyPoints = 0,
       this.reviews});
 
   // Convertir objeto a Map para guardarlo en Firebase
@@ -52,8 +53,8 @@ class UserInfoPopUp {
       'email': email,
       'bio': bio,
       'location': location,
-      'latitude':latitude,
-      'longitude':longitude,
+      'latitude': latitude,
+      'longitude': longitude,
       'website': website,
       'isExpert': isExpert,
       'specialty': specialty,
@@ -62,6 +63,7 @@ class UserInfoPopUp {
       'followers': followers,
       'joinDate': joinDate,
       'isAvailable': isAvailable,
+      'weeklyPoints': weeklyPoints,
       'experience': experience,
       'reviews': reviews
     };
@@ -86,6 +88,7 @@ class UserInfoPopUp {
       joinDate: map['joinDate'] != null ? map['joinDate'] as Timestamp : null,
       isAvailable: map['isAvailable'] as bool? ?? false,
       reviews: _parseReviews(map['reviews']), // Función auxiliar
+      weeklyPoints: map['weeklyPoints'] as int? ?? 0,
       experience: map['experience'] as String?,
     );
   }

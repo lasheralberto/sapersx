@@ -426,7 +426,7 @@ class _PostCardState extends State<PostCard> {
                   bool isUserLoggedIn = AuthService().isUserLoggedIn(context);
                   if (!isUserLoggedIn) return;
 
-                  FirebaseService().handleVote(
+                  FirebaseService().addToWeeklyPointsFromPost(
                     widget.post.id,
                     user?.username ?? '',
                     currentVote == VoteType.up ? VoteType.none : VoteType.up,
@@ -452,7 +452,7 @@ class _PostCardState extends State<PostCard> {
                   bool isUserLoggedIn = AuthService().isUserLoggedIn(context);
                   if (!isUserLoggedIn) return;
 
-                  FirebaseService().handleVote(
+                  FirebaseService().addToWeeklyPointsFromPost(
                     widget.post.id,
                     user?.username ?? '',
                     currentVote == VoteType.down

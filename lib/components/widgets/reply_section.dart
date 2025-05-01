@@ -27,6 +27,7 @@ import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
 import 'package:sapers/models/utils_sapers.dart';
+import 'package:sapers/models/vote.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ReplySection extends StatefulWidget {
@@ -86,6 +87,9 @@ class _ReplySectionState extends State<ReplySection> {
         await _firebaseService.createReply(userInfo!.username, widget.post.id,
             _replyController.text, widget.post.replyCount + 1,
             attachments: attachmentsList);
+
+        await _firebaseService.addToWeeklyPointsFromPost(
+            widget.post.id, userInfo.username, VoteType.up);
 
         setState(() {
           isUploading = false;

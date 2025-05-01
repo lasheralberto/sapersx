@@ -32,11 +32,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   String replyId = '';
   late SAPPost newPost;
   bool isLoadingPost = false;
+  final _customModuleController = TextEditingController();
+  bool _isCustomModule = false;
 
   final List<String> _modules = Modules.modules;
 
   @override
   void dispose() {
+    _customModuleController.dispose();
     _titleController.dispose();
     _descriptionController.dispose();
     _tagsController.dispose();
@@ -208,6 +211,72 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     Navigator.pop(context, newPost);
   }
 
+  Widget _buildModuleSelection() {
+    if (_isCustomModule) {
+      return TextField(
+        controller: _customModuleController,
+        decoration: styles.getInputDecoration(
+          Texts.translate('customModule', LanguageProvider().currentLanguage),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              setState(() {
+                _isCustomModule = false;
+                _selectedModule = _modules.first;
+              });
+            },
+          ),
+          context,
+        ),
+        onChanged: (value) {
+          setState(() {
+            _selectedModule = value;
+          });
+        },
+      );
+    }
+
+    return DropdownButtonFormField<String>(
+      value: _selectedModule,
+      decoration: styles.getInputDecoration(
+        Texts.translate('moduloSAP', LanguageProvider().currentLanguage),
+        null,
+        context,
+      ),
+      items: [
+        ..._modules.map((String module) {
+          return DropdownMenuItem<String>(
+            value: module,
+            child: Text(module),
+          );
+        }).toList(),
+        DropdownMenuItem<String>(
+          value: 'custom',
+          child: Row(
+            children: [
+              const Icon(Icons.add, size: 16),
+              const SizedBox(width: 8),
+              Text(Texts.translate(
+                  'customModule', LanguageProvider().currentLanguage)),
+            ],
+          ),
+        ),
+      ],
+      onChanged: (String? value) {
+        if (value == 'custom') {
+          setState(() {
+            _isCustomModule = true;
+            _customModuleController.clear();
+          });
+        } else if (value != null) {
+          setState(() {
+            _selectedModule = value;
+          });
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     var mediaQuery = MediaQuery.of(context).size;
@@ -292,28 +361,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           const SizedBox(height: 8),
                           _buildTagChips(),
                           const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(
-                            value: _selectedModule,
-                            decoration: styles.getInputDecoration(
-                              Texts.translate('moduloSAP',
-                                  LanguageProvider().currentLanguage),
-                              null,
-                              context,
-                            ),
-                            items: _modules.map((String module) {
-                              return DropdownMenuItem<String>(
-                                value: module,
-                                child: Text(module),
-                              );
-                            }).toList(),
-                            onChanged: (String? value) {
-                              if (value != null) {
-                                setState(() {
-                                  _selectedModule = value;
-                                });
-                              }
-                            },
-                          ),
+                          _buildModuleSelection(),
                           const SizedBox(height: 16),
                           Row(
                             children: [
@@ -348,7 +396,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         ),
       ),
       // Botón flotante para dispositivos móviles
-     
     );
   }
 }
