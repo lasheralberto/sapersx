@@ -368,11 +368,11 @@ class _ReplySectionState extends State<ReplySection> {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    LikeButton(
-                      postId: widget.post.id,
-                      replyId: reply.id,
-                      initialLikeCount: reply.replyVotes,
-                    ),
+                    // LikeButton(
+                    //   postId: widget.post.id,
+                    //   replyId: reply.id,
+                    //   initialLikeCount: reply.replyVotes,
+                    // ),
                   ],
                 ),
               ),
@@ -489,7 +489,7 @@ class _ReplySectionState extends State<ReplySection> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Error rendering code blocks',
             style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
           ),

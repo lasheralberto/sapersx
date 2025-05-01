@@ -47,6 +47,14 @@ class _PostCardState extends State<PostCard> {
     });
   }
 
+  void _unexpandPost() {
+    setState(() {
+      _isExpanded = false;
+      _showComments = false;
+      widget.onExpandChanged(false);
+    });
+  }
+
   Widget _buildTag(String tag, BuildContext context) {
     final bool isSelected = tag ==
         widget.post.tags.firstWhere(
@@ -83,7 +91,7 @@ class _PostCardState extends State<PostCard> {
           ),
           backgroundColor: isSelected
               ? Colors.deepOrange.withOpacity(0.1)
-              : Theme.of(context).cardColor,
+              : Theme.of(context).colorScheme.primary.withOpacity(0.1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
             side: BorderSide(
@@ -116,7 +124,9 @@ class _PostCardState extends State<PostCard> {
           width: 1,
         ),
       ),
-      color: Theme.of(context).cardColor,
+      color: _isExpanded
+          ? AppStyles.colorAvatarBorderLighter
+          : Theme.of(context).cardColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
@@ -134,7 +144,7 @@ class _PostCardState extends State<PostCard> {
                   replyCount: widget.post.replyCount,
                   iconSize: 15,
                   iconColor: AppStyles.colorAvatarBorder,
-                  onPressed: _expandPost, // Add this line
+                  //onPressed: _expandPost, // Add this line
                 ),
                 const SizedBox(width: 16),
                 _buildVoteButtons(context),
@@ -264,7 +274,9 @@ class _PostCardState extends State<PostCard> {
         // Content section with different background
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
+            color: _isExpanded
+                ? AppStyles.colorAvatarBorderLighter
+                : Theme.of(context).cardColor,
             border: Border(
               bottom: BorderSide(
                 color: Colors.grey.withOpacity(0.1),
@@ -276,7 +288,7 @@ class _PostCardState extends State<PostCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(30.0),
                 child: SelectableText(
                   widget.post.content,
                   style: AppStyles().getTextStyle(context),
@@ -291,7 +303,22 @@ class _PostCardState extends State<PostCard> {
                     child: Text(
                       Texts.translate(
                           'verMas', LanguageProvider().currentLanguage),
-                      style: TextStyle(
+                      style: const TextStyle(
+                        color: AppStyles.colorAvatarBorder,
+                        fontSize: AppStyles.fontSize,
+                      ),
+                    ),
+                  ),
+                ),
+              if (_isExpanded)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _unexpandPost,
+                    child: Text(
+                      Texts.translate(
+                          'verMenos', LanguageProvider().currentLanguage),
+                      style: const TextStyle(
                         color: AppStyles.colorAvatarBorder,
                         fontSize: AppStyles.fontSize,
                       ),
@@ -304,7 +331,9 @@ class _PostCardState extends State<PostCard> {
 
         // Attachments and tags section
         Container(
-          color: Theme.of(context).cardColor,
+          color: _isExpanded
+              ? AppStyles.colorAvatarBorderLighter
+              : Theme.of(context).cardColor,
           padding: const EdgeInsets.all(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

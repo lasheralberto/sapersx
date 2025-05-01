@@ -593,6 +593,7 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
             return LiquidPullToRefresh(
               backgroundColor: AppStyles.colorAvatarBorder,
               onRefresh: _handleRefresh,
+              animSpeedFactor: 1,
               child: Row(
                 children: [
                   // Espacio para el menú lateral fijo si está activo
@@ -612,7 +613,8 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
                   Expanded(
                     flex: 10,
                     child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
+                      physics:
+                          const NeverScrollableScrollPhysics(), // Add this line
                       slivers: [
                         // Add top contributors as first sliver
                         SliverToBoxAdapter(

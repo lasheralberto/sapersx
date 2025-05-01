@@ -4,6 +4,7 @@ class Texts {
 
   static final Map<String, Map<String, String>> _texts = {
     'es': {
+      'verMenos': 'Ver menos',
       'verMas': 'Ver más',
       'expertTab': 'Perfil de experto',
       'tarife': 'Tarifa/Hora',
@@ -105,6 +106,7 @@ class Texts {
       'personasTab': 'Personas',
     },
     'en': {
+      'verMenos': 'See less',
       'feedTab': 'Feed',
       'personasTab': 'People',
       'verMas': 'See more',
