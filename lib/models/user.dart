@@ -24,6 +24,7 @@ class UserInfoPopUp {
   List<String>? followers;
   List<Map<String, dynamic>>? reviews;
   int? weeklyPoints;
+  String? userTier;
 
   UserInfoPopUp(
       {required this.uid,
@@ -43,6 +44,7 @@ class UserInfoPopUp {
       this.following,
       this.followers,
       this.weeklyPoints = 0,
+      this.userTier = 'L1',
       this.reviews});
 
   // Convertir objeto a Map para guardarlo en Firebase
@@ -65,7 +67,8 @@ class UserInfoPopUp {
       'isAvailable': isAvailable,
       'weeklyPoints': weeklyPoints,
       'experience': experience,
-      'reviews': reviews
+      'reviews': reviews,
+      'userTier': userTier,
     };
   }
 
@@ -89,6 +92,7 @@ class UserInfoPopUp {
       isAvailable: map['isAvailable'] as bool? ?? false,
       reviews: _parseReviews(map['reviews']), // Función auxiliar
       weeklyPoints: map['weeklyPoints'] as int? ?? 0,
+      userTier: map['userTier'] as String? ?? 'L1',
       experience: map['experience'] as String?,
     );
   }

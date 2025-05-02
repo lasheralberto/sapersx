@@ -135,15 +135,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     });
   }
 
-  void _performSearch() {
-    final searchText = _searchController.text.trim();
-    setState(() {
-      _postsFutureGeneral = searchText.isEmpty
-          ? _firebaseService.getPostsFuture()
-          : _firebaseService.getPostsByKeyword(searchText);
-      _selectedModule = searchText.isEmpty ? _selectedModule : '';
-    });
-  }
+   
 
   Widget tagBubblePressed({
     required String tag,
@@ -181,28 +173,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       ),
     );
   }
-
-  Widget _buildMinimalSidebarToggle() {
-    return IconButton(
-      icon: AnimatedBuilder(
-        animation: _sidebarController,
-        builder: (context, _) {
-          return Icon(
-            _sidebarController.isOpen ? Symbols.close : Symbols.tag,
-            color: AppStyles.colorAvatarBorder,
-            size: AppStyles.iconSizeMedium, // Usando iconSizeMedium
-          );
-        },
-      ),
-      onPressed: () {
-        _sidebarController.toggle();
-      },
-      splashRadius:
-          24.0, // Reduce el área de interacción para hacerlo más minimalista
-      tooltip: _sidebarController.isOpen ? 'Cerrar Sidebar' : 'Abrir Sidebar',
-    );
-  }
-
+ 
   @override
   Widget build(BuildContext context) {
     double screenWidth = 0.0;

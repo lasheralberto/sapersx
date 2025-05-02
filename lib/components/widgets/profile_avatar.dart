@@ -4,6 +4,7 @@ import 'package:random_avatar/random_avatar.dart';
 import 'package:sapers/models/auth_service.dart';
 import 'package:sapers/models/styles.dart';
 import 'package:sapers/models/user.dart';
+import 'package:sapers/models/user_tier.dart';
 
 class ProfileAvatar extends StatelessWidget {
   final String seed;
@@ -55,10 +56,35 @@ class ProfileAvatar extends StatelessWidget {
   Widget _buildTextAvatar(BuildContext context) {
     return RepaintBoundary(
       // RepaintBoundary para el contenido estático
-      child: CircleAvatar(
-        backgroundColor: Colors.white,
-        child: _buildTextContent(context),
-      ),
+      child: Stack(children: [
+        CircleAvatar(
+          backgroundColor: Colors.white,
+          child: _buildTextContent(context),
+        ),
+        Positioned(
+          right: -2,
+          top: -2,
+          child: Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: UserTier.fromString(userInfoPopUp?.userTier ?? 'L1').color,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white,
+                width: 1,
+              ),
+            ),
+            child: Text(
+              userInfoPopUp?.userTier ?? 'L1',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 6,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ]),
     );
   }
 
@@ -74,10 +100,36 @@ class ProfileAvatar extends StatelessWidget {
             }
           }
         },
-        child: CircleAvatar(
-          backgroundColor: Colors.white,
-          child: _buildTextContent(context),
-        ),
+        child: Stack(children: [
+          CircleAvatar(
+            backgroundColor: Colors.white,
+            child: _buildTextContent(context),
+          ),
+          Positioned(
+            right: -2,
+            top: -2,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color:
+                    UserTier.fromString(userInfoPopUp?.userTier ?? 'L1').color,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white,
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                '${userInfoPopUp?.userTier ?? 'L1'}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ]),
       ),
     );
   }

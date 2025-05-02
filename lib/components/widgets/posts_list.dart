@@ -8,6 +8,7 @@ import 'package:sapers/models/styles.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
+import 'package:sapers/models/user_tier.dart';
 
 // Tu widget TrendingTagsSidebar existente
 class TrendingTagsSidebar extends StatefulWidget {
@@ -548,29 +549,7 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
                               ),
                             ),
                             // Points Badge
-                            Positioned(
-                              right: -8,
-                              top: -4,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: AppStyles.colorAvatarBorder,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Text(
-                                  '${contributor.weeklyPoints ?? 0}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
+                           
                           ],
                         ),
                         const SizedBox(height: 8),

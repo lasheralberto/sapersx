@@ -1485,16 +1485,18 @@ class FirebaseService {
   Future<void> addToWeeklyPointsFromPost(
       String postId, String userId, VoteType voteType) async {
     final postRef = postsCollection.doc(postId);
+    Map<String, String> currentVotes;
+    Map<String, dynamic> collectionData;
 
     await _firestore.runTransaction((transaction) async {
       final post = await transaction.get(postRef);
       if (!post.exists) return;
 
-      final data = post.data() as Map<String, dynamic>;
+      collectionData = post.data() as Map<String, dynamic>? ?? {};
 
       // Get existing votes if any
-      final Map<String, String> currentVotes = data.containsKey('userVotes')
-          ? (data['userVotes'] as Map<dynamic, dynamic>)
+      currentVotes = collectionData.containsKey('userVotes')
+          ? (collectionData['userVotes'] as Map<dynamic, dynamic>)
               .map((key, value) => MapEntry(key.toString(), value.toString()))
           : {};
 
@@ -1504,8 +1506,8 @@ class FirebaseService {
 
       // Only update if vote is changing
       if (voteType != previousVote) {
-        int upvotes = data['upvotes'] ?? 0;
-        int downvotes = data['downvotes'] ?? 0;
+        int upvotes = collectionData['upvotes'] ?? 0;
+        int downvotes = collectionData['downvotes'] ?? 0;
 
         if (previousVote == VoteType.up) upvotes--;
         if (previousVote == VoteType.down) downvotes--;
@@ -1513,8 +1515,10 @@ class FirebaseService {
         if (voteType == VoteType.down) downvotes++;
 
         // Get or initialize the arrays of usernames who voted
-        List<String> upvoters = List<String>.from(data['upvoters'] ?? []);
-        List<String> downvoters = List<String>.from(data['downvoters'] ?? []);
+        List<String> upvoters =
+            List<String>.from(collectionData['upvoters'] ?? []);
+        List<String> downvoters =
+            List<String>.from(collectionData['downvoters'] ?? []);
 
         // Remove user from previous vote list if any
         upvoters.remove(userId);
@@ -1536,12 +1540,36 @@ class FirebaseService {
 
         // Add reputation update logic for author
         final authorDoc = await userCollection
-            .where('username', isEqualTo: data['author'])
+            .where('username', isEqualTo: collectionData['author'])
             .limit(1)
             .get();
 
         if (authorDoc.docs.isNotEmpty) {
           final authorRef = userCollection.doc(authorDoc.docs.first.id);
+
+          //get weekly points and reputation
+          final authorData =
+              authorDoc.docs.first.data() as Map<String, dynamic>;
+          if (authorData.containsKey('weeklyPoints')) {
+            authorData['weeklyPoints'] = authorData['weeklyPoints'] ?? 0;
+          } else {
+            authorData['weeklyPoints'] =
+                0; // Default to 0 if field doesn't exist
+          }
+          int weeklyPoints = authorData['weeklyPoints'];
+
+          if (weeklyPoints < 100) {
+            //add new field to user called "userTier" with value L1, L2, L3, L4, L5
+            transaction.update(authorRef, {'userTier': 'L1'});
+          } else if (weeklyPoints < 200 && weeklyPoints >= 100) {
+            transaction.update(authorRef, {'userTier': 'L2'});
+          } else if (weeklyPoints < 300 && weeklyPoints >= 200) {
+            transaction.update(authorRef, {'userTier': 'L3'});
+          } else if (weeklyPoints < 400 && weeklyPoints >= 300) {
+            transaction.update(authorRef, {'userTier': 'L4'});
+          } else if (weeklyPoints >= 400) {
+            transaction.update(authorRef, {'userTier': 'L5'});
+          }
 
           // Update author's reputation based on vote type
           if (voteType == VoteType.up && !upvoters.contains(userId)) {
