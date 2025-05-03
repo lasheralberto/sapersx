@@ -105,6 +105,7 @@ class Texts {
       'feedTab': 'Feed',
       'personasTab': 'Personas',
       'customModule': 'Módulo personalizado',
+      'Level': 'Nivel',
     },
     'en': {
       'verMenos': 'See less',
@@ -207,8 +208,8 @@ class Texts {
       'noMessagesChat': 'No messages',
       'TopContributors': 'Top Sapers',
       'customModule': 'Custom Module',
+      'Level': 'Level',
     },
-   
   };
 
   static String translate(String key, String language) {

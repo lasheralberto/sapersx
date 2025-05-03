@@ -18,6 +18,7 @@ import 'package:sapers/components/widgets/posts_list.dart';
 import 'package:sapers/components/widgets/project_card.dart';
 import 'package:sapers/components/widgets/project_list.dart';
 import 'package:sapers/components/widgets/sap_ia_widget.dart';
+import 'package:sapers/components/widgets/sapers_ai_icon.dart';
 import 'package:sapers/components/widgets/searchbar.dart';
 import 'package:sapers/components/widgets/user_avatar.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
@@ -95,6 +96,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   final FocusNode _searchFocusNode = FocusNode();
   bool isMobile = false;
   int _currentIndex = 0; // Replace TabController with simple index
+  bool _showPanel = false;
 
   @override
   void dispose() {
@@ -135,7 +137,16 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     });
   }
 
-   
+  void _togglePanel() {
+    setState(() {
+      _showPanel = !_showPanel;
+      if (_showPanel) {
+        _panelController.animatePanelToPosition(1.0);
+      } else {
+        _panelController.close();
+      }
+    });
+  }
 
   Widget tagBubblePressed({
     required String tag,
@@ -173,7 +184,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       ),
     );
   }
- 
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = 0.0;
@@ -181,6 +192,10 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       body: _buildSlidingUpPanelUI(context, isMobile, screenWidth),
+      floatingActionButton: FloatingActionButton(
+          onPressed: _togglePanel,
+          backgroundColor: Colors.transparent,
+          child: const NebulaEffect(shouldMove: false)),
     );
   }
 
@@ -244,15 +259,19 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                               right: 0,
                               bottom: 0,
                               child: SlidingUpPanel(
+                                controller: _panelController,
                                 maxHeight:
                                     MediaQuery.of(context).size.height * 0.7,
-                                minHeight: isMobile ? 75 : 85,
-
+                                minHeight:
+                                    _showPanel ? (isMobile ? 75 : 85) : 0,
                                 onPanelSlide: (position) {
                                   setState(() {
                                     _panelPosition = position;
                                     _isPanelOpen = position > 0;
                                   });
+                                },
+                                onPanelClosed: () {
+                                  setState(() => _showPanel = false);
                                 },
                                 backdropEnabled: true,
                                 backdropOpacity: 0.5,

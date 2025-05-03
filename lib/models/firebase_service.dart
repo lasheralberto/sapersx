@@ -645,6 +645,8 @@ class FirebaseService {
             joinDate: data['joinDate'] ?? Timestamp.fromDate(DateTime.now()),
             experience: data['experience'] ?? '',
             isExpert: data['isExpert'] ?? false,
+            pointsInTier: data['pointsInTier'] ?? '0/500',
+            userTier: data['userTier'] ?? 'L1',
           );
 
           _userCache[username] = userInfo;
@@ -1561,21 +1563,21 @@ class FirebaseService {
           String progress;
 
           if (weeklyPoints < 100) {
-            progress = "${weeklyPoints}/100";
+            progress = "${weeklyPoints}/500";
             transaction.update(authorRef, {
               'userTier': 'L1',
               'pointsInTier': progress,
             });
           } else if (weeklyPoints < 200 && weeklyPoints >= 100) {
-            progress = "${weeklyPoints}/200";
+            progress = "${weeklyPoints}/500";
             transaction.update(
                 authorRef, {'userTier': 'L2', 'pointsInTier': progress});
           } else if (weeklyPoints < 300 && weeklyPoints >= 200) {
-            progress = "${weeklyPoints}/300";
+            progress = "${weeklyPoints}/500";
             transaction.update(
                 authorRef, {'userTier': 'L3', 'pointsInTier': progress});
           } else if (weeklyPoints < 400 && weeklyPoints >= 300) {
-            progress = "${weeklyPoints}/400";
+            progress = "${weeklyPoints}/500";
             transaction.update(
                 authorRef, {'userTier': 'L4', 'pointsInTier': progress});
           } else if (weeklyPoints >= 400) {
