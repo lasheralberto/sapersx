@@ -1558,17 +1558,31 @@ class FirebaseService {
           }
           int weeklyPoints = authorData['weeklyPoints'];
 
+          String progress;
+
           if (weeklyPoints < 100) {
-            //add new field to user called "userTier" with value L1, L2, L3, L4, L5
-            transaction.update(authorRef, {'userTier': 'L1'});
+            progress = "${weeklyPoints}/100";
+            transaction.update(authorRef, {
+              'userTier': 'L1',
+              'pointsInTier': progress,
+            });
           } else if (weeklyPoints < 200 && weeklyPoints >= 100) {
-            transaction.update(authorRef, {'userTier': 'L2'});
+            progress = "${weeklyPoints}/200";
+            transaction.update(
+                authorRef, {'userTier': 'L2', 'pointsInTier': progress});
           } else if (weeklyPoints < 300 && weeklyPoints >= 200) {
-            transaction.update(authorRef, {'userTier': 'L3'});
+            progress = "${weeklyPoints}/300";
+            transaction.update(
+                authorRef, {'userTier': 'L3', 'pointsInTier': progress});
           } else if (weeklyPoints < 400 && weeklyPoints >= 300) {
-            transaction.update(authorRef, {'userTier': 'L4'});
+            progress = "${weeklyPoints}/400";
+            transaction.update(
+                authorRef, {'userTier': 'L4', 'pointsInTier': progress});
           } else if (weeklyPoints >= 400) {
-            transaction.update(authorRef, {'userTier': 'L5'});
+            progress = "${weeklyPoints}/500";
+            // Puedes ajustar este valor según si hay un L6 o es el tope
+            transaction.update(
+                authorRef, {'userTier': 'L5', 'pointsInTier': progress});
           }
 
           // Update author's reputation based on vote type
