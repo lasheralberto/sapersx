@@ -292,18 +292,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // Create post/project button
-          FloatingActionButton(
-            heroTag: "btn1",
-            onPressed: _showCreateOptions,
-            backgroundColor: AppStyles.colorAvatarBorder,
-            child: const Icon(
-              Symbols.add,
-              color: AppStyles.scaffoldBackgroundColorBright,
-              size: AppStyles.iconSizeSmall,
-            ),
-          ),
-          const SizedBox(height: 16), // Spacing between buttons
           // AI Assistant button
           FloatingActionButton(
             heroTag: "btn2",
@@ -314,6 +302,19 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
               children: [
                 NebulaEffect(shouldMove: false),
               ],
+            ),
+          ),
+
+          const SizedBox(height: 16), // Spacing between buttons
+          // Create post/project button
+          FloatingActionButton(
+            heroTag: "btn1",
+            onPressed: _showCreateOptions,
+            backgroundColor: AppStyles.colorAvatarBorder,
+            child: const Icon(
+              Symbols.add,
+              color: AppStyles.scaffoldBackgroundColorBright,
+              size: AppStyles.iconSizeSmall,
             ),
           ),
         ],

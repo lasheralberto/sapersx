@@ -56,33 +56,45 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   }
 
   Widget _buildProfileInfo(BuildContext context, profile) {
-    return Padding(
-      padding: const EdgeInsets.all(TwitterDimensions.spacing + 20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ProfileAvatar(
-                seed: profile.email,
-                size: AppStyles.avatarSize + 10,
-                showBorder: profile.isExpert,
-              ),
-              const SizedBox(width: 16), // Espacio entre el avatar y la info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(TwitterDimensions.spacing + 20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Column(
                   children: [
-                    _buildUserInfo(context, profile),
-                    const SizedBox(height: 16),
-                    _buildUserMetadata(context),
+                    ProfileAvatar(
+                      seed: profile.email,
+                      size: AppStyles.avatarSize + 10,
+                      showBorder: profile.isExpert,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildFollowButton(context),
                   ],
                 ),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildUserInfo(context, profile),
+                      const SizedBox(height: 16),
+                      _buildUserMetadata(context),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: TwitterDimensions.spacingSmall + 20),
+          ],
+        ),
       ),
     );
   }
@@ -90,45 +102,58 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   Widget _buildFollowButton(BuildContext context) {
     bool isLoading = _loadingStates['follow'] ?? false;
 
-    return isLoading
-        ? AppStyles().progressIndicatorButton(context)
-        : ElevatedButton.icon(
-            onPressed: () async {
-              setState(() {
-                _loadingStates['follow'] = true;
-              });
-              bool isFollowed = await _firebaseService.followOrUnfollowUser(
-                FirebaseAuth.instance.currentUser!.uid,
-                widget.profile.username,
-                context,
-              );
-              setState(() {
-                _loadingStates['follow'] = false;
-                isFollowing = isFollowed;
-              });
-            },
-            icon: Icon(
-              isFollowing ? Icons.person_remove : Icons.person_add,
-              size: 16,
-            ),
-            label: Text(
-              Texts.translate(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      height: 40,
+      width: 40,
+      child: isLoading
+          ? const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppStyles.colorAvatarBorder,
+                  ),
+                ),
+              ),
+            )
+          : IconButton(
+              onPressed: () async {
+                setState(() => _loadingStates['follow'] = true);
+                bool isFollowed = await _firebaseService.followOrUnfollowUser(
+                  FirebaseAuth.instance.currentUser!.uid,
+                  widget.profile.username,
+                  context,
+                );
+                setState(() {
+                  _loadingStates['follow'] = false;
+                  isFollowing = isFollowed;
+                });
+              },
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return ScaleTransition(scale: animation, child: child);
+                },
+                child: Icon(
+                  isFollowing
+                      ? Icons.person_remove_rounded
+                      : Icons.person_add_rounded,
+                  key: ValueKey<bool>(isFollowing),
+                  size: 24,
+                  color: isFollowing
+                      ? Colors.redAccent
+                      : AppStyles.colorAvatarBorder,
+                ),
+              ),
+              tooltip: Texts.translate(
                 isFollowing ? 'unfollow' : 'seguir',
                 LanguageProvider().currentLanguage,
               ),
             ),
-            style: ElevatedButton.styleFrom(
-              iconColor: Theme.of(context).scaffoldBackgroundColor,
-              backgroundColor: isFollowing
-                  ? Colors.redAccent // Color para "dejar de seguir"
-                  : Theme.of(context).primaryColor, // Color para "seguir"
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          );
+    );
   }
 
   Widget _buildUserInfo(BuildContext context, UserInfoPopUp profile) {
@@ -150,41 +175,40 @@ class _ProfileHeaderState extends State<ProfileHeader> {
               .ellipsis, // Añadir puntos suspensivos si el texto es muy largo
         ),
         const SizedBox(height: 16),
-        _buildFollowButton(context), // Botón mejorado
+        // Botón mejorado
       ],
     );
   }
 
   Widget _buildUserMetadata(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildMetadataItem(
-            context,
-            Icons.location_on_outlined,
-            widget.profile.location.toString(),
-          ),
-          const SizedBox(height: TwitterDimensions.spacingSmall),
-          _buildMetadataItem(
-            context,
-            Icons.calendar_today_outlined,
-            '${Texts.translate('joinedOn', LanguageProvider().currentLanguage)} ${UtilsSapers().formatTimestampJoinDate(widget.profile.joinDate.toString())}',
-          ),
-          const SizedBox(height: TwitterDimensions.spacingSmall),
-          _buildMetadataItem(
-            context,
-            Icons.monetization_on_rounded,
-            '${Texts.translate('fare', LanguageProvider().currentLanguage)} ${widget.profile.hourlyRate.toString()} €/h',
-          ),
-          UserTierBadge(
-            currentLanguage: LanguageProvider().currentLanguage,
-            userTier: widget.profile.userTier ?? 'L1',
-            pointsInTier: widget.profile.pointsInTier ?? '0',
-            translate: Texts.translate, // Función de traducción
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildMetadataItem(
+          context,
+          Icons.location_on_outlined,
+          widget.profile.location.toString(),
+        ),
+        const SizedBox(height: TwitterDimensions.spacingSmall),
+        _buildMetadataItem(
+          context,
+          Icons.calendar_today_outlined,
+          '${Texts.translate('joinedOn', LanguageProvider().currentLanguage)} ${UtilsSapers().formatTimestampJoinDate(widget.profile.joinDate.toString())}',
+        ),
+        const SizedBox(height: TwitterDimensions.spacingSmall),
+        _buildMetadataItem(
+          context,
+          Icons.monetization_on_rounded,
+          '${Texts.translate('fare', LanguageProvider().currentLanguage)} ${widget.profile.hourlyRate.toString()} €/h',
+        ),
+        UserTierBadge(
+          currentLanguage: LanguageProvider().currentLanguage,
+          userTier: widget.profile.userTier ?? 'L1',
+          pointsInTier: widget.profile.pointsInTier ?? '0',
+          translate: Texts.translate, // Función de traducción
+        ),
+      ],
     );
   }
 
