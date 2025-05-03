@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:random_avatar/random_avatar.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
+import 'package:sapers/components/widgets/user_tier_badge.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
@@ -175,6 +176,12 @@ class _ProfileHeaderState extends State<ProfileHeader> {
             context,
             Icons.monetization_on_rounded,
             '${Texts.translate('fare', LanguageProvider().currentLanguage)} ${widget.profile.hourlyRate.toString()} €/h',
+          ),
+          UserTierBadge(
+            currentLanguage: LanguageProvider().currentLanguage,
+            userTier: widget.profile.userTier ?? 'L1',
+            pointsInTier: widget.profile.pointsInTier ?? '0',
+            translate: Texts.translate, // Función de traducción
           ),
         ],
       ),

@@ -119,228 +119,188 @@ class _ProjectInvitationSectionState extends State<ProjectInvitationSection> {
 
   Widget _buildSendMessageDialog(BuildContext context) {
     final messageController = TextEditingController();
-    final backgroundColor = Colors.white;
     String? selectedProject;
     Project? selectedProjectObj;
 
-    return StatefulBuilder(
-      builder: (context, setState) => Scaffold(
-        backgroundColor: backgroundColor,
-        appBar: AppBar(
-          backgroundColor: backgroundColor,
-          elevation: 0,
-          centerTitle: true,
-          title: isMessageSending
-              ? AppStyles().progressIndicatorButton(context)
-              : Text(
-                  Texts.translate('send_project_invitation',
-                      LanguageProvider().currentLanguage),
-                  style: AppStyles().getTextStyle(
-                    context,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.pop(context),
-          ),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
         ),
-        body: SafeArea(
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: backgroundColor,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+        child: StatefulBuilder(
+          builder: (context, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    if (isMessageSending)
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      const Icon(Icons.mail_outline),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        Texts.translate('send_project_invitation',
+                            LanguageProvider().currentLanguage),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ],
+                      ),
                     ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          Texts.translate('selectProject',
-                              LanguageProvider().currentLanguage),
-                          style: AppStyles().getTextStyle(
-                            context,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseService().getCreatedProjectsForUser(
-                              widget.profile!.username),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
-                            }
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
 
-                            if (snapshot.hasError) {
-                              return Center(
-                                  child: Text('Error: ${snapshot.error}'));
-                            }
+              // Content
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Project Selector
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseService()
+                            .getCreatedProjectsForUser(widget.profile.username),
+                        builder: (context, snapshot) {
+                          final projects = snapshot.data?.docs
+                                  .map((doc) => Project.fromMap(
+                                      doc.data() as Map<String, dynamic>,
+                                      doc.id))
+                                  .toList() ??
+                              [];
 
-                            if (!snapshot.hasData ||
-                                snapshot.data!.docs.isEmpty) {
-                              return const Center(
-                                child: Text(
-                                  'No projects yet',
-                                  style: TextStyle(
-                                      fontSize: 14, color: Colors.grey),
-                                ),
-                              );
-                            }
-
-                            final projects = snapshot.data!.docs
-                                .map((doc) => Project.fromMap(
-                                    doc.data() as Map<String, dynamic>, doc.id))
-                                .toList();
-
-                            return Container(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(8),
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: Theme.of(context).cardColor,
+                              border: Border.all(
+                                color: Theme.of(context)
+                                    .dividerColor
+                                    .withOpacity(0.2),
                               ),
+                            ),
+                            child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 isExpanded: true,
                                 value: selectedProject,
-                                underline: const SizedBox(),
                                 hint: Text(
                                   Texts.translate('selectProject',
                                       LanguageProvider().currentLanguage),
-                                  style: AppStyles().getTextStyle(context),
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .hintColor
+                                          .withOpacity(0.7)),
                                 ),
                                 items: projects.map((project) {
-                                  return DropdownMenuItem<String>(
+                                  return DropdownMenuItem(
                                     value: project.projectid,
-                                    child: Text(
-                                      project.projectName,
-                                      style: AppStyles().getTextStyle(context),
-                                    ),
+                                    child: Text(project.projectName),
                                   );
                                 }).toList(),
-                                onChanged: (String? value) {
-                                  setState(() {
-                                    selectedProject = value;
-                                    selectedProjectObj = projects.firstWhere(
-                                      (project) => project.projectid == value,
-                                    );
-                                  });
-                                },
+                                onChanged: (value) => setState(() {
+                                  selectedProject = value;
+                                  selectedProjectObj = projects.firstWhere(
+                                    (p) => p.projectid == value,
+                                  );
+                                }),
                               ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          Texts.translate('writeYourMessage',
-                              LanguageProvider().currentLanguage),
-                          style: AppStyles().getTextStyle(
-                            context,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Message Input
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Theme.of(context).cardColor,
+                          border: Border.all(
+                            color:
+                                Theme.of(context).dividerColor.withOpacity(0.2),
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        Expanded(
-                          child: Container(
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: TextField(
-                              controller: messageController,
-                              decoration: InputDecoration(
-                                hintText: Texts.translate('writeYourMessage',
-                                    LanguageProvider().currentLanguage),
-                                hintStyle: AppStyles().getTextStyle(
-                                  context,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.all(12),
-                              ),
-                              maxLines: null,
-                              expands: true,
-                              textAlignVertical: TextAlignVertical.top,
-                              style: AppStyles()
-                                  .getTextStyle(context, fontSize: 16),
-                            ),
+                        child: TextField(
+                          controller: messageController,
+                          minLines: 3,
+                          maxLines: 5,
+                          decoration: InputDecoration(
+                            hintText: Texts.translate('writeYourMessage',
+                                LanguageProvider().currentLanguage),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.all(16),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              ),
+
+              // Actions
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        Texts.translate(
+                            'cancel', LanguageProvider().currentLanguage),
                       ),
                     ),
-                    onPressed: selectedProject == null
-                        ? null
-                        : () async {
-                            final message = messageController.text.trim();
-                            if (message.isNotEmpty) {
-                              setState(() {
-                                isMessageSending = true;
-                              });
+                    const SizedBox(width: 12),
+                    FilledButton(
+                      onPressed: selectedProject == null || isMessageSending
+                          ? null
+                          : () async {
+                              final message = messageController.text.trim();
+                              if (message.isEmpty) return;
+
+                              setState(() => isMessageSending = true);
                               try {
                                 await FirebaseService().sendProjectInvitation(
-                                  to: widget.profile!.username,
+                                  to: widget.profile.username,
                                   message: message,
-                                  from: widget.profile!.username,
+                                  from: widget.profile.username,
                                   projectId: selectedProject!,
                                   projectName: selectedProjectObj!.projectName,
                                 );
                                 Navigator.pop(context);
-                              } catch (e) {
-                                // Manejo de errores...
                               } finally {
-                                setState(() {
-                                  isMessageSending = false;
-                                });
+                                setState(() => isMessageSending = false);
                               }
-                            }
-                          },
-                    child: Text(
-                      Texts.translate(
-                          'sendInvitation', LanguageProvider().currentLanguage),
-                      style: AppStyles().getTextStyle(
-                        context,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                            },
+                      child: Text(
+                        Texts.translate('sendInvitation',
+                            LanguageProvider().currentLanguage),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

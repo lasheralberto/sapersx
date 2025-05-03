@@ -717,6 +717,13 @@ class FirebaseService {
           joinDate: Timestamp.fromDate(DateTime.now()),
           experience: data['experience']?.toString() ?? '',
           reviews: List<Map<String, dynamic>>.from(data['reviews'] ?? []),
+          userTier: data['userTier']?.toString() ?? 'L1',
+          pointsInTier: data['pointsInTier']?.toString() ?? '0/500',
+          following: List<String>.from(data['following'] ?? []),
+          followers: List<String>.from(data['followers'] ?? []),
+          weeklyPoints: data['weeklyPoints'] as int? ?? 0,
+          latitude: data['latitude'] as double? ?? 0.0,
+          longitude: data['longitude'] as double? ?? 0.0,
           specialty: data['specialty']?.toString() ?? '');
     } catch (e) {
       rethrow;

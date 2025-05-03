@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
+import 'package:sapers/components/widgets/user_tier_badge.dart';
 
 import 'package:sapers/models/auth_service.dart';
 import 'package:sapers/models/firebase_service.dart';
@@ -173,51 +174,11 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
                             ),
                           )
                         : const SizedBox.shrink(),
-                    Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[100],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            Texts.translate(
-                                'Level', LanguageProvider().currentLanguage),
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            user.userTier != null ? user.userTier! : 'L1',
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            user.pointsInTier != null
-                                ? user.pointsInTier!
-                                : '0/500',
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+                    UserTierBadge(
+                      currentLanguage: LanguageProvider().currentLanguage,
+                      userTier: user.userTier ?? 'L1',
+                      pointsInTier: user.pointsInTier ?? '0',
+                      translate: Texts.translate, // Función de traducción
                     )
                   ],
                 ),

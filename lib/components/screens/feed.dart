@@ -148,6 +148,103 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     });
   }
 
+  void _showCreatePostDialog() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => const LoginScreen(),
+        ),
+      );
+    } else {
+      final result = await showDialog<SAPPost>(
+        context: context,
+        builder: (context) => const CreatePostScreen(),
+      );
+
+      if (result != null) {
+        await _firebaseService.createPost(result);
+        // if (widget.onPostCreated != null) {
+        //   widget.onPostCreated!();
+        // }
+      }
+    }
+  }
+
+  void _showCreateProjectDialog() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => const LoginScreen(),
+        ),
+      );
+    } else {
+      UserInfoPopUp? user =
+          Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
+
+      final result = await showDialog<Project>(
+        context: context,
+        builder: (context) => CreateProjectScreen(user: user),
+      );
+
+      if (result != null) {
+        await _firebaseService.createProject(result);
+        // if (widget.onProjectCreated != null) {
+        //   widget.onProjectCreated!();
+        // }
+      }
+    }
+  }
+
+  void _showCreateOptions() {
+    final languageProvider =
+        Provider.of<LanguageProvider>(context, listen: false);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Symbols.post_add, weight: 1150.0),
+                title: Text(
+                  Texts.translate(
+                      'crearPost', languageProvider.currentLanguage),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCreatePostDialog();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Symbols.add_task, weight: 1150.0),
+                title: Text(
+                  Texts.translate(
+                      'nuevoProyecto', languageProvider.currentLanguage),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCreateProjectDialog();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget tagBubblePressed({
     required String tag,
     required VoidCallback onDelete,
@@ -192,10 +289,35 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       body: _buildSlidingUpPanelUI(context, isMobile, screenWidth),
-      floatingActionButton: FloatingActionButton(
-          onPressed: _togglePanel,
-          backgroundColor: Colors.transparent,
-          child: const NebulaEffect(shouldMove: false)),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // Create post/project button
+          FloatingActionButton(
+            heroTag: "btn1",
+            onPressed: _showCreateOptions,
+            backgroundColor: AppStyles.colorAvatarBorder,
+            child: const Icon(
+              Symbols.add,
+              color: AppStyles.scaffoldBackgroundColorBright,
+              size: AppStyles.iconSizeSmall,
+            ),
+          ),
+          const SizedBox(height: 16), // Spacing between buttons
+          // AI Assistant button
+          FloatingActionButton(
+            heroTag: "btn2",
+            onPressed: _togglePanel,
+            backgroundColor: Colors.transparent,
+            child: const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                NebulaEffect(shouldMove: false),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

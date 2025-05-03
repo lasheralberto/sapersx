@@ -127,103 +127,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
     });
   }
 
-  void _showCreatePostDialog() async {
-    if (FirebaseAuth.instance.currentUser == null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (context) => const LoginScreen(),
-        ),
-      );
-    } else {
-      final result = await showDialog<SAPPost>(
-        context: context,
-        builder: (context) => const CreatePostScreen(),
-      );
-
-      if (result != null) {
-        await _firebaseService.createPost(result);
-        if (widget.onPostCreated != null) {
-          widget.onPostCreated!();
-        }
-      }
-    }
-  }
-
-  void _showCreateProjectDialog() async {
-    if (FirebaseAuth.instance.currentUser == null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (context) => const LoginScreen(),
-        ),
-      );
-    } else {
-      UserInfoPopUp? user =
-          Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
-
-      final result = await showDialog<Project>(
-        context: context,
-        builder: (context) => CreateProjectScreen(user: user),
-      );
-
-      if (result != null) {
-        await _firebaseService.createProject(result);
-        if (widget.onProjectCreated != null) {
-          widget.onProjectCreated!();
-        }
-      }
-    }
-  }
-
-  void _showCreateOptions() {
-    final languageProvider =
-        Provider.of<LanguageProvider>(context, listen: false);
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Symbols.post_add, weight: 1150.0),
-                title: Text(
-                  Texts.translate(
-                      'crearPost', languageProvider.currentLanguage),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showCreatePostDialog();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Symbols.add_task, weight: 1150.0),
-                title: Text(
-                  Texts.translate(
-                      'nuevoProyecto', languageProvider.currentLanguage),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showCreateProjectDialog();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
+ 
   @override
   void dispose() {
     _animationTimer?.cancel();
@@ -291,20 +195,20 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                                   ),
                                   child: Row(
                                     children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.add,
-                                          color: AppStyles.colorAvatarBorder,
-                                          size: 20,
-                                        ),
-                                        style: IconButton.styleFrom(
-                                          backgroundColor: AppStyles
-                                              .colorAvatarBorder
-                                              .withOpacity(0.1),
-                                          padding: const EdgeInsets.all(8),
-                                        ),
-                                        onPressed: _showCreateOptions,
-                                      ),
+                                      // // IconButton(
+                                      // //   icon: const Icon(
+                                      // //     Icons.add,
+                                      // //     color: AppStyles.colorAvatarBorder,
+                                      // //     size: 20,
+                                      // //   ),
+                                      // //   style: IconButton.styleFrom(
+                                      // //     backgroundColor: AppStyles
+                                      // //         .colorAvatarBorder
+                                      // //         .withOpacity(0.1),
+                                      // //     padding: const EdgeInsets.all(8),
+                                      // //   ),
+                                      // //   onPressed: _showCreateOptions,
+                                      // // ),
                                       AnimatedSwitcher(
                                         duration:
                                             const Duration(milliseconds: 200),
