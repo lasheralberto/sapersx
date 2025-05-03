@@ -273,7 +273,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
             child: const Icon(
               Symbols.close,
               size: AppStyles.iconSizeSmall, // Usando iconSizeSmall
-              weight: 1150.0,
+              weight: 1120.0,
               color: Colors.blue,
             ),
           ),
