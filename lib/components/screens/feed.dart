@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:sapers/components/screens/messages_screen.dart';
 import 'package:sapers/components/widgets/achievement_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -475,6 +476,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
         return _buildProjectsTab(isMobile);
       case 2:
         return const UserSearchScreen();
+      case 3:
+        return const MessagesScreen();
       default:
         return _buildGeneralPostsTab(isMobile);
     }
@@ -562,6 +565,18 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                     'personasTab', LanguageProvider().currentLanguage),
                 isSelected: _currentIndex == 2,
                 onTap: () => setState(() => _currentIndex = 2),
+              ),
+              _buildSideMenuItem(
+                icon: Symbols.email,
+                label: Texts.translate(
+                    'messagesScreen', LanguageProvider().currentLanguage),
+                isSelected: _currentIndex == 3,
+                onTap: () {
+                  // Implementar navegación a la configuración
+                  setState(() {
+                    _currentIndex = 3;
+                  });
+                },
               ),
             ],
           ),

@@ -53,6 +53,10 @@ class FirebaseService {
   final CollectionReference projectChatCollection =
       FirebaseFirestore.instance.collection('projectChat');
 
+  // Direct messages collection
+  final CollectionReference _directMessagesCollection =
+      FirebaseFirestore.instance.collection('direct_messages');
+
   // Constantes para paginación
   static const int postsPerPage = 10;
 
@@ -414,26 +418,6 @@ class FirebaseService {
       rethrow;
     }
   }
-
-  // //Function to follow the user
-  // Future<bool> followOrUnfollowUser(String uid, String username) async {
-  //   try {
-  //     final userExists = await checkIfUserExistsInFollowers(uid, username);
-  //     if (userExists) {
-  //       await userCollection.doc(uid).update({
-  //         'following': FieldValue.arrayRemove([username])
-  //       });
-  //       return false; // Unfollow
-  //     } else {
-  //       await userCollection.doc(uid).update({
-  //         'following': FieldValue.arrayUnion([username])
-  //       });
-  //       return true; // Follow
-  //     }
-  //   } catch (e) {
-  //     rethrow;
-  //   }
-  // }
 
 // Usar BehaviorSubject en lugar de StreamController
   final BehaviorSubject<List<SAPPost>> _postsSubject =
@@ -1645,5 +1629,55 @@ class FirebaseService {
         'downvoters': List<String>.from(data['downvoters'] ?? []),
       };
     });
+  }
+
+  Future<void> sendDirectMessage({
+    required String toUsername,
+    required String fromUsername,
+    required String message,
+  }) async {
+    try {
+      final chatId = ([fromUsername, toUsername]..sort()).join('_');
+
+      final messageData = {
+        'fromUsername': fromUsername,
+        'toUsername': toUsername,
+        'message': message,
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+      };
+
+      // Add message to chat subcollection
+      await _directMessagesCollection
+          .doc(chatId)
+          .collection('messages')
+          .add(messageData);
+
+      // Update chat metadata
+      await _directMessagesCollection.doc(chatId).set({
+        'participants': [fromUsername, toUsername],
+        'lastMessage': message,
+        'lastMessageTime': FieldValue.serverTimestamp(),
+        'lastSender': fromUsername,
+      }, SetOptions(merge: true));
+    } catch (e) {
+      print('Error sending DM: $e');
+      rethrow;
+    }
+  }
+
+  Stream<QuerySnapshot> getUserDirectMessages(String username) {
+    return _directMessagesCollection
+        .where('participants', arrayContains: username)
+        .orderBy('lastMessageTime', descending: true)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot> getChatMessages(String chatId) {
+    return _directMessagesCollection
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots();
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/user_tier_badge.dart';
+import 'package:sapers/models/auth_provider.dart';
 
 import 'package:sapers/models/auth_service.dart';
 import 'package:sapers/models/firebase_service.dart';
@@ -112,6 +113,7 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
     if (mounted) Overlay.of(context).insert(_overlayEntry!);
   }
 
+  
   Widget _buildUserInfoCard() {
     final user = _cachedUser!;
     return Container(
@@ -210,6 +212,7 @@ class _UserProfileCardHoverState extends State<UserProfileCardHover> {
                   Texts.translate(
                       'FollowersTab', LanguageProvider().currentLanguage),
                   user.followers?.length ?? 0),
+          
             ],
           ),
           const SizedBox(height: 16),

@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:random_avatar/random_avatar.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/user_tier_badge.dart';
+import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
@@ -46,6 +48,99 @@ class _ProfileHeaderState extends State<ProfileHeader> {
     );
   }
 
+  void _showDMDialog(BuildContext context, UserInfoPopUp recipient) {
+    final messageController = TextEditingController();
+    bool isSending = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '@${recipient.username}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: messageController,
+                  decoration: InputDecoration(
+                    hintText: Texts.translate(
+                        'writeMessage', LanguageProvider().currentLanguage),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (isSending)
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      FilledButton(
+                        onPressed: () async {
+                          if (messageController.text.trim().isEmpty) return;
+                          setState(() => isSending = true);
+                          try {
+                            final user = Provider.of<AuthProviderSapers>(
+                                    context,
+                                    listen: false)
+                                .userInfo;
+                            await FirebaseService().sendDirectMessage(
+                              fromUsername: user?.username ?? 'Unknown',
+                              toUsername: recipient.username,
+                              message: messageController.text.trim(),
+                            );
+                            if (context.mounted) Navigator.pop(context);
+                          } finally {
+                            if (mounted) setState(() => isSending = false);
+                          }
+                        },
+                        child: Text(
+                          Texts.translate(
+                              'send', LanguageProvider().currentLanguage),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -76,6 +171,12 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                     ),
                     const SizedBox(height: 8),
                     _buildFollowButton(context),
+                    IconButton(
+                      onPressed: () => _showDMDialog(context, profile),
+                      icon: const Icon(Icons.mail_outline_rounded, size: 20),
+                      tooltip: Texts.translate(
+                          'sendMessage', LanguageProvider().currentLanguage),
+                    ),
                   ],
                 ),
                 const SizedBox(width: 20),

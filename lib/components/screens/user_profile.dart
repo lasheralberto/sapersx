@@ -53,6 +53,97 @@ class _UserProfilePageState extends State<UserProfilePage>
     super.dispose();
   }
 
+  void _showDMDialog(BuildContext context, UserInfoPopUp recipient) {
+    final messageController = TextEditingController();
+    bool isSending = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '@${recipient.username}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: messageController,
+                  decoration: InputDecoration(
+                    hintText: Texts.translate(
+                        'writeMessage', LanguageProvider().currentLanguage),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (isSending)
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      FilledButton(
+                        onPressed: () async {
+                          if (messageController.text.trim().isEmpty) return;
+                          setState(() => isSending = true);
+                          try {
+                            await FirebaseService().sendDirectMessage(
+                              fromUsername:
+                                  AuthProviderSapers().userInfo!.username,
+                              toUsername: recipient.username,
+                              message: messageController.text.trim(),
+                            );
+                            if (context.mounted) Navigator.pop(context);
+                          } finally {
+                            if (mounted) setState(() => isSending = false);
+                          }
+                        },
+                        child: Text(
+                          Texts.translate(
+                              'send', LanguageProvider().currentLanguage),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
   Future<UserInfoPopUp?> _loadUserProfileData() async {
     return widget.userinfo;
   }
