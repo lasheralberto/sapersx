@@ -110,8 +110,10 @@ class Texts {
       'messages': 'Mensajes',
       'typeMessage': 'Escribe un mensaje...',
       'messagesScreen': 'Mensajes',
+      'sendMessage': 'Enviar mensaje',
     },
     'en': {
+      'sendMessage': 'Send message',
       'messagesScreen': 'Messages',
       'typeMessage': 'Type a message...',
       'selectChat': 'Select chat',
