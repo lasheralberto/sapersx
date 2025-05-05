@@ -50,7 +50,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   decoration: BoxDecoration(
                     border: Border(
                         bottom:
-                            BorderSide(color: Colors.grey.withOpacity(0.2))),
+                            BorderSide(color: Colors.grey.withOpacity(0.3))),
                   ),
                   child: Text(
                     Texts.translate(

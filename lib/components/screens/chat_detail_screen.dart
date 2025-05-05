@@ -149,7 +149,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 textCapitalization: TextCapitalization.sentences,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             SizedBox(
               width: 48,
               height: 48,
