@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sapers/components/widgets/profile_avatar.dart';
+import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/models/auth_provider.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
@@ -54,7 +56,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     Texts.translate(
                         'messages', LanguageProvider().currentLanguage),
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: AppStyles.fontSizeMedium,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -160,7 +162,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
             setState(() => selectedChat = docId);
           }
         },
-        leading: CircleAvatar(child: Text(otherUser[0].toUpperCase())),
+        //leading: CircleAvatar(child: Text(otherUser[0].toUpperCase())),
+        leading: UserProfileCardHover(
+            authorUsername: otherUser, isExpert: false, onProfileOpen: () {}),
         title: Text(otherUser),
         subtitle: Text(
           chat['lastMessage'] ?? '',
