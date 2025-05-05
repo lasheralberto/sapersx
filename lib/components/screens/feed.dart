@@ -290,36 +290,36 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       body: _buildSlidingUpPanelUI(context, isMobile, screenWidth),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // AI Assistant button
-          FloatingActionButton(
-            heroTag: "btn2",
-            onPressed: _togglePanel,
-            backgroundColor: Colors.transparent,
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+      floatingActionButton: _currentIndex == 0
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                NebulaEffect(shouldMove: false),
+                // AI Assistant button
+                FloatingActionButton(
+                  heroTag: "btn2",
+                  onPressed: _togglePanel,
+                  backgroundColor: Colors.transparent,
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      NebulaEffect(shouldMove: false),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                FloatingActionButton(
+                  heroTag: "btn1",
+                  onPressed: _showCreateOptions,
+                  backgroundColor: AppStyles.colorAvatarBorder,
+                  child: const Icon(
+                    Symbols.add,
+                    color: AppStyles.scaffoldBackgroundColorBright,
+                    size: AppStyles.iconSizeSmall,
+                  ),
+                ),
               ],
-            ),
-          ),
-
-          const SizedBox(height: 16), // Spacing between buttons
-          // Create post/project button
-          FloatingActionButton(
-            heroTag: "btn1",
-            onPressed: _showCreateOptions,
-            backgroundColor: AppStyles.colorAvatarBorder,
-            child: const Icon(
-              Symbols.add,
-              color: AppStyles.scaffoldBackgroundColorBright,
-              size: AppStyles.iconSizeSmall,
-            ),
-          ),
-        ],
-      ),
+            )
+          : null,
     );
   }
 

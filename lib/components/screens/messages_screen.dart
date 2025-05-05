@@ -21,6 +21,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
   String? selectedChat;
   final TextEditingController _messageController = TextEditingController();
 
+  bool get isMobile => MediaQuery.of(context).size.width < 600;
+
   @override
   void dispose() {
     _messageController.dispose();
@@ -35,13 +37,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return Scaffold(
       body: Row(
         children: [
-          // Chat list sidebar
-          Container(
-            width: 300,
-            decoration: BoxDecoration(
-              border: Border(
-                  right: BorderSide(color: Colors.grey.withOpacity(0.2))),
-            ),
+          // Chat list sidebar with constrained width
+          SizedBox(
+            width: isMobile ? MediaQuery.of(context).size.width : 300,
             child: Column(
               children: [
                 // Header
@@ -116,12 +114,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
               ],
             ),
           ),
-          // Chat content
-          Expanded(
-            child: selectedChat == null
-                ? _buildNoChatSelected()
-                : _buildChatContent(currentUser.username),
-          ),
+          // Show chat content only on desktop
+          if (!isMobile && selectedChat != null)
+            Expanded(
+              child: ChatDetailScreen(
+                otherUser: (selectedChat!
+                    .split('_')
+                    .firstWhere((u) => u != currentUser.username)),
+                chatId: selectedChat!,
+              ),
+            ),
         ],
       ),
     );
@@ -142,15 +144,21 @@ class _MessagesScreenState extends State<MessagesScreen> {
       ),
       child: ListTile(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ChatDetailScreen(
-                otherUser: otherUser,
-                chatId: docId, // Use document ID here
+          if (isMobile) {
+            // Navigate to new screen on mobile
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatDetailScreen(
+                  otherUser: otherUser,
+                  chatId: docId,
+                ),
               ),
-            ),
-          );
+            );
+          } else {
+            // Update selected chat on desktop
+            setState(() => selectedChat = docId);
+          }
         },
         leading: CircleAvatar(child: Text(otherUser[0].toUpperCase())),
         title: Text(otherUser),

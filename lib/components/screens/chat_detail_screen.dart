@@ -150,13 +150,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Container(
-              decoration: const BoxDecoration(
-                color: AppStyles.colorAvatarBorder,
-                shape: BoxShape.circle,
-              ),
+            SizedBox(
+              width: 48,
+              height: 48,
               child: IconButton(
-                icon: const Icon(Icons.send, color: Colors.white),
+                style: IconButton.styleFrom(
+                  padding: const EdgeInsets.all(0),
+                  shape: const CircleBorder(),
+                ),
+                padding: const EdgeInsets.all(12),
+                icon: Icon(Icons.arrow_upward_rounded,
+                    color: AppStyles.colorAvatarBorder),
                 onPressed: () => _sendMessage(currentUsername),
               ),
             ),
