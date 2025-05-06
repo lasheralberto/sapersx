@@ -1478,131 +1478,130 @@ class FirebaseService {
   Future<void> addToWeeklyPointsFromPost(
       String postId, String userId, VoteType voteType) async {
     final postRef = postsCollection.doc(postId);
-    Map<String, String> currentVotes;
-    Map<String, dynamic> collectionData;
 
     await _firestore.runTransaction((transaction) async {
-      final post = await transaction.get(postRef);
-      if (!post.exists) return;
+      final postSnapshot = await transaction.get(postRef);
+      if (!postSnapshot.exists) return;
 
-      collectionData = post.data() as Map<String, dynamic>? ?? {};
+      final postData = postSnapshot.data() as Map<String, dynamic>? ?? {};
+      final userVotes = (postData['userVotes'] as Map<dynamic, dynamic>?)?.map(
+              (key, value) => MapEntry(key.toString(), value.toString())) ??
+          {};
 
-      // Get existing votes if any
-      currentVotes = collectionData.containsKey('userVotes')
-          ? (collectionData['userVotes'] as Map<dynamic, dynamic>)
-              .map((key, value) => MapEntry(key.toString(), value.toString()))
-          : {};
-
-      final previousVote = currentVotes.containsKey(userId)
-          ? VoteType.values.byName(currentVotes[userId]!)
+      final previousVote = userVotes.containsKey(userId)
+          ? VoteType.values.byName(userVotes[userId]!)
           : VoteType.none;
 
-      // Only update if vote is changing
-      if (voteType != previousVote) {
-        int upvotes = collectionData['upvotes'] ?? 0;
-        int downvotes = collectionData['downvotes'] ?? 0;
+      // Buscar autor del post
+      final authorQuery = await userCollection
+          .where('username', isEqualTo: postData['author'])
+          .limit(1)
+          .get();
 
-        if (previousVote == VoteType.up) upvotes--;
-        if (previousVote == VoteType.down) downvotes--;
-        if (voteType == VoteType.up) upvotes++;
-        if (voteType == VoteType.down) downvotes++;
+      if (authorQuery.docs.isEmpty) return;
+      final authorRef = userCollection.doc(authorQuery.docs.first.id);
+      final authorData =
+          authorQuery.docs.first.data() as Map<String, dynamic>? ?? {};
 
-        // Get or initialize the arrays of usernames who voted
-        List<String> upvoters =
-            List<String>.from(collectionData['upvoters'] ?? []);
-        List<String> downvoters =
-            List<String>.from(collectionData['downvoters'] ?? []);
+      // Inicializar puntos actuales
+      int weeklyPoints = authorData['weeklyPoints'] ?? 0;
 
-        // Remove user from previous vote list if any
-        upvoters.remove(userId);
-        downvoters.remove(userId);
-
-        // Add user to new vote list
-        if (voteType == VoteType.up) {
-          upvoters.add(userId);
-        } else if (voteType == VoteType.down) {
-          downvoters.add(userId);
-        }
-
-        Map<String, dynamic> updateData = {
-          'upvotes': upvotes,
-          'downvotes': downvotes,
-          'upvoters': upvoters,
-          'downvoters': downvoters,
-        };
-
-        // Add reputation update logic for author
-        final authorDoc = await userCollection
-            .where('username', isEqualTo: collectionData['author'])
-            .limit(1)
-            .get();
-
-        if (authorDoc.docs.isNotEmpty) {
-          final authorRef = userCollection.doc(authorDoc.docs.first.id);
-
-          //get weekly points and reputation
-          final authorData =
-              authorDoc.docs.first.data() as Map<String, dynamic>;
-          if (authorData.containsKey('weeklyPoints')) {
-            authorData['weeklyPoints'] = authorData['weeklyPoints'] ?? 0;
-          } else {
-            authorData['weeklyPoints'] =
-                0; // Default to 0 if field doesn't exist
-          }
-          int weeklyPoints = authorData['weeklyPoints'];
-
-          String progress;
-
-          if (weeklyPoints < 100) {
-            progress = "${weeklyPoints}/500";
-            transaction.update(authorRef, {
-              'userTier': 'L1',
-              'pointsInTier': progress,
-            });
-          } else if (weeklyPoints < 200 && weeklyPoints >= 100) {
-            progress = "${weeklyPoints}/500";
-            transaction.update(
-                authorRef, {'userTier': 'L2', 'pointsInTier': progress});
-          } else if (weeklyPoints < 300 && weeklyPoints >= 200) {
-            progress = "${weeklyPoints}/500";
-            transaction.update(
-                authorRef, {'userTier': 'L3', 'pointsInTier': progress});
-          } else if (weeklyPoints < 400 && weeklyPoints >= 300) {
-            progress = "${weeklyPoints}/500";
-            transaction.update(
-                authorRef, {'userTier': 'L4', 'pointsInTier': progress});
-          } else if (weeklyPoints >= 400) {
-            progress = "${weeklyPoints}/500";
-            // Puedes ajustar este valor según si hay un L6 o es el tope
-            transaction.update(
-                authorRef, {'userTier': 'L5', 'pointsInTier': progress});
-          }
-
-          // Update author's reputation based on vote type
-          if (voteType == VoteType.up && !upvoters.contains(userId)) {
-            transaction.update(authorRef, {
-              'weeklyPoints': FieldValue.increment(10),
-              'reputation': FieldValue.increment(5)
-            });
-          } else if (voteType == VoteType.down &&
-              !downvoters.contains(userId)) {
-            transaction.update(authorRef, {
-              'weeklyPoints': FieldValue.increment(-5),
-              'reputation': FieldValue.increment(-2)
-            });
-          }
-
-          // Additional penalty check remains the same
-          if (downvotes >= 5) {
-            transaction.update(authorRef, {
-              'weeklyPoints': FieldValue.increment(-20),
-              'reputation': FieldValue.increment(-10)
-            });
-          }
-        }
-
-        transaction.update(postRef, updateData);
+      // Revertir efecto del voto anterior si existe
+      if (previousVote == VoteType.up) {
+        weeklyPoints -= 10;
+        transaction.update(authorRef, {
+          'weeklyPoints': FieldValue.increment(-10),
+          'reputation': FieldValue.increment(-5),
+        });
+      } else if (previousVote == VoteType.down) {
+        weeklyPoints += 5;
+        transaction.update(authorRef, {
+          'weeklyPoints': FieldValue.increment(5),
+          'reputation': FieldValue.increment(2),
+        });
       }
+
+      // Actualizar conteo de votos
+      int upvotes = postData['upvotes'] ?? 0;
+      int downvotes = postData['downvotes'] ?? 0;
+
+      if (previousVote == VoteType.up) upvotes--;
+      if (previousVote == VoteType.down) downvotes--;
+
+      if (voteType == VoteType.up) upvotes++;
+      if (voteType == VoteType.down) downvotes++;
+
+      // Actualizar listas de votantes
+      List<String> upvoters = List<String>.from(postData['upvoters'] ?? []);
+      List<String> downvoters = List<String>.from(postData['downvoters'] ?? []);
+
+      upvoters.remove(userId);
+      downvoters.remove(userId);
+
+      if (voteType == VoteType.up) {
+        upvoters.add(userId);
+      } else if (voteType == VoteType.down) {
+        downvoters.add(userId);
+      }
+
+      // Aplicar efecto del nuevo voto
+      if (voteType == VoteType.up) {
+        weeklyPoints += 10;
+        transaction.update(authorRef, {
+          'weeklyPoints': FieldValue.increment(10),
+          'reputation': FieldValue.increment(5),
+        });
+      } else if (voteType == VoteType.down) {
+        weeklyPoints -= 5;
+        transaction.update(authorRef, {
+          'weeklyPoints': FieldValue.increment(-5),
+          'reputation': FieldValue.increment(-2),
+        });
+      }
+
+      // Penalización si tiene muchos downvotes
+      if (downvotes >= 5) {
+        weeklyPoints -= 20;
+        transaction.update(authorRef, {
+          'weeklyPoints': FieldValue.increment(-20),
+          'reputation': FieldValue.increment(-10),
+        });
+      }
+
+      // Actualizar votos en el post
+      final updatedVotes = {...userVotes, userId: voteType.name};
+      transaction.update(postRef, {
+        'upvotes': upvotes,
+        'downvotes': downvotes,
+        'upvoters': upvoters,
+        'downvoters': downvoters,
+        'userVotes': updatedVotes,
+      });
+
+      // Determinar el tier del autor según sus puntos
+      String progress = "$weeklyPoints/500";
+      debugPrint("Progress: $progress");
+      String tier = 'L1';
+      debugPrint("Tier: $tier");
+
+      if (weeklyPoints < 100) {
+        tier = 'L1';
+      } else if (weeklyPoints < 200) {
+        tier = 'L2';
+      } else if (weeklyPoints < 300) {
+        tier = 'L3';
+      } else if (weeklyPoints < 400) {
+        tier = 'L4';
+      } else {
+        tier = 'L5';
+      }
+      debugPrint("Tier: $tier");
+
+      transaction.update(authorRef, {
+        'userTier': tier,
+        'pointsInTier': progress,
+      });
+      debugPrint("Transaction completed successfully");
     });
   }
 

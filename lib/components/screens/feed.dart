@@ -619,7 +619,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   color: isSelected
                       ? AppStyles.colorAvatarBorder
                       : AppStyles.textColor,
-                  size: 24,
+                  size: 15,
                   weight: 700,
                 ),
                 const SizedBox(width: 12),
@@ -631,7 +631,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                         : AppStyles.textColor,
                     fontWeight:
                         isSelected ? FontWeight.bold : FontWeight.normal,
-                    fontSize: 16,
+                    fontSize: AppStyles.fontSizeMedium,
                   ),
                 ),
               ],

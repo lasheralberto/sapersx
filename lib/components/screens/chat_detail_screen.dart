@@ -159,7 +159,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   shape: const CircleBorder(),
                 ),
                 padding: const EdgeInsets.all(12),
-                icon: Icon(Icons.arrow_upward_rounded,
+                icon: const Icon(Icons.arrow_upward_rounded,
                     color: AppStyles.colorAvatarBorder),
                 onPressed: () => _sendMessage(currentUsername),
               ),
