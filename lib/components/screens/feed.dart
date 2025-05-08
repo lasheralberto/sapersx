@@ -166,9 +166,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
 
       if (result != null) {
         await _firebaseService.createPost(result);
-        // if (widget.onPostCreated != null) {
-        //   widget.onPostCreated!();
-        // }
+        await _updateFutures();
+        setState(() {}); // Forzar reconstrucción del widget
       }
     }
   }

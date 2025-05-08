@@ -9,12 +9,28 @@ class PostIndexer {
 
   Future<Map<String, dynamic>> indexPost(Map<String, dynamic> postBody) async {
     try {
+      // Crear una copia del mapa y convertir el Timestamp
+      final Map<String, dynamic> serializedBody = Map.from(postBody);
+
+      // Convertir el Timestamp a ISO string
+      if (serializedBody['timestamp'] is Timestamp) {
+        serializedBody['timestamp'] = (serializedBody['timestamp'] as Timestamp)
+            .toDate()
+            .toIso8601String();
+      }
+
+      // Asegurarse que tags y attachments sean listas vacías si son null
+      serializedBody['tags'] ??= [];
+      serializedBody['attachments'] ??= [];
+
+      debugPrint("Sending to index: ${jsonEncode(serializedBody)}");
+
       final response = await http.post(
         Uri.parse(endpoint),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: jsonEncode(postBody),
+        body: jsonEncode(serializedBody),
       );
 
       if (response.statusCode == 200) {
@@ -30,6 +46,7 @@ class PostIndexer {
         };
       }
     } catch (e) {
+      debugPrint('Error indexing post: $e');
       return {
         "success": false,
         "error": e.toString(),

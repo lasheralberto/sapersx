@@ -63,6 +63,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
   final SAPAIAssistantService _assistantService = SAPAIAssistantService();
   final FirebaseService _firebaseService = FirebaseService();
   String _fullResponse = '';
+  List<QueryMatch> _matches = [];
   double _animationProgress = 0.0;
   bool _isLoading = false;
   List<dynamic> _recommendedPosts = [];
@@ -89,6 +90,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
       if (mounted) {
         setState(() {
           _fullResponse = result.responseChat;
+          _matches = result.matches;
           _isLoading = false;
         });
         _startSweepAnimation();
@@ -97,6 +99,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
       if (mounted) {
         setState(() {
           _fullResponse = 'Error al procesar la solicitud';
+          _matches = [];
           _isLoading = false;
         });
       }
@@ -127,7 +130,6 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
     });
   }
 
- 
   @override
   void dispose() {
     _animationTimer?.cancel();
@@ -195,20 +197,6 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
                                   ),
                                   child: Row(
                                     children: [
-                                      // // IconButton(
-                                      // //   icon: const Icon(
-                                      // //     Icons.add,
-                                      // //     color: AppStyles.colorAvatarBorder,
-                                      // //     size: 20,
-                                      // //   ),
-                                      // //   style: IconButton.styleFrom(
-                                      // //     backgroundColor: AppStyles
-                                      // //         .colorAvatarBorder
-                                      // //         .withOpacity(0.1),
-                                      // //     padding: const EdgeInsets.all(8),
-                                      // //   ),
-                                      // //   onPressed: _showCreateOptions,
-                                      // // ),
                                       AnimatedSwitcher(
                                         duration:
                                             const Duration(milliseconds: 200),
@@ -316,66 +304,141 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            child: _buildAnimatedText(),
-          ),
-        ),
-        if (_recommendedPosts.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Text(
-            Texts.translate('recommendedPosts', currentLanguage),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 32,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _recommendedPosts.length,
-              itemBuilder: (context, index) {
-                final post = _recommendedPosts[index];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: InkWell(
-                    onTap: () => PostPopup.show(context, post),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppStyles.colorAvatarBorder.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Symbols.article,
-                            size: 14,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildAnimatedText(),
+                if (_matches.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    Texts.translate('matchingContent', currentLanguage),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _matches.map((match) {
+                      return ActionChip(
+                        label: Text(
+                          match.title.toString(),
+                          style: const TextStyle(
+                            fontSize: 12,
                             color: AppStyles.colorAvatarBorder,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _getPostTitle(post),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppStyles.colorAvatarBorder,
-                            ),
+                        ),
+                        backgroundColor:
+                            AppStyles.colorAvatarBorder.withOpacity(0.1),
+                        onPressed: () => _showMatchPopup(context, match),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 32,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _recommendedPosts.length,
+            itemBuilder: (context, index) {
+              final post = _recommendedPosts[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: InkWell(
+                  onTap: () => PostPopup.show(context, post),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppStyles.colorAvatarBorder.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Symbols.article,
+                          size: 14,
+                          color: AppStyles.colorAvatarBorder,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _getPostTitle(post),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppStyles.colorAvatarBorder,
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showMatchPopup(BuildContext context, QueryMatch match) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      match.title.toString(),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                );
-              },
-            ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Text(
+                    match.text ?? 'No content available',
+                    style: const TextStyle(fontSize: 14, height: 1.5),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ],
+        ),
+      ),
     );
   }
 
@@ -480,6 +543,7 @@ class _SAPAIAssistantWidgetState extends State<SAPAIAssistantWidget> {
           style: const TextStyle(height: 1.8),
         ));
       }
+      ;
     }
 
     return spans;

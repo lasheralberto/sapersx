@@ -111,8 +111,10 @@ class Texts {
       'typeMessage': 'Escribe un mensaje...',
       'messagesScreen': 'Mensajes',
       'sendMessage': 'Enviar mensaje',
+      'matchingContent': 'Contenido coincidente',
     },
     'en': {
+      'matchingContent': 'Matching content',
       'sendMessage': 'Send message',
       'messagesScreen': 'Messages',
       'typeMessage': 'Type a message...',

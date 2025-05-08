@@ -770,10 +770,12 @@ class FirebaseService {
           'weeklyPoints': currentPoints + 10,
         };
 
+        await postIndexer.indexPost(postMap);
+
         // Run both operations in a transaction
         await FirebaseFirestore.instance.runTransaction((transaction) async {
           // Update post
-          await postIndexer.indexPost(postMap);
+
           transaction.set(postsCollection.doc(), postMap);
 
           // Initialize or update user points
