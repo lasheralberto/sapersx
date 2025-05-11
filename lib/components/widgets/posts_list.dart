@@ -429,12 +429,14 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
   final FirebaseService _firebaseService = FirebaseService();
   List<UserInfoPopUp>? _featuredUsers;
   final _random = math.Random();
+  List<SAPPost>? _topPosts;
 
   @override
   void initState() {
     super.initState();
     _loadTopContributors();
     _loadFeaturedUsers();
+    _loadTopPosts();
   }
 
   Future<void> _loadTopContributors() async {
@@ -454,6 +456,17 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
         });
       }
     });
+  }
+
+  Future<void> _loadTopPosts() async {
+    final posts = await _firebaseService.getPostsFuture();
+    if (posts.isNotEmpty) {
+      // Ordenar por número de upvotes
+      posts.sort((a, b) => (b.upvotes ?? 0).compareTo(a.upvotes ?? 0));
+      setState(() {
+        _topPosts = posts.take(2).toList(); // Tomar los 2 posts con más upvotes
+      });
+    }
   }
 
   Future<void> _handleRefresh() async {
@@ -524,7 +537,8 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
             stream: _topContributors,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return Center(
+                    child: AppStyles().progressIndicatorButton(context));
               }
 
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -647,6 +661,51 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
     );
   }
 
+  Widget _buildTopPostsRow() {
+    if (_topPosts == null || _topPosts!.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppStyles.colorAvatarBorder.withOpacity(0.1),
+            AppStyles.colorAvatarBorder.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              children: [
+                Icon(Icons.trending_up, color: AppStyles.colorAvatarBorder),
+                const SizedBox(width: 8),
+                Text(
+                  'Posts Destacados',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppStyles.colorAvatarBorder,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          for (var post in _topPosts!)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _buildPostCard(post, widget.isMobile),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -705,26 +764,26 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
                           child: _buildTopContributorsRow(),
                         ),
 
-                        // Primeros 10 posts
+                        // Primeros 5 posts
                         SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) =>
                                 _buildPostCard(posts[index], widget.isMobile),
-                            childCount: math.min(10, posts.length),
+                            childCount: math.min(5, posts.length),
                           ),
                         ),
 
-                        // Featured users después de los primeros 10 posts
-                        SliverToBoxAdapter(child: _buildFeaturedUsersRow()),
+                        // Posts destacados después de los primeros 5
+                        SliverToBoxAdapter(child: _buildTopPostsRow()),
 
                         // Resto de los posts
                         SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) => _buildPostCard(
-                              posts[index + math.min(10, posts.length)],
+                              posts[index + math.min(5, posts.length)],
                               widget.isMobile,
                             ),
-                            childCount: math.max(0, posts.length - 10),
+                            childCount: math.max(0, posts.length - 5),
                           ),
                         ),
                       ],

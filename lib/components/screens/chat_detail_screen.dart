@@ -78,6 +78,27 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     );
   }
 
+  String _formatDate(Timestamp? timestamp) {
+    if (timestamp == null) return '';
+
+    try {
+      final now = DateTime.now();
+      final date = timestamp.toDate();
+      final diff = now.difference(date);
+
+      if (diff.inDays == 0) {
+        return DateFormat('HH:mm').format(date);
+      } else if (diff.inDays < 7) {
+        return DateFormat('E HH:mm').format(date);
+      } else {
+        return DateFormat('MMM d').format(date);
+      }
+    } catch (e) {
+      debugPrint('Error formatting date: $e');
+      return '';
+    }
+  }
+
   Widget _buildMessageBubble(Map<String, dynamic> message, bool isMe) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -93,14 +114,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             Text(
-              message['message'],
+              message['message'] ?? '',
               style: TextStyle(
                 color: isMe ? Colors.white : Colors.black,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              _formatDate(message['timestamp'] as Timestamp),
+              _formatDate(message['timestamp'] as Timestamp?),
               style: TextStyle(
                 fontSize: 10,
                 color: isMe ? Colors.white70 : Colors.grey[600],
@@ -180,19 +201,5 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     );
 
     _messageController.clear();
-  }
-
-  String _formatDate(Timestamp timestamp) {
-    final now = DateTime.now();
-    final date = timestamp.toDate();
-    final diff = now.difference(date);
-
-    if (diff.inDays == 0) {
-      return DateFormat('HH:mm').format(date);
-    } else if (diff.inDays < 7) {
-      return DateFormat('E HH:mm').format(date);
-    } else {
-      return DateFormat('MMM d').format(date);
-    }
   }
 }

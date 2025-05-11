@@ -22,6 +22,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   String? selectedChat;
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  bool _isSending = false;
 
   bool get isMobile => MediaQuery.of(context).size.width < 600;
 
@@ -131,6 +133,27 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
+  String _formatDate(Timestamp? timestamp) {
+    if (timestamp == null) return '';
+
+    try {
+      final now = DateTime.now();
+      final date = timestamp.toDate();
+      final diff = now.difference(date);
+
+      if (diff.inDays == 0) {
+        return DateFormat('HH:mm').format(date);
+      } else if (diff.inDays < 7) {
+        return DateFormat('E HH:mm').format(date);
+      } else {
+        return DateFormat('MMM d').format(date);
+      }
+    } catch (e) {
+      debugPrint('Error formatting date: $e');
+      return '';
+    }
+  }
+
   Widget _buildChatListItem(
     Map<String, dynamic> chat,
     String otherUser,
@@ -172,7 +195,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         trailing: Text(
-          _formatDate(chat['lastMessageTime'] as Timestamp),
+          _formatDate(chat['lastMessageTime'] as Timestamp?),
           style: const TextStyle(fontSize: 12),
         ),
       ),
@@ -209,6 +232,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
               final messages = snapshot.data!.docs;
               return ListView.builder(
+                controller: _scrollController,
                 reverse: true,
                 padding: const EdgeInsets.all(16),
                 itemCount: messages.length,
@@ -216,8 +240,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   final message =
                       messages[index].data() as Map<String, dynamic>;
                   final isMe = message['fromUsername'] == currentUsername;
+                  final isNew = index == 0 && _isSending;
 
-                  return _buildMessageBubble(message, isMe);
+                  return _buildMessageBubble(message, isMe, isNew: isNew);
                 },
               );
             },
@@ -260,70 +285,98 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
-  Widget _buildMessageBubble(Map<String, dynamic> message, bool isMe) {
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isMe ? AppStyles.colorAvatarBorder : Colors.grey[200],
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment:
-              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            Text(
-              message['message'],
-              style: TextStyle(
-                color: isMe ? Colors.white : Colors.black,
-              ),
+  Widget _buildMessageBubble(Map<String, dynamic> message, bool isMe,
+      {bool isNew = false}) {
+    return AnimatedSlide(
+      duration: const Duration(milliseconds: 300),
+      offset: isNew ? const Offset(0, 1) : Offset.zero,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 300),
+        opacity: isNew ? 0 : 1,
+        child: Align(
+          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isMe ? AppStyles.colorAvatarBorder : Colors.grey[200],
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(height: 4),
-            Text(
-              _formatDate(message['timestamp'] as Timestamp),
-              style: TextStyle(
-                fontSize: 10,
-                color: isMe ? Colors.white70 : Colors.grey[600],
-              ),
+            child: Column(
+              crossAxisAlignment:
+                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message['message'],
+                  style: TextStyle(
+                    color: isMe ? Colors.white : Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _formatDate(message['timestamp'] as Timestamp?),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isMe ? Colors.white70 : Colors.grey[600],
+                      ),
+                    ),
+                    if (_isSending && isNew) ...[
+                      const SizedBox(width: 4),
+                      SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isMe ? Colors.white70 : Colors.grey[600]!,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  String _formatDate(Timestamp timestamp) {
-    final now = DateTime.now();
-    final date = timestamp.toDate();
-    final diff = now.difference(date);
-
-    if (diff.inDays == 0) {
-      return DateFormat('HH:mm').format(date);
-    } else if (diff.inDays < 7) {
-      return DateFormat('E HH:mm').format(date);
-    } else {
-      return DateFormat('MMM d').format(date);
-    }
-  }
-
-  void _sendMessage() {
+  void _sendMessage() async {
     if (_messageController.text.trim().isEmpty || selectedChat == null) return;
 
     final currentUser =
         Provider.of<AuthProviderSapers>(context, listen: false).userInfo;
     if (currentUser == null) return;
 
-    final otherUser =
-        selectedChat!.split('_').firstWhere((u) => u != currentUser.username);
-
-    _firebaseService.sendDirectMessage(
-      fromUsername: currentUser.username,
-      toUsername: otherUser,
-      message: _messageController.text.trim(),
-    );
-
+    final message = _messageController.text.trim();
     _messageController.clear();
+
+    setState(() => _isSending = true);
+
+    try {
+      final otherUser =
+          selectedChat!.split('_').firstWhere((u) => u != currentUser.username);
+
+      await _firebaseService.sendDirectMessage(
+        fromUsername: currentUser.username,
+        toUsername: otherUser,
+        message: message,
+      );
+
+      // Scroll to bottom after message is sent
+      await Future.delayed(const Duration(milliseconds: 100));
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
   }
 }
