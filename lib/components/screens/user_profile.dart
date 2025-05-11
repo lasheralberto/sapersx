@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:provider/provider.dart';
+import 'package:sapers/components/screens/edit_profile_screen.dart';
 import 'package:sapers/components/widgets/expert_profile_card.dart';
 import 'package:sapers/components/widgets/invitation_item.dart';
 import 'package:sapers/components/widgets/postcard.dart';
@@ -143,7 +144,6 @@ class _UserProfilePageState extends State<UserProfilePage>
     );
   }
 
-
   Future<UserInfoPopUp?> _loadUserProfileData() async {
     return widget.userinfo;
   }
@@ -205,6 +205,65 @@ class _UserProfilePageState extends State<UserProfilePage>
                   color: TwitterColors.darkGray,
                   onPressed: () => context.pop(),
                 ),
+                actions: [
+                  if (widget.userinfo?.uid ==
+                      Provider.of<AuthProviderSapers>(context).userInfo?.uid)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(30),
+                          onTap: () async {
+                            final updatedUser =
+                                await Navigator.push<UserInfoPopUp>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditProfileScreen(user: widget.userinfo!),
+                              ),
+                            );
+
+                            if (updatedUser != null) {
+                              setState(() {
+                                userProfileData = Future.value(updatedUser);
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: AppStyles.colorAvatarBorder,
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child:  Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                             const   Icon(
+                                  Icons.edit_outlined,
+                                  size: 16,
+                                  color: AppStyles.colorAvatarBorder,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                               Texts.translate('editProfile', LanguageProvider().currentLanguage),
+                                  style: const TextStyle(
+                                    color: AppStyles.colorAvatarBorder,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ];

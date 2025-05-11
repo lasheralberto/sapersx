@@ -1682,4 +1682,22 @@ class FirebaseService {
         .orderBy('timestamp', descending: true)
         .snapshots();
   }
+
+  Future<void> updateUserProfile(UserInfoPopUp user) async {
+    try {
+      await userCollection.doc(user.uid).update({
+        'bio': user.bio,
+        'location': user.location,
+        'specialty': user.specialty,
+        'website': user.website,
+        'experience': user.experience,
+      });
+
+      // Re-indexar usuario actualizado
+       await UserIndexer().indexUser(user.toMap());
+    } catch (e) {
+      print('Error updating profile: $e');
+      rethrow;
+    }
+  }
 }

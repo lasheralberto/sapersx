@@ -43,12 +43,13 @@ class UserAvatar extends StatelessWidget {
       builder: (context, authProvider, child) {
         if (authProvider.userInfo != null) {
           final user = authProvider.userInfo!;
-          
+
           return PopupMenuButton(
             onSelected: (value) async {
               if (value == 'profile') {
                 // Usar push para mantener el historial
-                await Future.delayed(Duration.zero); // Pequeño delay para cerrar el menú
+                await Future.delayed(
+                    Duration.zero); // Pequeño delay para cerrar el menú
                 context.push('/profile/${user.username}');
               } else if (value == 'logout') {
                 AuthService().signOut();
@@ -59,7 +60,7 @@ class UserAvatar extends StatelessWidget {
                 value: 'profile',
                 child: ListTile(
                   leading: const Icon(Icons.person),
-                  title: Text(user.email),
+                  title: Text(user.username),
                 ),
               ),
               PopupMenuItem(
@@ -67,7 +68,8 @@ class UserAvatar extends StatelessWidget {
                 child: ListTile(
                   leading: const Icon(Icons.exit_to_app),
                   title: Text(
-                    Texts.translate('cerrarSesion', LanguageProvider().currentLanguage),
+                    Texts.translate(
+                        'cerrarSesion', LanguageProvider().currentLanguage),
                   ),
                 ),
               ),

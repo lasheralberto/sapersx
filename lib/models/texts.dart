@@ -114,8 +114,20 @@ class Texts {
       'sendMessage': 'Enviar mensaje',
       'matchingContent': 'Contenido coincidente',
       'featuredUsers': 'Recomendados',
+      'editProfile': 'Editar perfil',
+      'bio': 'Bio',
+      'location': 'Ubicación',
+      'website': 'Web/LinkedIn',
+      'specialty': 'Especialidad',
+      'experience': 'Experiencia',
+      
     },
     'en': {
+      'bio': 'Bio',
+      'experience': 'Experience',
+      'location': 'Location',
+      'website': 'Website/LinkedIn',
+      'specialty': 'Specialty',
       'finding_users': 'Finding users...',
       'matchingContent': 'Matching content',
       'sendMessage': 'Send message',
@@ -225,6 +237,7 @@ class Texts {
       'customModule': 'Custom Module',
       'Level': 'Level',
       'featuredUsers': 'Recommended',
+      'editProfile': 'Edit Profile',
     },
   };
 

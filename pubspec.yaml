@@ -41,6 +41,7 @@ dependencies:
   googleapis_auth: ^1.6.0
   shimmer: ^3.0.0
   loading_indicator: ^3.1.1
+  animate_do: ^4.2.0
   lottie: ^3.3.1
  
  

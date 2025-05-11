@@ -167,7 +167,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                     ProfileAvatar(
                       seed: profile.email,
                       size: AppStyles.avatarSize + 10,
-                      showBorder: profile.isExpert,
+                      showBorder: profile.isExpert ?? false,
                     ),
                     const SizedBox(height: 8),
                     _buildFollowButton(context),
@@ -298,11 +298,19 @@ class _ProfileHeaderState extends State<ProfileHeader> {
           '${Texts.translate('joinedOn', LanguageProvider().currentLanguage)} ${UtilsSapers().formatTimestampJoinDate(widget.profile.joinDate.toString())}',
         ),
         const SizedBox(height: TwitterDimensions.spacingSmall),
-        _buildMetadataItem(
-          context,
-          Icons.monetization_on_rounded,
-          '${Texts.translate('fare', LanguageProvider().currentLanguage)} ${widget.profile.hourlyRate.toString()} €/h',
-        ),
+        widget.profile.hourlyRate != 0
+            ? _buildMetadataItem(
+                context,
+                Icons.monetization_on_rounded,
+                '${Texts.translate('fare', LanguageProvider().currentLanguage)} ${widget.profile.hourlyRate.toString()} €/h',
+              )
+            : const SizedBox.shrink(),
+        const SizedBox(height: TwitterDimensions.spacingSmall),
+        widget.profile.specialty == null
+            ? const SizedBox.shrink()
+            : _buildMetadataItem(context, Icons.type_specimen,
+                widget.profile.specialty.toString()),
+        const SizedBox(height: TwitterDimensions.spacingSmall),
         UserTierBadge(
           currentLanguage: LanguageProvider().currentLanguage,
           userTier: widget.profile.userTier ?? 'L1',
