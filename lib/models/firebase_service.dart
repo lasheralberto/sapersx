@@ -63,7 +63,8 @@ class FirebaseService {
   // Cache para información de usuarios
   final Map<String, UserInfoPopUp> _userCache = {};
 
-  Stream<QuerySnapshot> getProjectChatStream(String projectId) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> getProjectChatStream(
+      String projectId) {
     return projectChatCollection
         .doc(projectId)
         .collection('messages')

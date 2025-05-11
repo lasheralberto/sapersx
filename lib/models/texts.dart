@@ -4,6 +4,7 @@ class Texts {
 
   static final Map<String, Map<String, String>> _texts = {
     'es': {
+      'finding_users': 'Buscando usuarios...',
       'verMenos': 'Ver menos',
       'verMas': 'Ver más',
       'expertTab': 'Perfil de experto',
@@ -114,6 +115,7 @@ class Texts {
       'matchingContent': 'Contenido coincidente',
     },
     'en': {
+      'finding_users': 'Finding users...',
       'matchingContent': 'Matching content',
       'sendMessage': 'Send message',
       'messagesScreen': 'Messages',

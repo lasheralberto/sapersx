@@ -139,23 +139,29 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
             body: NestedScrollView(
               headerSliverBuilder: (context, innerBoxIsScrolled) => [
                 SliverAppBar(
-                  expandedHeight: MediaQuery.of(context).size.height * 0.30, // Reduced from 0.2
+                  expandedHeight: MediaQuery.of(context).size.height *
+                      0.30, // Reduced from 0.2
                   toolbarHeight: 45, // Added fixed toolbar height
                   pinned: true,
                   stretch: true,
-                  backgroundColor: AppStyles().getProjectCardColor(widget.project.projectid),
+                  backgroundColor:
+                      AppStyles().getProjectCardColor(widget.project.projectid),
                   flexibleSpace: FlexibleSpaceBar(
                     expandedTitleScale: 1.1, // Reduced from 1.2
                     stretchModes: const [StretchMode.zoomBackground],
                     background: Container(
-                      padding: const EdgeInsets.only(bottom: 8), // Reduced padding
+                      padding:
+                          const EdgeInsets.only(bottom: 8), // Reduced padding
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            AppStyles().getProjectCardColor(widget.project.projectid),
-                            AppStyles().getProjectCardColor(widget.project.projectid).withOpacity(0.8),
+                            AppStyles()
+                                .getProjectCardColor(widget.project.projectid),
+                            AppStyles()
+                                .getProjectCardColor(widget.project.projectid)
+                                .withOpacity(0.8),
                           ],
                         ),
                       ),
@@ -165,7 +171,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
@@ -575,7 +582,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
               ),
             ),
             const SizedBox(height: 15),
-            StreamBuilder<QuerySnapshot>(
+            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              // Cambiar el tipo aquí
               stream: _firebaseService
                   .getProjectChatStream(widget.project.projectid),
               builder: (context, snapshot) {
@@ -599,7 +607,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
-                    final data = message.data() as Map<String, dynamic>;
+                    final data = message.data(); // No necesita casteo
                     return _buildMessageItem(data, context);
                   },
                 );

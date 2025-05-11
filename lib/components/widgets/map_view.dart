@@ -121,6 +121,7 @@ class _MapViewPeopleScreenState extends State<MapViewPeopleScreen> {
           children: [
             // Mapa principal
             GoogleMap(
+       
               onMapCreated: (map) {
                 setState(() {
                   _mapController = map;

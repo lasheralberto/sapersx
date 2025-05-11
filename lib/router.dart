@@ -10,7 +10,6 @@ import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart' as app_user;
 import 'package:sapers/models/user.dart';
-import 'package:go_router/go_router.dart';
 
 class UserSearchScreen extends StatefulWidget {
   const UserSearchScreen({super.key});
@@ -126,8 +125,11 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                       users: filteredUsers,
                       currentUserId: _currentUserId,
                       onRefreshCurrentUser: _refreshCurrentUser,
-                      onSelectUser: (user) => context
-                          .push('/profile/${user.username}', extra: user),
+                      onSelectUser: (user) => Navigator.pushNamed(
+                        context,
+                        '/profile',
+                        arguments: user,
+                      ),
                     );
                   },
                 ),
