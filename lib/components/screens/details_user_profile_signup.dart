@@ -107,30 +107,74 @@ class _UserProfileFullScreenPageState extends State<UserProfileFullScreenPage> {
     }
   }
 
+  int calculateProfileScore({
+    required String bio,
+    required String email,
+    required String experience,
+    required double hourlyRate,
+    required bool isExpert,
+    required String location,
+    required String specialty,
+    required String website,
+    required String text,
+  }) {
+    int score = 0;
+
+    if (bio.trim().length > 20) score += 20;
+    if (email.contains('@')) score += 10;
+    if (experience.trim().isNotEmpty) score += 15;
+    if (hourlyRate > 0) score += 10;
+    if (isExpert) score += 10;
+    if (location.trim().isNotEmpty) score += 5;
+    if (specialty.trim().isNotEmpty) score += 10;
+    if (website.contains('linkedin') ||
+        website.contains('github') ||
+        website.contains('.com')) score += 10;
+    if (text.trim().isNotEmpty && text.trim() != bio.trim()) score += 10;
+
+    return score;
+  }
+
   Future<void> _saveProfile(email) async {
     if (!_formKey.currentState!.validate()) return;
+
+    final score = calculateProfileScore(
+      bio: _bioController.text.trim(),
+      email: email.trim().toLowerCase().replaceAll(' ', ''),
+      experience: _experienceController.text.trim(),
+      hourlyRate:
+          double.tryParse(_rateController.text.trim().replaceAll(' ', '')) ??
+              0.0,
+      isExpert: _isExpertMode,
+      location: _locationController.text.trim(),
+      specialty: _specialtyController.text.trim(),
+      website: _websiteController.text.trim().toLowerCase().replaceAll(' ', ''),
+      text: _bioController.text
+          .trim(), // o cambia si tienes un campo `text` distinto
+    );
 
     try {
       setState(() => _isSaving = true);
 
       final userInfo = UserInfoPopUp(
-        uid: UtilsSapers().userUniqueUid(email),
-        username: _nameController.text.trim().toLowerCase().replaceAll(' ', ''),
-        bio: _bioController.text.trim(),
-        location: _locationController.text.trim(),
-        latitude: _latitude,
-        longitude: _longitude,
-        website:
-            _websiteController.text.trim().toLowerCase().replaceAll(' ', ''),
-        isExpert: _isExpertMode,
-        joinDate: Timestamp.fromDate(DateTime.now()),
-        specialty: _specialtyController.text.trim(),
-        hourlyRate:
-            double.tryParse(_rateController.text.trim().replaceAll(' ', '')) ??
-                0.0,
-        email: email.trim().toLowerCase().replaceAll(' ', ''),
-        experience: _experienceController.text.trim(),
-      );
+          uid: UtilsSapers().userUniqueUid(email),
+          username:
+              _nameController.text.trim().toLowerCase().replaceAll(' ', ''),
+          bio: _bioController.text.trim(),
+          location: _locationController.text.trim(),
+          latitude: _latitude,
+          longitude: _longitude,
+          website:
+              _websiteController.text.trim().toLowerCase().replaceAll(' ', ''),
+          isExpert: _isExpertMode,
+          joinDate: Timestamp.fromDate(DateTime.now()),
+          specialty: _specialtyController.text.trim(),
+          hourlyRate: double.tryParse(
+                  _rateController.text.trim().replaceAll(' ', '')) ??
+              0.0,
+          email: email.trim().toLowerCase().replaceAll(' ', ''),
+          experience: _experienceController.text.trim(),
+          score: score);
 
       await FirebaseService().saveUserInfo(userInfo);
 

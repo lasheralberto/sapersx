@@ -113,6 +113,7 @@ class Texts {
       'messagesScreen': 'Mensajes',
       'sendMessage': 'Enviar mensaje',
       'matchingContent': 'Contenido coincidente',
+      'featuredUsers': 'Recomendados',
     },
     'en': {
       'finding_users': 'Finding users...',
@@ -223,6 +224,7 @@ class Texts {
       'TopContributors': 'Top Sapers',
       'customModule': 'Custom Module',
       'Level': 'Level',
+      'featuredUsers': 'Recommended',
     },
   };
 

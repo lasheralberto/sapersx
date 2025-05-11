@@ -9,6 +9,8 @@ import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
 import 'package:sapers/models/user_tier.dart';
+import 'package:sapers/components/widgets/user_card.dart';
+import 'dart:math' as math;
 
 // Tu widget TrendingTagsSidebar existente
 class TrendingTagsSidebar extends StatefulWidget {
@@ -425,17 +427,32 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
   int _selectedMenuOption = 0;
   Stream<List<UserInfoPopUp>>? _topContributors;
   final FirebaseService _firebaseService = FirebaseService();
+  List<UserInfoPopUp>? _featuredUsers;
+  final _random = math.Random();
 
   @override
   void initState() {
     super.initState();
     _loadTopContributors();
+    _loadFeaturedUsers();
   }
 
   Future<void> _loadTopContributors() async {
     setState(() {
       _topContributors =
           _firebaseService.getTopContributors().asBroadcastStream();
+    });
+  }
+
+  Future<void> _loadFeaturedUsers() async {
+    _firebaseService.getTopContributors().listen((users) {
+      if (users.length >= 2) {
+        // Ordenar por score y tomar los 2 primeros
+        users.sort((a, b) => (b.score ?? 0).compareTo(a.score ?? 0));
+        setState(() {
+          _featuredUsers = users.take(2).toList();
+        });
+      }
     });
   }
 
@@ -549,7 +566,6 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
                               ),
                             ),
                             // Points Badge
-                           
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -570,6 +586,64 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFeaturedUsersRow() {
+    if (_featuredUsers == null || _featuredUsers!.length < 2)
+      return const SizedBox.shrink();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondaryFixed,
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              Texts.translate(
+                  'featuredUsers', LanguageProvider().currentLanguage),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              children: [
+                for (var user in _featuredUsers!)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: UserCard(
+                        user: user,
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          '/profile',
+                          arguments: user,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -598,6 +672,9 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
               );
             }
 
+            // Insertar featured users en una posición aleatoria
+            int featuredUsersPosition = _random.nextInt(posts.length);
+
             return LiquidPullToRefresh(
               backgroundColor: AppStyles.colorAvatarBorder,
               onRefresh: _handleRefresh,
@@ -623,31 +700,31 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
                     child: CustomScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       slivers: [
-                        // Add top contributors as first sliver
+                        // Top contributors
                         SliverToBoxAdapter(
                           child: _buildTopContributorsRow(),
                         ),
-                        if (_isRefreshing)
-                          const SliverToBoxAdapter(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8.0),
-                              child: Center(child: CircularProgressIndicator()),
-                            ),
+
+                        // Primeros 10 posts
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) =>
+                                _buildPostCard(posts[index], widget.isMobile),
+                            childCount: math.min(10, posts.length),
                           ),
-                        SliverPadding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: widget.isMobile ? 4.0 : 16.0,
-                            vertical: 0.0,
-                          ),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              addAutomaticKeepAlives: false,
-                              (context, index) {
-                                return _buildPostCard(
-                                    posts[index], widget.isMobile);
-                              },
-                              childCount: posts.length,
+                        ),
+
+                        // Featured users después de los primeros 10 posts
+                        SliverToBoxAdapter(child: _buildFeaturedUsersRow()),
+
+                        // Resto de los posts
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => _buildPostCard(
+                              posts[index + math.min(10, posts.length)],
+                              widget.isMobile,
                             ),
+                            childCount: math.max(0, posts.length - 10),
                           ),
                         ),
                       ],

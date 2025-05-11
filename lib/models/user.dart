@@ -26,6 +26,7 @@ class UserInfoPopUp {
   int? weeklyPoints;
   String? userTier;
   String? pointsInTier;
+  int? score;
 
   UserInfoPopUp(
       {required this.uid,
@@ -47,6 +48,7 @@ class UserInfoPopUp {
       this.weeklyPoints = 0,
       this.userTier = 'L1',
       this.pointsInTier = '0/500',
+      this.score = 0,
       this.reviews});
 
   // Convertir objeto a Map para guardarlo en Firebase
@@ -71,6 +73,7 @@ class UserInfoPopUp {
       'experience': experience,
       'reviews': reviews,
       'userTier': userTier,
+      'score': score,
       'pointsInTier': pointsInTier,
     };
   }
@@ -98,6 +101,7 @@ class UserInfoPopUp {
       userTier: map['userTier'] as String? ?? 'L1',
       pointsInTier: map['pointsInTier'] as String? ?? '0/500',
       experience: map['experience'] as String?,
+      score: map['score'] as int? ?? 0,
     );
   }
 
