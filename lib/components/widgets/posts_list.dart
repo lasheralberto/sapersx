@@ -530,218 +530,115 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
     );
   }
 
-  Widget _buildTopContributorsAndHotTopicsRow() {
+  Widget _buildCombinedFeaturesRow() {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Contributors section
-          Flexible(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Text(
-                    Texts.translate(
-                        'TopContributors', LanguageProvider().currentLanguage),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[800],
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 80,
-                  child: StreamBuilder<List<UserInfoPopUp>>(
-                    stream: _topContributors,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                            child:
-                                AppStyles().progressIndicatorButton(context));
-                      }
+      height: 65,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: StreamBuilder<List<UserInfoPopUp>>(
+        stream: _topContributors,
+        builder: (context, snapshot) {
+          List<Widget> items = [];
 
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-
-                      return ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, index) {
-                          final contributor = snapshot.data![index];
-                          return Container(
-                            margin: const EdgeInsets.only(right: 16),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.grey.withOpacity(0.1),
-                                            spreadRadius: 1,
-                                            blurRadius: 3,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: UserProfileCardHover(
-                                        authorUsername: contributor.username,
-                                        isExpert: contributor.isExpert as bool,
-                                        onProfileOpen: () {},
-                                      ),
-                                    ),
-                                    // Points Badge
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  contributor.username,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+          // Add hot topics if available
+          if (_hotTopics != null && _hotTopics!.isNotEmpty) {
+            items.addAll(
+              _hotTopics!.map((topic) {
+                final isSelected = topic == widget.selectedTag;
+                return Container(
+                  height: 36,
+                  margin: const EdgeInsets.only(right: 8),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => widget.onTagSelected(topic),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppStyles.colorAvatarBorder.withOpacity(0.1)
+                              : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppStyles.colorAvatarBorder.withOpacity(0.3)
+                                : Colors.grey.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.local_fire_department,
+                              size: 14,
+                              color: isSelected
+                                  ? AppStyles.colorAvatarBorder
+                                  : Colors.grey[600],
                             ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Vertical divider
-          Container(
-            height: 100,
-            width: 1,
-            color: Colors.grey.withOpacity(0.2),
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-          ),
-
-          // Hot Topics section
-          Flexible(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(
-                    children: [
-                      Icon(Icons.local_fire_department,
-                          color: AppStyles.colorAvatarBorder),
-                      SizedBox(width: 8),
-                      Text(
-                        'Hot Topics',
-                        style: TextStyle(
-                          fontSize: AppStyles.fontSize,
-                          fontWeight: FontWeight.w600,
-                          color: AppStyles.colorAvatarBorder,
+                            const SizedBox(width: 4),
+                            Text(
+                              topic,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? AppStyles.colorAvatarBorder
+                                    : Colors.grey[800],
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                SizedBox(
-                  height: 50,
-                  child: _hotTopics == null
-                      ? const Center(child: CircularProgressIndicator())
-                      : _hotTopics!.isEmpty
-                          ? const SizedBox.shrink()
-                          : ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              itemCount: _hotTopics!.length,
-                              itemBuilder: (context, index) {
-                                final topic = _hotTopics![index];
-                                final isSelected = topic == widget.selectedTag;
+                );
+              }).toList(),
+            );
+          }
 
-                                return Container(
-                                  margin: const EdgeInsets.only(right: 8),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: () => widget.onTagSelected(topic),
-                                      borderRadius: BorderRadius.circular(
-                                          AppStyles.borderRadiusValue),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 8),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              isSelected
-                                                  ? AppStyles.colorAvatarBorder
-                                                  : AppStyles.colorAvatarBorder
-                                                      .withOpacity(0.1),
-                                              isSelected
-                                                  ? AppStyles.colorAvatarBorder
-                                                      .withOpacity(0.8)
-                                                  : AppStyles.colorAvatarBorder
-                                                      .withOpacity(0.05),
-                                            ],
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(30),
-                                          border: Border.all(
-                                            color: AppStyles.colorAvatarBorder
-                                                .withOpacity(
-                                                    isSelected ? 0.5 : 0.2),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.tag,
-                                              size: 16,
-                                              color: isSelected
-                                                  ? Colors.white
-                                                  : AppStyles.colorAvatarBorder,
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              topic,
-                                              style: TextStyle(
-                                                color: isSelected
-                                                    ? Colors.white
-                                                    : AppStyles
-                                                        .colorAvatarBorder,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
+          // Add contributors if available
+          if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+            items.addAll(
+              snapshot.data!
+                  .map((contributor) => Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            UserProfileCardHover(
+                              authorUsername: contributor.username,
+                              isExpert: contributor.isExpert as bool,
+                              onProfileOpen: () {},
                             ),
-                ),
-              ],
-            ),
-          ),
-        ],
+                            const SizedBox(height: 4),
+                            Text(
+                              contributor.username,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ))
+                  .toList(),
+            );
+          }
+
+          // Shuffle items
+          if (items.isNotEmpty) {
+            items.shuffle(_random);
+          }
+
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: items.length,
+            itemBuilder: (context, index) => items[index],
+          );
+        },
       ),
     );
   }
@@ -825,7 +722,6 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
               animSpeedFactor: 1,
               child: Row(
                 children: [
-                  // Espacio para el menú lateral fijo si está activo
                   AnimatedBuilder(
                     animation: widget.menuSidebarController,
                     builder: (context, _) {
@@ -844,9 +740,9 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
                     child: CustomScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       slivers: [
-                        // Combined row for contributors and hot topics
+                        // Combined features row
                         SliverToBoxAdapter(
-                          child: _buildTopContributorsAndHotTopicsRow(),
+                          child: _buildCombinedFeaturesRow(),
                         ),
 
                         // Primeros 5 posts
