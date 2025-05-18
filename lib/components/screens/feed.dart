@@ -288,6 +288,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     isMobile = MediaQuery.of(context).size.width < 600;
     screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: _buildSlidingUpPanelUI(context, isMobile, screenWidth),
       floatingActionButton: _currentIndex == 0
           ? Column(
@@ -325,6 +326,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   Widget _buildSlidingUpPanelUI(
       BuildContext context, bool isMobile, double screenWidth) {
     return Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: Stack(
         children: [
           Row(
@@ -333,7 +335,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                 Material(
                   elevation: 0,
                   color: Theme.of(context).scaffoldBackgroundColor,
-                  surfaceTintColor: Colors.white,
                   child: SizedBox(
                     width: 250,
                     height: MediaQuery.of(context).size.height,
@@ -487,7 +488,6 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        // Logo section
         Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
@@ -498,17 +498,12 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
           ),
         ),
 
-        // User profile section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.grey.withOpacity(0.1),
-                width: 0,
-              ),
               color: Colors.transparent,
             ),
             child: Row(

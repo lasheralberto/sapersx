@@ -180,7 +180,7 @@ class UtilsSapers {
         TextStyle(fontWeight: FontWeight.bold, color: Colors.black87);
     const italicStyle =
         TextStyle(fontStyle: FontStyle.italic, color: Colors.black87);
-    final codeStyle = TextStyle(
+    const codeStyle = TextStyle(
       fontFamily: 'RobotoMono',
       fontSize: 13,
       backgroundColor: const Color(0xFFF6F8FA),
@@ -193,17 +193,17 @@ class UtilsSapers {
       fontWeight: FontWeight.w500,
     );
 
-    final heading1Style = TextStyle(
+    const heading1Style = TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.bold,
         color: Colors.black87,
         height: 2.2);
-    final heading2Style = TextStyle(
+    const heading2Style = TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w600,
         color: Colors.black87,
         height: 2.0);
-    final bulletStyle =
+    const bulletStyle =
         TextStyle(fontSize: 15, height: 1.6, color: Colors.black87);
 
     TextSpan _parseLineWithMarkup(String line) {

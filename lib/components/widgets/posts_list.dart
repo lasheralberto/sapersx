@@ -432,99 +432,136 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
   List<SAPPost>? _topPosts;
   List<String>? _hotTopics;
 
+  // Cache para datos
+  static final Map<String, List<UserInfoPopUp>> _contributorsCache = {};
+  static final Map<String, List<String>> _topicsCache = {};
+
+  // Control de paginación
+  final int _pageSize = 10;
+  int _currentPage = 0;
+  bool _hasMorePosts = true;
+  final List<SAPPost> _loadedPosts = [];
+  bool _isLoadingMore = false;
+
+  // ScrollController para lazy loading
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
-    _loadTopContributors();
-    _loadFeaturedUsers();
-    _loadTopPosts();
-    _loadHotTopics();
+    _scrollController.addListener(_onScroll);
+    _initializeData();
   }
 
-  Future<void> _loadTopContributors() async {
-    setState(() {
-      _topContributors =
-          _firebaseService.getTopContributors().asBroadcastStream();
-    });
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
   }
 
-  Future<void> _loadFeaturedUsers() async {
-    _firebaseService.getTopContributors().listen((users) {
-      if (users.length >= 2) {
-        // Ordenar por score y tomar los 2 primeros
-        users.sort((a, b) => (b.score ?? 0).compareTo(a.score ?? 0));
-        setState(() {
-          _featuredUsers = users.take(2).toList();
-        });
-      }
-    });
+  Future<void> _initializeData() async {
+    await Future.wait([
+      _loadInitialPosts(),
+      _loadTopContributors(),
+      _loadHotTopics(),
+    ]);
   }
 
-  Future<void> _loadTopPosts() async {
-    final posts = await _firebaseService.getPostsFuture();
-    if (posts.isNotEmpty) {
-      // Ordenar por número de upvotes
-      posts.sort((a, b) => (b.upvotes ?? 0).compareTo(a.upvotes ?? 0));
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 500) {
+      _loadMorePosts();
+    }
+  }
+
+  Future<void> _loadInitialPosts() async {
+    if (_loadedPosts.isEmpty) {
+      final posts = await widget.future;
       setState(() {
-        _topPosts = posts.take(2).toList(); // Tomar los 2 posts con más upvotes
+        _loadedPosts.addAll(posts.take(_pageSize));
+        _currentPage = 1;
+        _hasMorePosts = posts.length > _pageSize;
       });
     }
   }
 
+  Future<void> _loadMorePosts() async {
+    if (!_hasMorePosts || _isLoadingMore) return;
+
+    setState(() => _isLoadingMore = true);
+
+    try {
+      final allPosts = await widget.future;
+      final nextPosts =
+          allPosts.skip(_currentPage * _pageSize).take(_pageSize).toList();
+
+      if (nextPosts.isNotEmpty) {
+        setState(() {
+          _loadedPosts.addAll(nextPosts);
+          _currentPage++;
+          _hasMorePosts = allPosts.length > _loadedPosts.length;
+        });
+      } else {
+        setState(() => _hasMorePosts = false);
+      }
+    } finally {
+      setState(() => _isLoadingMore = false);
+    }
+  }
+
+  Future<void> _loadTopContributors() async {
+    final cacheKey = 'contributors_${DateTime.now().day}';
+    if (_contributorsCache.containsKey(cacheKey)) {
+      setState(
+          () => _topContributors = Stream.value(_contributorsCache[cacheKey]!));
+      return;
+    }
+
+    final contributorsStream =
+        _firebaseService.getTopContributors().asBroadcastStream();
+    contributorsStream.listen((contributors) {
+      _contributorsCache[cacheKey] = contributors;
+    });
+
+    setState(() => _topContributors = contributorsStream);
+  }
+
   Future<void> _loadHotTopics() async {
+    final cacheKey = 'topics_${DateTime.now().hour}';
+    if (_topicsCache.containsKey(cacheKey)) {
+      setState(() => _hotTopics = _topicsCache[cacheKey]);
+      return;
+    }
+
     try {
       final topics = await _firebaseService.getAllTags(10);
-      if (mounted) {
-        setState(() {
-          _hotTopics = topics;
-        });
-      }
+      _topicsCache[cacheKey] = topics;
+      if (mounted) setState(() => _hotTopics = topics);
     } catch (e) {
       debugPrint('Error loading hot topics: $e');
     }
   }
 
-  Future<void> _handleRefresh() async {
-    setState(() {
-      _isRefreshing = true;
-    });
-
-    // Aquí deberías implementar tu lógica de recarga
-    widget.onRefresh();
-
-    setState(() {
-      _isRefreshing = false;
-    });
-  }
-
   Widget _buildPostCard(SAPPost post, bool isMobile) {
     return Container(
-      margin: EdgeInsets.only(
-        bottom: isMobile ? 8.0 : 16.0,
-        left: isMobile ? 2.0 : 8.0,
-        right: isMobile ? 2.0 : 8.0,
+      margin: EdgeInsets.symmetric(
+        horizontal: isMobile ? 0 : 8.0,
+        vertical: 8.0,
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         color: Theme.of(context).colorScheme.surface,
-        boxShadow: null,
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
-          width: 0.1,
-        ),
       ),
-      child: ClipRRect(
+      child: Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-        child: Material(
-          color: Colors.transparent,
-          child: PostCard(
-            key: ValueKey(post.id),
-            onExpandChanged: (p0) => setState(() => widget.onPostExpanded(p0)),
-            tagPressed:
-                widget.onTagSelected, // Simply pass through the callback
-            selectedTag: widget.selectedTag, // Use widget prop directly
-            post: post,
-          ),
+        child: PostCard(
+          key: ValueKey(post.id),
+          onExpandChanged: (p0) => setState(() => widget.onPostExpanded(p0)),
+          tagPressed: widget.onTagSelected,
+          selectedTag: widget.selectedTag,
+          post: post,
         ),
       ),
     );
@@ -532,113 +569,111 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
 
   Widget _buildCombinedFeaturesRow() {
     return Container(
-      height: 65,
+      height: 70,
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: StreamBuilder<List<UserInfoPopUp>>(
         stream: _topContributors,
         builder: (context, snapshot) {
-          List<Widget> items = [];
+          List<Widget> allItems = [];
 
           // Add hot topics if available
-          if (_hotTopics != null && _hotTopics!.isNotEmpty) {
-            items.addAll(
-              _hotTopics!.map((topic) {
-                final isSelected = topic == widget.selectedTag;
-                return Container(
-                  height: 36,
-                  margin: const EdgeInsets.only(right: 8),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => widget.onTagSelected(topic),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppStyles.colorAvatarBorder.withOpacity(0.1)
-                              : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isSelected
-                                ? AppStyles.colorAvatarBorder.withOpacity(0.3)
-                                : Colors.grey.withOpacity(0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.local_fire_department,
-                              size: 14,
-                              color: isSelected
-                                  ? AppStyles.colorAvatarBorder
-                                  : Colors.grey[600],
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              topic,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? AppStyles.colorAvatarBorder
-                                    : Colors.grey[800],
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            );
+          if (_hotTopics != null) {
+            allItems
+                .addAll(_hotTopics!.map((topic) => _buildHotTopicItem(topic)));
           }
 
           // Add contributors if available
-          if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-            items.addAll(
-              snapshot.data!
-                  .map((contributor) => Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            UserProfileCardHover(
-                              authorUsername: contributor.username,
-                              isExpert: contributor.isExpert as bool,
-                              onProfileOpen: () {},
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              contributor.username,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ))
-                  .toList(),
-            );
+          if (snapshot.hasData) {
+            allItems.addAll(snapshot.data!
+                .map((contributor) => _buildContributorItem(contributor)));
           }
 
-          // Shuffle items
-          if (items.isNotEmpty) {
-            items.shuffle(_random);
+          // Shuffle all items
+          if (allItems.isNotEmpty) {
+            allItems.shuffle(_random);
           }
 
           return ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: items.length,
-            itemBuilder: (context, index) => items[index],
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: allItems.length,
+            itemBuilder: (context, index) => allItems[index],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildHotTopicItem(String topic) {
+    final isSelected = topic == widget.selectedTag;
+    return Container(
+      height: 36,
+      margin: const EdgeInsets.only(right: 8),
+      child: Material(
+        elevation: AppStyles.cardElevation,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+        child: InkWell(
+          onTap: () => widget.onTagSelected(topic),
+          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppStyles.colorAvatarBorder.withOpacity(0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected
+                    ? AppStyles.colorAvatarBorder.withOpacity(0.3)
+                    : Colors.white,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.trending_up_rounded,
+                    size: 14, color: AppStyles.colorAvatarBorder),
+                const SizedBox(width: 4),
+                Text(
+                  topic,
+                  style: TextStyle(
+                    color: isSelected
+                        ? AppStyles.colorAvatarBorder
+                        : Colors.grey[800],
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContributorItem(UserInfoPopUp contributor) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          UserProfileCardHover(
+            authorUsername: contributor.username,
+            isExpert: contributor.isExpert as bool,
+            onProfileOpen: () {},
+          ),
+          const SizedBox(height: 4),
+          Text(
+            contributor.username,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
@@ -692,92 +727,44 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        FutureBuilder<List<SAPPost>>(
-          future: widget.future,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return Center(child: SelectableText('Error: ${snapshot.error}'));
-            }
-
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final posts = snapshot.data ?? [];
-            if (posts.isEmpty) {
-              return Center(
-                child: Text(
-                  Texts.translate(
-                      'noposts', LanguageProvider().currentLanguage),
-                ),
-              );
-            }
-
-            // Insertar featured users en una posición aleatoria
-            int featuredUsersPosition = _random.nextInt(posts.length);
-
-            return LiquidPullToRefresh(
-              backgroundColor: AppStyles.colorAvatarBorder,
-              onRefresh: _handleRefresh,
-              animSpeedFactor: 1,
-              child: Row(
-                children: [
-                  AnimatedBuilder(
-                    animation: widget.menuSidebarController,
-                    builder: (context, _) {
-                      return widget.menuSidebarController.isFixed &&
-                              widget.menuSidebarController.isOpen &&
-                              !widget.isMobile
-                          ? SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.25)
-                          : const SizedBox.shrink();
-                    },
-                  ),
-
-                  // Lista principal
-                  Expanded(
-                    flex: 10,
-                    child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      slivers: [
-                        // Combined features row
-                        SliverToBoxAdapter(
-                          child: _buildCombinedFeaturesRow(),
-                        ),
-
-                        // Primeros 5 posts
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) =>
-                                _buildPostCard(posts[index], widget.isMobile),
-                            childCount: math.min(5, posts.length),
-                          ),
-                        ),
-
-                        // Posts destacados después de los primeros 5
-                        SliverToBoxAdapter(child: _buildTopPostsRow()),
-
-                        // Resto de los posts
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) => _buildPostCard(
-                              posts[index + math.min(5, posts.length)],
-                              widget.isMobile,
-                            ),
-                            childCount: math.max(0, posts.length - 5),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+        CustomScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            // Combined features row
+            SliverToBoxAdapter(
+              child: Container(
+                height: 8,
+                color: AppStyles.scaffoldColor,
               ),
-            );
-          },
-        ),
+            ),
+            SliverToBoxAdapter(
+              child: _buildCombinedFeaturesRow(),
+            ),
 
-        // Botón flotante menú lateral estilo X
-        //  FloatingMenuButton(controller: widget.menuSidebarController),
+            // Primeros 5 posts
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  if (index == _loadedPosts.length && _hasMorePosts) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+                  if (index >= _loadedPosts.length) return null;
+                  return _buildPostCard(_loadedPosts[index], widget.isMobile);
+                },
+                childCount: _loadedPosts.length + (_hasMorePosts ? 1 : 0),
+              ),
+            ),
+
+            // Posts destacados después de los primeros 5
+            SliverToBoxAdapter(child: _buildTopPostsRow()),
+          ],
+        ),
 
         // Menú lateral estilo X con animación
         AnimatedBuilder(

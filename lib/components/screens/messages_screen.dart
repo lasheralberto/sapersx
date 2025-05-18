@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:sapers/components/widgets/profile_avatar.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
 import 'package:sapers/models/auth_provider.dart';
+import 'package:sapers/models/auth_service.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/styles.dart';
@@ -36,6 +37,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = Provider.of<AuthProviderSapers>(context).userInfo;
+
+    //AuthService().isUserLoggedIn(context);
     if (currentUser == null) return const Center(child: Text('Not logged in'));
 
     return Scaffold(
@@ -67,7 +70,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
                     stream: _firebaseService
-                        .getUserDirectMessages(currentUser.username),
+                        .getUserDirectMessages(currentUser!.username),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         return Center(

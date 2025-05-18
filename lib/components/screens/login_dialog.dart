@@ -93,13 +93,12 @@ class _LoginScreenState extends State<LoginScreen> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 4,
+            color: Theme.of(context).scaffoldBackgroundColor,
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).dividerColor.withOpacity(0.1),
               ),
-            ],
+            ),
           ),
           child: AppBar(
             centerTitle: true,
@@ -209,7 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         _buildAnimatedTextField(
           controller: _passwordController,
           label:
@@ -229,7 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
         if (_isSignUp) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildAnimatedTextField(
             controller: _confirmPasswordController,
             label: Texts.translate(
@@ -263,22 +262,34 @@ class _LoginScreenState extends State<LoginScreen> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.1),
+          color: Theme.of(context).dividerColor.withOpacity(0.2),
+          width: 1.5,
         ),
       ),
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, size: 20),
+          labelStyle: TextStyle(
+            fontSize: 14,
+            color:
+                Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+          ),
+          prefixIcon: Icon(
+            icon,
+            size: 18,
+            color:
+                Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+          ),
           border: InputBorder.none,
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
         ),
-        style: TextStyle(fontSize: 15),
+        style: const TextStyle(fontSize: 15),
         obscureText: obscureText,
         validator: validator,
       ),
@@ -334,19 +345,39 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppStyles().getButtonColor(context),
+            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(25),
             ),
             elevation: 0,
+            textStyle: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ).copyWith(
+            overlayColor: MaterialStateProperty.resolveWith<Color?>(
+              (Set<MaterialState> states) {
+                if (states.contains(MaterialState.pressed)) {
+                  return Colors.black12;
+                }
+                if (states.contains(MaterialState.hovered)) {
+                  return Colors.black.withOpacity(0.05);
+                }
+                return null;
+              },
+            ),
           ),
           child: _isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   height: 20,
                   width: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).colorScheme.onPrimary,
+                    ),
                   ),
                 )
               : Text(
@@ -355,15 +386,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           'crearCuenta', LanguageProvider().currentLanguage)
                       : Texts.translate(
                           'iniciarSesion', LanguageProvider().currentLanguage),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
                 ),
         ),
+        const SizedBox(height: 16),
         TextButton(
           onPressed: _isLoading ? null : _toggleMode,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
+            ),
+          ),
           child: Text(
             _isSignUp
                 ? Texts.translate(
@@ -372,6 +405,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     'crearCuenta', LanguageProvider().currentLanguage),
             style: TextStyle(
               fontSize: 14,
+              fontWeight: FontWeight.w500,
               color: AppStyles().getButtonColor(context),
             ),
           ),
