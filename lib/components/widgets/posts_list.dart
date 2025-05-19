@@ -610,7 +610,7 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
       height: 36,
       margin: const EdgeInsets.only(right: 8),
       child: Material(
-        elevation: AppStyles.cardElevation,
+        elevation: 0,
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         child: InkWell(
