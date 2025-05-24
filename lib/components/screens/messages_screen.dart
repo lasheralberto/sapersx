@@ -41,7 +41,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     //AuthService().isUserLoggedIn(context);
     
 
-     if (currentUser == null) return AuthProviderSapers.buildLoginButton(context);
+     if (currentUser == null) return AuthProviderSapers.buildLoginButton(context, 'iniciarSesion');
 
     return Scaffold(
       body: Row(
