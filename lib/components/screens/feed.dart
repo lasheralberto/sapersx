@@ -371,9 +371,11 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
+                          // Ajuste aquí: quitar el padding inferior en mobile
                           Padding(
-                            padding: EdgeInsets.only(
-                              bottom: isMobile ? kBottomNavigationBarHeight : 0,
+                            padding: const EdgeInsets.only(
+                              bottom:
+                                  0, // <-- Cambiado de "isMobile ? kBottomNavigationBarHeight : 0" a 0
                             ),
                             child: _getCurrentView(isMobile),
                           ),

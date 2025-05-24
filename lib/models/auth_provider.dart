@@ -72,7 +72,7 @@ class AuthProviderSapers with ChangeNotifier {
     }
   }
 
-  static buildLoginButton(BuildContext context) {
+  static buildLoginButton(BuildContext context, String keyText) {
     return Center(
       child: ElevatedButton(
         onPressed: () {
@@ -90,7 +90,7 @@ class AuthProviderSapers with ChangeNotifier {
           elevation: 0,
         ),
         child: Text(
-          Texts.translate('iniciarSesion', LanguageProvider().currentLanguage),
+          Texts.translate(keyText, LanguageProvider().currentLanguage),
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
         ),
       ),

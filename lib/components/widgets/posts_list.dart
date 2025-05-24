@@ -758,15 +758,17 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 16),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
             child: Row(
               children: [
-                Icon(Icons.trending_up, color: AppStyles.colorAvatarBorder),
-                SizedBox(width: 8),
+                const Icon(Icons.trending_up,
+                    color: AppStyles.colorAvatarBorder),
+                const SizedBox(width: 8),
                 Text(
-                  'Posts Destacados',
-                  style: TextStyle(
+                  Texts.translate(
+                      'postDestacados', LanguageProvider().currentLanguage),
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppStyles.colorAvatarBorder,
@@ -898,35 +900,14 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
               );
             },
           ),
-          if (!isLoguedIn && _loadedPosts.length > 5)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: IgnorePointer(
-                child: Container(
-                  height: 120,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.white70,
-                        Colors.white,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+
           if (!isLoguedIn && _loadedPosts.length > 5)
             Positioned(
               left: 0,
               right: 0,
               bottom: 32,
               child: AuthProviderSapers.buildLoginButton(
-                context,
+                context, 'iniciarSesion',
               ),
             ),
         ],
