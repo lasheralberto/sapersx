@@ -520,7 +520,7 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                     Provider.of<AuthProviderSapers>(context, listen: false)
                             .userInfo
                             ?.username ??
-                        Texts.translate('iniciarSesion',
+                        Texts.translate('iniciarSesionParaVerMas',
                             LanguageProvider().currentLanguage),
                     style: const TextStyle(
                       fontSize: 13,

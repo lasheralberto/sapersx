@@ -499,39 +499,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
     }
   }
 
-  String _formatFileSize(int bytes) {
-    if (bytes <= 0) return '0 B';
-    const suffixes = ['B', 'KB', 'MB', 'GB'];
-    final i = (log(bytes) / log(1024)).floor();
-    return '${(bytes / pow(1024, i)).toStringAsFixed(bytes > 1024 ? 1 : 0)} ${suffixes[i]}';
-  }
-
   Widget _buildChatInput() {
     if (isMember != false && currentUser != null && _tabController.index == 1) {
       return _buildMessageInput();
     } else {
       return const SizedBox.shrink();
     }
-  }
-
-  Widget _buildTab(bool text, String texto, IconData icon) {
-    return Tab(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 80), // Reducir de 100 a 80
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-              horizontal: 8), // Añadir padding horizontal
-          child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: text == true
-                  ? Text(texto, style: Theme.of(context).textTheme.bodySmall)
-                  : Icon(
-                      icon,
-                      size: 20,
-                    )),
-        ),
-      ),
-    );
   }
 
   Widget _buildProjectDescription(BuildContext context) {
@@ -564,6 +537,15 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   }
 
   Widget _buildChatSection(BuildContext context) {
+    final bool isLogued = AuthProviderSapers().isLoggedIn;
+    if (!isLogued) {
+      return Center(
+        child: Text(
+          Texts.translate('noMemberOfProyect', _languageProvider.currentLanguage),
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      );
+    }
     return SingleChildScrollView(
       child: Padding(
         padding: EdgeInsets.only(
