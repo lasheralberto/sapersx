@@ -168,7 +168,8 @@ class _PostCardState extends State<PostCard> {
     return InkWell(
       onTap: () => widget.onExpandChanged(true),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(
+            16.0, 8.0, 16.0, 4.0), // Reducido el padding inferior de 16 a 8
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -288,7 +289,8 @@ class _PostCardState extends State<PostCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.all(30.0),
+                padding: const EdgeInsets.fromLTRB(
+                    30.0, 0.0, 30.0, 30.0), // Reducido el padding superior
                 child: SelectableText(
                   widget.post.content,
                   style: AppStyles().getTextStyle(context),

@@ -39,7 +39,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final currentUser = Provider.of<AuthProviderSapers>(context).userInfo;
 
     //AuthService().isUserLoggedIn(context);
-    if (currentUser == null) return const Center(child: Text('Not logged in'));
+    
+
+     if (currentUser == null) return AuthProviderSapers.buildLoginButton(context);
 
     return Scaffold(
       body: Row(

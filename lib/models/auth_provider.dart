@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/feed.dart';
 import 'package:sapers/components/screens/login_dialog.dart';
 import 'package:sapers/models/firebase_service.dart';
+import 'package:sapers/models/language_provider.dart';
+import 'package:sapers/models/texts.dart';
 import 'package:sapers/models/user.dart';
 import 'package:sapers/models/styles.dart';
 
@@ -17,11 +19,19 @@ class AuthProviderSapers with ChangeNotifier {
   User? get user => _user;
   UserInfoPopUp? get userInfo => _userInfo; // Getter crítico
   bool get isLoading => _isLoading;
+  bool get isLoggedIn => _user != null;
 
   AuthProviderSapers() {
     FirebaseAuth.instance.authStateChanges().listen((user) {
       setUser(user);
     });
+  }
+
+  showLoginDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const LoginScreen(),
+    );
   }
 
   void setUser(User? user) {
@@ -62,6 +72,31 @@ class AuthProviderSapers with ChangeNotifier {
     }
   }
 
+  static buildLoginButton(BuildContext context) {
+    return Center(
+      child: ElevatedButton(
+        onPressed: () {
+          // Aquí puedes abrir el login dialog o navegar a login
+          Provider.of<AuthProviderSapers>(context, listen: false)
+              .showLoginDialog(context);
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppStyles.colorAvatarBorder,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+          elevation: 0,
+        ),
+        child: Text(
+          Texts.translate('iniciarSesion', LanguageProvider().currentLanguage),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+      ),
+    );
+  }
+
   Future<void> signOut() async {
     try {
       await FirebaseAuth.instance.signOut();
@@ -81,13 +116,13 @@ class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
   Future<void> _showLoginDialog(BuildContext context) async {
-     Navigator.push(
-  context,
-  MaterialPageRoute(
-    fullscreenDialog: true,
-    builder: (context) => const LoginScreen(),
-  ),
-);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => const LoginScreen(),
+      ),
+    );
   }
 
   @override

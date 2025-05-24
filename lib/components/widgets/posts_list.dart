@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sapers/components/widgets/postcard.dart';
 import 'package:sapers/components/widgets/user_profile_hover.dart';
+import 'package:sapers/models/auth_service.dart';
 import 'package:sapers/models/firebase_service.dart';
 import 'package:sapers/models/language_provider.dart';
 import 'package:sapers/models/posts.dart';
@@ -11,6 +12,8 @@ import 'package:sapers/models/user.dart';
 import 'package:sapers/models/user_tier.dart';
 import 'package:sapers/components/widgets/user_card.dart';
 import 'dart:math' as math;
+import 'package:provider/provider.dart';
+import 'package:sapers/models/auth_provider.dart';
 
 // Tu widget TrendingTagsSidebar existente
 class TrendingTagsSidebar extends StatefulWidget {
@@ -446,6 +449,9 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
   // ScrollController para lazy loading
   final ScrollController _scrollController = ScrollController();
 
+  // Mejora del caching con expiration
+  static final _cache = _CacheManager();
+
   @override
   void initState() {
     super.initState();
@@ -543,12 +549,13 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
     }
   }
 
-  Widget _buildPostCard(SAPPost post, bool isMobile) {
+  Widget _buildPostCard(SAPPost post, bool isMobile, {double? width}) {
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: isMobile ? 0 : 8.0,
+        horizontal: isMobile ? 0 : 4.0,
         vertical: 8.0,
       ),
+      width: width,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
         color: Theme.of(context).colorScheme.surface,
@@ -565,6 +572,54 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
         ),
       ),
     );
+  }
+
+  Widget _buildDynamicPostLayout(int index) {
+    if (index >= _loadedPosts.length) {
+      if (_hasMorePosts) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    }
+
+    // Cada 5 posts, mostrar una fila con dos posts
+    if (!widget.isMobile) {
+      if (index % 5 == 3 && index + 1 < _loadedPosts.length) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildPostCard(
+                  _loadedPosts[index],
+                  widget.isMobile,
+                  width: null,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildPostCard(
+                  _loadedPosts[index + 1],
+                  widget.isMobile,
+                  width: null,
+                ),
+              ),
+            ],
+          ),
+        );
+      } else if (index % 5 == 4) {
+        // Saltar el siguiente post ya que fue mostrado en la fila doble
+        return const SizedBox.shrink();
+      }
+    }
+
+    // Post normal a ancho completo
+    return _buildPostCard(_loadedPosts[index], widget.isMobile);
   }
 
   Widget _buildCombinedFeaturesRow() {
@@ -605,75 +660,82 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
   }
 
   Widget _buildHotTopicItem(String topic) {
-    final isSelected = topic == widget.selectedTag;
-    return Container(
-      height: 36,
-      margin: const EdgeInsets.only(right: 8),
-      child: Material(
-        elevation: AppStyles.cardElevation,
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-        child: InkWell(
-          onTap: () => widget.onTagSelected(topic),
-          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppStyles.colorAvatarBorder.withOpacity(0.1)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isSelected
-                    ? AppStyles.colorAvatarBorder.withOpacity(0.3)
-                    : Colors.white,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.trending_up_rounded,
-                    size: 14, color: AppStyles.colorAvatarBorder),
-                const SizedBox(width: 4),
-                Text(
-                  topic,
-                  style: TextStyle(
+    return RepaintBoundary(
+      child: Builder(
+        builder: (context) {
+          final isSelected = topic == widget.selectedTag;
+          return Container(
+            height: 36,
+            margin: const EdgeInsets.only(right: 8),
+            child: Material(
+              elevation: 0,
+              color: Colors.white,
+              borderRadius: const BorderRadius.all(Radius.circular(20)),
+              child: InkWell(
+                onTap: () => widget.onTagSelected(topic),
+                borderRadius: const BorderRadius.all(Radius.circular(20)),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
                     color: isSelected
-                        ? AppStyles.colorAvatarBorder
-                        : Colors.grey[800],
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                        ? AppStyles.colorAvatarBorder.withOpacity(0.1)
+                        : Colors.transparent,
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.trending_up_rounded,
+                          size: 14, color: AppStyles.colorAvatarBorder),
+                      const SizedBox(width: 4),
+                      Text(
+                        topic,
+                        style: TextStyle(
+                          color: isSelected
+                              ? AppStyles.colorAvatarBorder
+                              : Colors.grey[800],
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 
   Widget _buildContributorItem(UserInfoPopUp contributor) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          UserProfileCardHover(
-            authorUsername: contributor.username,
-            isExpert: contributor.isExpert as bool,
-            onProfileOpen: () {},
+    return RepaintBoundary(
+      child: _cache.getWidget(
+        'contributor_${contributor.username}',
+        () => Container(
+          margin: const EdgeInsets.only(right: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              UserProfileCardHover(
+                authorUsername: contributor.username,
+                isExpert: contributor.isExpert as bool,
+                onProfileOpen: () {},
+              ),
+              const SizedBox(height: 4),
+              Text(
+                contributor.username,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            contributor.username,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -725,110 +787,180 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        CustomScrollView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            // Combined features row
-            SliverToBoxAdapter(
-              child: Container(
-                height: 8,
-                color: AppStyles.scaffoldColor,
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _buildCombinedFeaturesRow(),
-            ),
+    final isLoguedIn =
+        Provider.of<AuthProviderSapers>(context, listen: false).isLoggedIn;
 
-            // Primeros 5 posts
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  if (index == _loadedPosts.length && _hasMorePosts) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-                  if (index >= _loadedPosts.length) return null;
-                  return _buildPostCard(_loadedPosts[index], widget.isMobile);
-                },
-                childCount: _loadedPosts.length + (_hasMorePosts ? 1 : 0),
-              ),
-            ),
+    final maxPosts =
+        isLoguedIn ? _loadedPosts.length : math.min(_loadedPosts.length, 5);
 
-            // Posts destacados después de los primeros 5
-            SliverToBoxAdapter(child: _buildTopPostsRow()),
-          ],
-        ),
-
-        // Menú lateral estilo X con animación
-        AnimatedBuilder(
-          animation: widget.menuSidebarController,
-          builder: (context, _) {
-            return AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              left: widget.menuSidebarController.isOpen
-                  ? 0
-                  : -MediaQuery.of(context).size.width *
-                      (widget.isMobile ? 0.7 : 0.25),
-              top: 0,
-              bottom: 0,
-              width: widget.isMobile
-                  ? MediaQuery.of(context).size.width * 0.7
-                  : MediaQuery.of(context).size.width * 0.25,
-              child: XMenuSidebar(
-                sidebarController: widget.menuSidebarController,
-                isMobile: widget.isMobile,
-                onMenuOptionSelected: (index) {
-                  setState(() {
-                    _selectedMenuOption = index;
-                  });
-                  // Aquí puedes añadir cualquier otra acción al seleccionar
-                },
-              ),
-            );
-          },
-        ),
-
-        // Sidebar de tendencias con animación (original)
-        AnimatedBuilder(
-          animation: widget.sidebarController,
-          builder: (context, _) {
-            return AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              right: widget.sidebarController.isOpen
-                  ? 0
-                  : -MediaQuery.of(context).size.width *
-                      (widget.isMobile ? 0.5 : 0.33),
-              top: 0,
-              bottom: 0,
-              width: widget.isMobile
-                  ? MediaQuery.of(context).size.width * 0.5
-                  : MediaQuery.of(context).size.width * 0.33,
-              child: GestureDetector(
-                onTap: () {}, // Evita que los clics pasen a través del sidebar
-                child: TrendingTagsSidebar(
-                  sidebarController: widget.sidebarController,
-                  trendingTags: widget.trendingTags,
-                  onTagSelected: (tag) {
-                    widget.onTagSelected(tag);
-                    if (widget.isMobile) {
-                      widget.sidebarController.close();
-                    }
-                  },
+    return RepaintBoundary(
+      child: Stack(
+        children: [
+          CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              // Combined features row
+              SliverToBoxAdapter(
+                child: Container(
+                  height: 8,
+                  color: AppStyles.scaffoldColor,
                 ),
               ),
-            );
-          },
-        ),
-      ],
+              SliverToBoxAdapter(
+                child: _buildCombinedFeaturesRow(),
+              ),
+
+              // Primeros 5 posts
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    if (index == maxPosts && _hasMorePosts && isLoguedIn) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+                    if (index >= maxPosts) return null;
+                    return _buildDynamicPostLayout(index);
+                  },
+                  childCount: maxPosts + (_hasMorePosts && isLoguedIn ? 1 : 0),
+                ),
+              ),
+
+              // Posts destacados después de los primeros 5
+              SliverToBoxAdapter(child: _buildTopPostsRow()),
+            ],
+          ),
+
+          // Menú lateral estilo X con animación
+          AnimatedBuilder(
+            animation: widget.menuSidebarController,
+            builder: (context, _) {
+              return AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                left: widget.menuSidebarController.isOpen
+                    ? 0
+                    : -MediaQuery.of(context).size.width *
+                        (widget.isMobile ? 0.7 : 0.25),
+                top: 0,
+                bottom: 0,
+                width: widget.isMobile
+                    ? MediaQuery.of(context).size.width * 0.7
+                    : MediaQuery.of(context).size.width * 0.25,
+                child: XMenuSidebar(
+                  sidebarController: widget.menuSidebarController,
+                  isMobile: widget.isMobile,
+                  onMenuOptionSelected: (index) {
+                    setState(() {
+                      _selectedMenuOption = index;
+                    });
+                    // Aquí puedes añadir cualquier otra acción al seleccionar
+                  },
+                ),
+              );
+            },
+          ),
+
+          // Sidebar de tendencias con animación (original)
+          AnimatedBuilder(
+            animation: widget.sidebarController,
+            builder: (context, _) {
+              return AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                right: widget.sidebarController.isOpen
+                    ? 0
+                    : -MediaQuery.of(context).size.width *
+                        (widget.isMobile ? 0.5 : 0.33),
+                top: 0,
+                bottom: 0,
+                width: widget.isMobile
+                    ? MediaQuery.of(context).size.width * 0.5
+                    : MediaQuery.of(context).size.width * 0.33,
+                child: GestureDetector(
+                  onTap:
+                      () {}, // Evita que los clics pasen a través del sidebar
+                  child: TrendingTagsSidebar(
+                    sidebarController: widget.sidebarController,
+                    trendingTags: widget.trendingTags,
+                    onTagSelected: (tag) {
+                      widget.onTagSelected(tag);
+                      if (widget.isMobile) {
+                        widget.sidebarController.close();
+                      }
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+          if (!isLoguedIn && _loadedPosts.length > 5)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: IgnorePointer(
+                child: Container(
+                  height: 120,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.white70,
+                        Colors.white,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (!isLoguedIn && _loadedPosts.length > 5)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 32,
+              child: AuthProviderSapers.buildLoginButton(
+                context,
+              ),
+            ),
+        ],
+      ),
     );
   }
+}
+
+// Cache manager para widgets
+class _CacheManager {
+  final Map<String, _CachedWidget> _cache = {};
+  static const _cacheTimeout = Duration(minutes: 5);
+
+  Widget getWidget(String key, Widget Function() builder) {
+    final now = DateTime.now();
+    final cached = _cache[key];
+
+    if (cached != null && now.difference(cached.timestamp) < _cacheTimeout) {
+      return cached.widget;
+    }
+
+    final widget = builder();
+    _cache[key] = _CachedWidget(widget, now);
+    return widget;
+  }
+
+  void clear() {
+    _cache.clear();
+  }
+}
+
+class _CachedWidget {
+  final Widget widget;
+  final DateTime timestamp;
+
+  _CachedWidget(this.widget, this.timestamp);
 }
