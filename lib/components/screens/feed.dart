@@ -290,36 +290,37 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: _buildSlidingUpPanelUI(context, isMobile, screenWidth),
-      floatingActionButton: _currentIndex == 0
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // AI Assistant button
-                FloatingActionButton(
-                  heroTag: "btn2",
-                  onPressed: _togglePanel,
-                  backgroundColor: Colors.transparent,
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      NebulaEffect(shouldMove: false),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                FloatingActionButton(
-                  heroTag: "btn1",
-                  onPressed: _showCreateOptions,
-                  backgroundColor: AppStyles.colorAvatarBorder,
-                  child: const Icon(
-                    Symbols.add,
-                    color: AppStyles.scaffoldBackgroundColorBright,
-                    size: AppStyles.iconSizeSmall,
-                  ),
-                ),
-              ],
-            )
-          : null,
+      floatingActionButton:
+          _currentIndex == 0 && AuthProviderSapers().isLoggedIn == true
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    // AI Assistant button
+                    FloatingActionButton(
+                      heroTag: "btn2",
+                      onPressed: _togglePanel,
+                      backgroundColor: Colors.transparent,
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          NebulaEffect(shouldMove: false),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FloatingActionButton(
+                      heroTag: "btn1",
+                      onPressed: _showCreateOptions,
+                      backgroundColor: AppStyles.colorAvatarBorder,
+                      child: const Icon(
+                        Symbols.add,
+                        color: AppStyles.scaffoldBackgroundColorBright,
+                        size: AppStyles.iconSizeSmall,
+                      ),
+                    ),
+                  ],
+                )
+              : null,
     );
   }
 

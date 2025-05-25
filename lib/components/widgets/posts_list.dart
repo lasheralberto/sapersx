@@ -905,9 +905,41 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
             Positioned(
               left: 0,
               right: 0,
-              bottom: 32,
-              child: AuthProviderSapers.buildLoginButton(
-                context, 'iniciarSesion',
+              bottom: 0,
+              child: SizedBox(
+                height: 120,
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    // Difuminado visual (no bloquea interacción)
+                    IgnorePointer(
+                      child: Container(
+                        height: 120,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.white70,
+                              Colors.white,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Botón de login (clickable)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 16,
+                      child: AuthProviderSapers.buildLoginButton(
+                        context,
+                        'iniciarSesion',
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
         ],
