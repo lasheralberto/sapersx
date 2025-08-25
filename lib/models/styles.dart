@@ -48,32 +48,48 @@ class AppStyles {
   static const Color sendButtonColorDisabled = _mediumGray;
   static const Color buttonHoverColor = Color(0xFFFFF3E0);
 
-  // Dimensions
-  static const double borderRadiusValue = 8.0;
-  static const double avatarSize = 33.0;
-  static const double cardElevation = 2.0;
-  static const double dialogBorderRadius = 12.0;
+  // Dimensions - Google-inspired
+  static const double borderRadiusValue = 12.0;
+  static const double borderRadiusLarge = 16.0;
+  static const double avatarSize = 40.0;
+  static const double cardElevation = 0.0; // Flat design like Google
+  static const double cardElevationHover = 1.0;
+  static const double dialogBorderRadius = 20.0;
 
-  // Typography
-  static const double fontSize = 11.0;
-  static const double fontSizeMedium = 12.0;
-  static const double fontSizeLarge = 16.0;
-  static const double fontSizeHeading = 20.0;
+  // Typography - Google-like hierarchy
+  static const double fontSize = 14.0;           // Body text
+  static const double fontSizeMedium = 16.0;     // Medium text
+  static const double fontSizeLarge = 18.0;      // Large text
+  static const double fontSizeHeading = 24.0;    // Headings
+  static const double fontSizeDisplay = 32.0;    // Display text
 
   // Assets
   static const String tabMarkerImage = 'assets/images/tabmarker.png';
   static const String logoImage = 'assets/images/logo.png';
 
-  // Spacing
+  // Spacing - Google Material Design 3
+  static const double spacingXSmall = 4.0;
   static const double spacingSmall = 8.0;
   static const double spacingMedium = 16.0;
   static const double spacingLarge = 24.0;
+  static const double spacingXLarge = 32.0;
+  static const double spacingXXLarge = 48.0;
 
-  // Icon sizes
-  static const double iconSizeSmall = 16.0;
+  // Icon sizes - Material Design 3
+  static const double iconSizeSmall = 18.0;
   static const double iconSizeMedium = 24.0;
   static const double iconSizeLarge = 32.0;
-  static const double iconSizeExtraLarge = 40.0;
+  static const double iconSizeExtraLarge = 48.0;
+
+  // Card styling - Google-like
+  static const Color cardShadowColor = Color(0x0A000000);
+  static const Color cardHoverColor = Color(0xFFF8F9FA);
+  static const Color dividerColor = Color(0xFFE8EAED);
+  
+  // Surface colors - Google-inspired
+  static const Color surfaceColor = _pureWhite;
+  static const Color surfaceVariant = Color(0xFFF8F9FA);
+  static const Color outlineColor = Color(0xFFDADCE0);
 
   Widget progressIndicatorCreatePostButton() {
     return const CircularProgressIndicator(
