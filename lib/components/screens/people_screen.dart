@@ -107,7 +107,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                     }
 
                     _users = snapshot.data!.docs.map((doc) {
-                      final data = doc.data();
+                      final data = doc.data() as Map<String, dynamic>;
                       try {
                         return UserInfoPopUp.fromMap(data);
                       } catch (e) {

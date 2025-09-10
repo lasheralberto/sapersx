@@ -82,7 +82,7 @@ class FirebaseService {
 
       if (projectQuery.docs.isEmpty) return false;
 
-      final projectData = projectQuery.docs.first.data();
+      final projectData = projectQuery.docs.first.data() as Map<String, dynamic>;
       final membersData = projectData['members'];
 
       // Estandarización de la estructura de miembros
@@ -435,13 +435,14 @@ class FirebaseService {
     final userDoc =
         await _firestore.collection('userinfo').doc(currentUser.uid).get();
 
-    if (!userDoc.exists || !userDoc.data()!.containsKey('following')) {
+    final userDocData = userDoc.data() as Map<String, dynamic>?;
+    if (!userDoc.exists || !userDocData!.containsKey('following')) {
       // Si no tiene campo 'following', retornar una lista vacía
       return [];
     }
 
     final List<String> following =
-        List<String>.from(userDoc.data()!['following'] ?? []);
+        List<String>.from(userDocData['following'] ?? []);
 
     if (following.isEmpty) {
       // Si no sigue a nadie, retornar una lista vacía
@@ -461,7 +462,7 @@ class FirebaseService {
           .get();
 
       final posts = snapshot.docs.map((doc) {
-        final data = doc.data();
+        final data = doc.data() as Map<String, dynamic>;
         return SAPPost(
           id: doc.id,
           title: data['title'] ?? '',
@@ -611,9 +612,8 @@ class FirebaseService {
 
       if (querySnapshot.docs.isNotEmpty) {
         final docSnapshot = querySnapshot.docs.first;
-        final rawData = docSnapshot.data();
-        if (rawData is Map<String, dynamic>) {
-          final data = rawData;
+        final rawData = docSnapshot.data() as Map<String, dynamic>;
+        final data = rawData;
 
           final userInfo = UserInfoPopUp(
             uid: data['uid'] ?? '',
@@ -638,7 +638,6 @@ class FirebaseService {
 
           _userCache[username] = userInfo;
           return userInfo;
-        }
       }
       return null;
     } catch (e) {
@@ -672,13 +671,13 @@ class FirebaseService {
           String docEmail = doc['email']?.toString().toLowerCase() ?? '';
 
           if (docEmail == cleanedEmail) {
-            return _createUserInfoFromDoc(doc.data());
+            return _createUserInfoFromDoc(doc.data() as Map<String, dynamic>);
           }
         }
       } else {
         // Si encontramos directamente, crear el objeto
 
-        return _createUserInfoFromDoc(querySnapshot.docs.first.data());
+        return _createUserInfoFromDoc(querySnapshot.docs.first.data() as Map<String, dynamic>);
       }
 
       return null;
@@ -1190,7 +1189,7 @@ class FirebaseService {
           .snapshots()
           .map((snapshot) => snapshot.docs.map((doc) {
                 try {
-                  final data = doc.data();
+                  final data = doc.data() as Map<String, dynamic>;
                   // Asegurarse de que data sea un Map<String, dynamic>
                   data['id'] = doc.id;
                   data['postId'] = postId;
@@ -1263,9 +1262,10 @@ class FirebaseService {
         final doc = await transaction.get(replyRef);
         if (!doc.exists) throw Exception('Reply no encontrada');
 
+        final docData = doc.data() as Map<String, dynamic>?;
         final likes = Map<String, dynamic>.from(
-            doc.data()?['likes'] as Map<String, dynamic>? ?? {});
-        final currentLikeCount = doc.data()?['likeCount'] ?? 0;
+            docData?['likes'] as Map<String, dynamic>? ?? {});
+        final currentLikeCount = docData?['likeCount'] ?? 0;
 
         if (likes.containsKey(userInfo.username)) {
           // Quitar like
@@ -1625,7 +1625,7 @@ class FirebaseService {
         };
       }
 
-      final data = snapshot.data()!;
+      final data = snapshot.data()! as Map<String, dynamic>;
       return {
         'upvotes': data['upvotes'] ?? 0,
         'downvotes': data['downvotes'] ?? 0,

@@ -589,7 +589,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
-                    final data = message.data(); // No necesita casteo
+                    final data = message.data() as Map<String, dynamic>;
                     return _buildMessageItem(data, context);
                   },
                 );
