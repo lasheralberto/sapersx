@@ -59,4 +59,5 @@ flutter:
     - assets/images/logo.png
     - assets/images/tabmarker.png
     - assets/sapersx_sa.json
+    - assets/animations/
 
