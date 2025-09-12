@@ -15,6 +15,8 @@ class UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -63,66 +65,88 @@ class UserCard extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(height: 8),
+                // Flexible content area to prevent overflow
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 8),
 
-                // Información adicional
-                if (user.specialty?.isNotEmpty ?? false) ...[
-                  const SizedBox(height: 8),
-                  _buildInfoRow(
-                    Icons.category_outlined,
-                    user.specialty!,
-                    iconColor: AppStyles.colorAvatarBorder,
-                    isHighlighted: true,
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                      // Show fewer details on small screens to prevent overflow
+                      if (user.specialty?.isNotEmpty ?? false && !isSmallScreen) ...[
+                        const SizedBox(height: 8),
+                        _buildInfoRow(
+                          Icons.category_outlined,
+                          user.specialty!,
+                          iconColor: AppStyles.colorAvatarBorder,
+                          isHighlighted: true,
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                        ),
+                      ],
+                      if (user.location?.isNotEmpty ?? false) ...[
+                        const SizedBox(height: 4),
+                        _buildInfoRow(
+                          Icons.location_on_outlined,
+                          user.location!,
+                          iconColor: Colors.redAccent,
+                        ),
+                      ],
+                      if (user.bio?.isNotEmpty ?? false && !isSmallScreen) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          user.bio!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                          maxLines: isSmallScreen ? 1 : 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      // Show only essential info on mobile
+                      if (isSmallScreen && (user.followers?.isNotEmpty ?? false)) ...[
+                        const SizedBox(height: 4),
+                        _buildInfoRow(
+                          Icons.people_outline,
+                          "${user.followers!.length}",
+                          showBadge: false,
+                          iconColor: AppStyles.colorAvatarBorder,
+                        ),
+                      ],
+                      // Show more details on larger screens
+                      if (!isSmallScreen) ...[
+                        if (user.website?.isNotEmpty ?? false) ...[
+                          const SizedBox(height: 8),
+                          _buildInfoRow(
+                            Icons.link_outlined,
+                            user.website!,
+                            iconColor: Colors.blue,
+                            textColor: Colors.blue.withOpacity(0.8),
+                          ),
+                        ],
+                        if (user.followers?.isNotEmpty ?? false) ...[
+                          const SizedBox(height: 8),
+                          _buildInfoRow(
+                            Icons.people_outline,
+                            "${user.followers!.length} seguidores",
+                            showBadge: false,
+                            iconColor: AppStyles.colorAvatarBorder,
+                          ),
+                        ],
+                        if (user.following?.isNotEmpty ?? false) ...[
+                          const SizedBox(height: 4),
+                          _buildInfoRow(
+                            Icons.person_add_outlined,
+                            "${user.following!.length} siguiendo",
+                            showBadge: false,
+                            iconColor: AppStyles.colorAvatarBorder,
+                          ),
+                        ],
+                      ],
+                    ],
                   ),
-                ],
-                if (user.location?.isNotEmpty ?? false) ...[
-                  const SizedBox(height: 4),
-                  _buildInfoRow(
-                    Icons.location_on_outlined,
-                    user.location!,
-                    iconColor: Colors.redAccent,
-                  ),
-                ],
-                if (user.bio?.isNotEmpty ?? false) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    user.bio!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                if (user.website?.isNotEmpty ?? false) ...[
-                  const SizedBox(height: 8),
-                  _buildInfoRow(
-                    Icons.link_outlined,
-                    user.website!,
-                    iconColor: Colors.blue,
-                    textColor: Colors.blue.withOpacity(0.8),
-                  ),
-                ],
-                if (user.followers?.isNotEmpty ?? false) ...[
-                  const SizedBox(height: 8),
-                  _buildInfoRow(
-                    Icons.people_outline,
-                    "${user.followers!.length} seguidores",
-                    showBadge: false,
-                    iconColor: AppStyles.colorAvatarBorder,
-                  ),
-                ],
-                if (user.following?.isNotEmpty ?? false) ...[
-                  const SizedBox(height: 4),
-                  _buildInfoRow(
-                    Icons.person_add_outlined,
-                    "${user.following!.length} siguiendo",
-                    showBadge: false,
-                    iconColor: AppStyles.colorAvatarBorder,
-                  ),
-                ],
+                ),
               ]),
         ),
       ),

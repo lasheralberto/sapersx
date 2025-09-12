@@ -27,12 +27,13 @@ class UserListWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
     final crossAxisCount = isSmallScreen ? 2 : 4;
+    final aspectRatio = isSmallScreen ? 0.85 : 0.75; // Better ratio for mobile
 
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
-        childAspectRatio: 0.75,
+        childAspectRatio: aspectRatio,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sapers/components/screens/feed.dart';
+import 'package:sapers/components/screens/people_screen.dart';
 import 'package:sapers/components/screens/project_screen.dart';
 import 'package:sapers/components/screens/user_profile.dart';
 import 'package:sapers/models/auth_provider.dart';
@@ -68,6 +69,14 @@ final router = GoRouter(
           ),
         );
       },
+    ),
+    GoRoute(
+      name: 'challenges-user',
+      path: '/challenges/user',
+      pageBuilder: (context, state) => MaterialPage(
+        key: ValueKey('challenges_user'),
+        child: const UserSearchScreen(),
+      ),
     ),
   ],
   errorPageBuilder: (context, state) => MaterialPage(

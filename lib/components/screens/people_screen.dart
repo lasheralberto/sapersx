@@ -75,62 +75,84 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 1,
-            right: 1,
-            top: 1,
-          ),
-          child: currentUser == null
-              ? LoginRequiredWidget(
-                  onTap: () => AuthService().isUserLoggedIn(context),
-                )
-              : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  // Cambiar el tipo aquí
-                  stream: FirebaseFirestore.instance
-                      .collection('userinfo')
-                      .where('username', isNotEqualTo: currentUser?.username)
-                      .orderBy('username', descending: false)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return _buildErrorState(snapshot.error!);
-                    }
-
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return _buildLoadingState();
-                    }
-
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return _buildEmptyState();
-                    }
-
-                    _users = snapshot.data!.docs.map((doc) {
-                      final data = doc.data();
-                      try {
-                        return UserInfoPopUp.fromMap(data);
-                      } catch (e) {
-                        debugPrint('Error parsing user ${doc.id}: $e');
-                        return UserInfoPopUp(
-                          uid: doc.id,
-                          username: 'Usuario inválido',
-                          email: '',
-                        );
-                      }
-                    }).toList();
-
-                    final filteredUsers = _filterUsers(_users);
-
-                    return UserListWidget(
-                      users: filteredUsers,
-                      currentUserId: _currentUserId,
-                      onRefreshCurrentUser: _refreshCurrentUser,
-                      onSelectUser: (user) => context
-                          .push('/profile/${user.username}', extra: user),
-                    );
-                  },
+        child: Column(
+          children: [
+            // Search bar for mobile
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: Texts.translate('searchUsers', LanguageProvider().currentLanguage),
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
+              ),
+            ),
+            // Main content
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  left: 1,
+                  right: 1,
+                  top: 1,
+                ),
+                child: currentUser == null
+                    ? LoginRequiredWidget(
+                        onTap: () => AuthService().isUserLoggedIn(context),
+                      )
+                    : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        // Cambiar el tipo aquí
+                        stream: FirebaseFirestore.instance
+                            .collection('userinfo')
+                            .where('username', isNotEqualTo: currentUser?.username)
+                            .orderBy('username', descending: false)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            return _buildErrorState(snapshot.error!);
+                          }
+
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return _buildLoadingState();
+                          }
+
+                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                            return _buildEmptyState();
+                          }
+
+                          _users = snapshot.data!.docs.map((doc) {
+                            final data = doc.data();
+                            try {
+                              return UserInfoPopUp.fromMap(data);
+                            } catch (e) {
+                              debugPrint('Error parsing user ${doc.id}: $e');
+                              return UserInfoPopUp(
+                                uid: doc.id,
+                                username: 'Usuario inválido',
+                                email: '',
+                              );
+                            }
+                          }).toList();
+
+                          final filteredUsers = _filterUsers(_users);
+
+                          return UserListWidget(
+                            users: filteredUsers,
+                            currentUserId: _currentUserId,
+                            onRefreshCurrentUser: _refreshCurrentUser,
+                            onSelectUser: (user) => context
+                                .push('/profile/${user.username}', extra: user),
+                          );
+                        },
+                      ),
+              ),
+            ),
+          ],
         ),
       ),
     );
