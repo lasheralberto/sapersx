@@ -70,39 +70,48 @@ class _PostCardState extends State<PostCard> {
           widget.tagPressed(tag);
         }
       },
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8, bottom: 8),
-        child: Chip(
-          avatar: isSelected
-              ? const Icon(Icons.close, size: 16, color: Colors.deepOrange)
-              : null,
-          label: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                tag.toUpperCase(),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isSelected ? Colors.deepOrange : Colors.black,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.w500,
-                    ),
+      borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+      child: Container(
+        margin: const EdgeInsets.only(right: AppStyles.spacingSmall, bottom: AppStyles.spacingSmall),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppStyles.spacingMedium,
+          vertical: AppStyles.spacingSmall,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppStyles.colorAvatarBorder.withOpacity(0.1)
+              : AppStyles.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+          border: Border.all(
+            color: isSelected
+                ? AppStyles.colorAvatarBorder
+                : AppStyles.outlineColor,
+            width: isSelected ? 1.5 : 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                size: AppStyles.iconSizeSmall,
+                color: AppStyles.colorAvatarBorder,
               ),
-            ],
-          ),
-          backgroundColor: isSelected
-              ? Colors.deepOrange.withOpacity(0.1)
-              : Theme.of(context).colorScheme.primary.withOpacity(0.1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-            side: BorderSide(
-              color: isSelected
-                  ? Colors.deepOrange.withOpacity(0.5)
-                  : Theme.of(context).colorScheme.primary.withOpacity(0.9),
-              width: isSelected ? 1.5 : 1,
+            if (isSelected) const SizedBox(width: AppStyles.spacingXSmall),
+            Text(
+              tag.toUpperCase(),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: isSelected 
+                        ? AppStyles.colorAvatarBorder 
+                        : AppStyles.textColor,
+                    fontWeight: isSelected 
+                        ? FontWeight.w600 
+                        : FontWeight.w500,
+                    fontSize: AppStyles.fontSize - 2,
+                  ),
             ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ],
         ),
       ),
     );
@@ -110,99 +119,117 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      surfaceTintColor: Colors.transparent,
-      shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: widget.post.isExpert
-              ? Theme.of(context).primaryColor.withOpacity(0.2)
-              : Colors.grey.withOpacity(0.1),
-          width: 1,
-        ),
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppStyles.spacingMedium, 
+        vertical: AppStyles.spacingSmall,
       ),
-      color: _isExpanded
-          ? AppStyles.colorAvatarBorderLighter
-          : Theme.of(context).cardColor,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          _buildPostHeader(context),
-          _buildPostContent(context),
-          const Divider(),
-          // Bottom section with comments and votes
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                CommentButton(
-                  replyCount: widget.post.replyCount,
-                  iconSize: 15,
-                  iconColor: AppStyles.colorAvatarBorder,
-                  //onPressed: _expandPost, // Add this line
-                ),
-                const SizedBox(width: 16),
-                _buildVoteButtons(context),
-              ],
-            ),
-          ),
-          if (_showComments)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ReplySection(
-                post: widget.post,
-                onClose: () => setState(() => _showComments = false),
+      decoration: BoxDecoration(
+        color: _isExpanded
+            ? AppStyles.cardHoverColor
+            : AppStyles.surfaceColor,
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusLarge),
+        border: widget.post.isExpert
+            ? Border.all(
+                color: AppStyles.colorAvatarBorder.withOpacity(0.2),
+                width: 1,
+              )
+            : Border.all(
+                color: AppStyles.outlineColor,
+                width: 0.5,
               ),
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: AppStyles.cardShadowColor,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusLarge),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppStyles.borderRadiusLarge),
+          onTap: () => widget.onExpandChanged(!_isExpanded),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              _buildPostHeader(context),
+              _buildPostContent(context),
+              Divider(
+                color: AppStyles.dividerColor,
+                height: 1,
+                thickness: 0.5,
+              ),
+              // Bottom section with comments and votes
+              Padding(
+                padding: const EdgeInsets.all(AppStyles.spacingMedium),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    CommentButton(
+                      replyCount: widget.post.replyCount,
+                      iconSize: AppStyles.iconSizeSmall,
+                      iconColor: AppStyles.colorAvatarBorder,
+                      //onPressed: _expandPost, // Add this line
+                    ),
+                    const SizedBox(width: AppStyles.spacingMedium),
+                    _buildVoteButtons(context),
+                  ],
+                ),
+              ),
+              if (_showComments)
+                Padding(
+                  padding: const EdgeInsets.all(AppStyles.spacingMedium),
+                  child: ReplySection(
+                    post: widget.post,
+                    onClose: () => setState(() => _showComments = false),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildPostHeader(BuildContext context) {
-    return InkWell(
-      onTap: () => widget.onExpandChanged(true),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-            16.0, 8.0, 16.0, 4.0), // Reducido el padding inferior de 16 a 8
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildAuthorAvatar(),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeaderPostInfo(context),
-                  const SizedBox(height: 8),
-                  // Moved attachments viewer to top right
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      SAPAttachmentsViewerHeader(
-                        reply: widget.post,
-                        onAttachmentOpen: (attachment) {
-                          if (attachment['url'] != null) {
-                            launchUrl(
-                              Uri.parse(attachment['url']),
-                              mode: LaunchMode.externalApplication,
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+    return Padding(
+      padding: const EdgeInsets.all(AppStyles.spacingMedium),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildAuthorAvatar(),
+          const SizedBox(width: AppStyles.spacingMedium),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeaderPostInfo(context),
+                const SizedBox(width: AppStyles.spacingSmall),
+                // Moved attachments viewer to top right
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    SAPAttachmentsViewerHeader(
+                      reply: widget.post,
+                      onAttachmentOpen: (attachment) {
+                        if (attachment['url'] != null) {
+                          launchUrl(
+                            Uri.parse(attachment['url']),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

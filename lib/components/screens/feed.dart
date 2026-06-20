@@ -296,26 +296,37 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     // AI Assistant button
-                    FloatingActionButton(
-                      heroTag: "btn2",
-                      onPressed: _togglePanel,
-                      backgroundColor: Colors.transparent,
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          NebulaEffect(shouldMove: false),
-                        ],
+                    Container(
+                      margin: const EdgeInsets.only(bottom: AppStyles.spacingMedium),
+                      child: FloatingActionButton(
+                        heroTag: "btn2",
+                        onPressed: _togglePanel,
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            NebulaEffect(shouldMove: false),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    FloatingActionButton(
+                    FloatingActionButton.extended(
                       heroTag: "btn1",
                       onPressed: _showCreateOptions,
                       backgroundColor: AppStyles.colorAvatarBorder,
-                      child: const Icon(
+                      foregroundColor: AppStyles.scaffoldBackgroundColorBright,
+                      elevation: AppStyles.cardElevation,
+                      icon: const Icon(
                         Symbols.add,
-                        color: AppStyles.scaffoldBackgroundColorBright,
-                        size: AppStyles.iconSizeSmall,
+                        size: AppStyles.iconSizeMedium,
+                      ),
+                      label: Text(
+                        'Create',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: AppStyles.fontSize,
+                        ),
                       ),
                     ),
                   ],
@@ -333,9 +344,16 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
           Row(
             children: [
               if (!isMobile)
-                Material(
-                  elevation: 0,
-                  color: Theme.of(context).scaffoldBackgroundColor,
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppStyles.surfaceColor,
+                    border: Border(
+                      right: BorderSide(
+                        color: AppStyles.outlineColor,
+                        width: 0.5,
+                      ),
+                    ),
+                  ),
                   child: SizedBox(
                     width: 250,
                     height: MediaQuery.of(context).size.height,
@@ -348,13 +366,14 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                     if (isMobile)
                       AppBar(
                         elevation: 0,
-                        backgroundColor:
-                            Theme.of(context).scaffoldBackgroundColor,
+                        backgroundColor: AppStyles.surfaceColor,
+                        surfaceTintColor: Colors.transparent,
+                        shadowColor: AppStyles.cardShadowColor,
                         leading: IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Symbols.menu,
                             color: AppStyles.colorAvatarBorder,
-                            size: AppStyles.iconSizeMedium,
+                            size: AppStyles.iconSizeLarge,
                           ),
                           onPressed: () {
                             setState(() {
@@ -365,7 +384,14 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                         centerTitle: true,
                         title: Image.asset(
                           AppStyles.logoImage,
-                          height: 40,
+                          height: 36,
+                        ),
+                        bottom: PreferredSize(
+                          preferredSize: const Size.fromHeight(0.5),
+                          child: Container(
+                            height: 0.5,
+                            color: AppStyles.outlineColor,
+                          ),
                         ),
                       ),
                     Expanded(
@@ -487,67 +513,90 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
   }
 
   Widget _buildSideMenu() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-          child: Image.asset(
-            AppStyles.logoImage,
-            height: 70,
-            width: 70,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppStyles.surfaceColor,
+        border: Border(
+          right: BorderSide(
+            color: AppStyles.outlineColor,
+            width: 0.5,
           ),
         ),
-
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.transparent,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(
+              AppStyles.spacingLarge, 
+              AppStyles.spacingXLarge, 
+              AppStyles.spacingLarge, 
+              AppStyles.spacingLarge,
             ),
-            child: Row(
-              children: [
-                UserAvatar(
-                  user: widget.user,
-                  size: AppStyles.avatarSize,
+            child: Image.asset(
+              AppStyles.logoImage,
+              height: 60,
+              width: 60,
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppStyles.spacingMedium, 
+              vertical: AppStyles.spacingSmall,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(AppStyles.spacingMedium),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppStyles.borderRadiusLarge),
+                color: AppStyles.surfaceVariant,
+                border: Border.all(
+                  color: AppStyles.outlineColor,
+                  width: 0.5,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    Provider.of<AuthProviderSapers>(context, listen: false)
-                            .userInfo
-                            ?.username ??
-                        Texts.translate('iniciarSesionParaVerMas',
-                            LanguageProvider().currentLanguage),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+              ),
+              child: Row(
+                children: [
+                  UserAvatar(
+                    user: widget.user,
+                    size: AppStyles.avatarSize,
                   ),
-                ),
-              ],
+                  const SizedBox(width: AppStyles.spacingMedium),
+                  Expanded(
+                    child: Text(
+                      Provider.of<AuthProviderSapers>(context, listen: false)
+                              .userInfo
+                              ?.username ??
+                          Texts.translate('iniciarSesionParaVerMas',
+                              LanguageProvider().currentLanguage),
+                      style: TextStyle(
+                        fontSize: AppStyles.fontSize,
+                        fontWeight: FontWeight.w500,
+                        color: AppStyles.textColor,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
 
-        const SizedBox(height: 24),
+          const SizedBox(height: AppStyles.spacingLarge),
 
-        // Menu items section
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Column(
-            children: [
-              _buildSideMenuItem(
-                icon: Symbols.home_filled,
-                label: Texts.translate(
-                    'feedTab', LanguageProvider().currentLanguage),
-                isSelected: _currentIndex == 0,
-                onTap: () => setState(() => _currentIndex = 0),
+          // Menu items section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppStyles.spacingMedium),
+            child: Column(
+              children: [
+                _buildSideMenuItem(
+                  icon: Symbols.home_filled,
+                  label: Texts.translate(
+                      'feedTab', LanguageProvider().currentLanguage),
+                  isSelected: _currentIndex == 0,
+                  onTap: () => setState(() => _currentIndex = 0),
               ),
               _buildSideMenuItem(
                 icon: Symbols.category,
@@ -574,11 +623,12 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                     _currentIndex = 3;
                   });
                 },
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -589,12 +639,12 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
     required VoidCallback onTap,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: AppStyles.spacingXSmall),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusLarge),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppStyles.borderRadiusLarge),
           onTap: () {
             onTap();
             if (isMobile) {
@@ -602,12 +652,21 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
             }
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppStyles.spacingMedium, 
+              vertical: AppStyles.spacingMedium,
+            ),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppStyles.colorAvatarBorder.withOpacity(0.1)
+                  ? AppStyles.colorAvatarBorder.withOpacity(0.12)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppStyles.borderRadiusLarge),
+              border: isSelected
+                  ? Border.all(
+                      color: AppStyles.colorAvatarBorder.withOpacity(0.3),
+                      width: 1,
+                    )
+                  : null,
             ),
             child: Row(
               children: [
@@ -616,10 +675,10 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                   color: isSelected
                       ? AppStyles.colorAvatarBorder
                       : AppStyles.textColor,
-                  size: 15,
-                  weight: 700,
+                  size: AppStyles.iconSizeMedium,
+                  weight: isSelected ? 700 : 400,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppStyles.spacingMedium),
                 Text(
                   label,
                   style: TextStyle(
@@ -627,8 +686,8 @@ class _FeedState extends State<Feed> with TickerProviderStateMixin {
                         ? AppStyles.colorAvatarBorder
                         : AppStyles.textColor,
                     fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                    fontSize: AppStyles.fontSizeMedium,
+                        isSelected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: AppStyles.fontSize,
                   ),
                 ),
               ],

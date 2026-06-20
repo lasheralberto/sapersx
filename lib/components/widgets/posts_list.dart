@@ -54,33 +54,51 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
     return Container(
       width: MediaQuery.of(context).size.width * 0.3,
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(15),
+        color: AppStyles.surfaceColor,
+        borderRadius: BorderRadius.circular(AppStyles.borderRadiusLarge),
+        border: Border.all(
+          color: AppStyles.outlineColor,
+          width: 0.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: AppStyles.cardShadowColor,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(AppStyles.spacingLarge),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Título del sidebar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              Texts.translate(
-                  'trendingTags', LanguageProvider().currentLanguage),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppStyles.colorAvatarBorder,
-                  ),
-            ),
+          Row(
+            children: [
+              Icon(
+                Icons.trending_up_rounded,
+                color: AppStyles.colorAvatarBorder,
+                size: AppStyles.iconSizeMedium,
+              ),
+              const SizedBox(width: AppStyles.spacingSmall),
+              Text(
+                Texts.translate(
+                    'trendingTags', LanguageProvider().currentLanguage),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppStyles.textColor,
+                      fontSize: AppStyles.fontSizeLarge,
+                    ),
+              ),
+            ],
           ),
-          const Divider(height: 1, thickness: 1),
+          const SizedBox(height: AppStyles.spacingMedium),
+          Divider(
+            color: AppStyles.dividerColor,
+            height: 1,
+            thickness: 0.5,
+          ),
+          const SizedBox(height: AppStyles.spacingMedium),
 
           // Lista de etiquetas
           Expanded(
@@ -90,49 +108,68 @@ class _TrendingTagsSidebarState extends State<TrendingTagsSidebar> {
                 final tag = widget.trendingTags[index];
                 final isSelected = selectedTag == tag;
 
-                return InkWell(
-                  onTap: () => _handleTagSelection(tag),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.trending_up_rounded,
-                                color: isSelected ? Colors.green : Colors.grey,
-                                size: AppStyles.iconSizeSmall,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  tag,
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? AppStyles.colorAvatarBorder
-                                        : Colors.black,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: AppStyles.spacingSmall),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+                    child: InkWell(
+                      onTap: () => _handleTagSelection(tag),
+                      borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppStyles.spacingMedium,
+                          vertical: AppStyles.spacingMedium,
                         ),
-                      ],
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppStyles.colorAvatarBorder.withOpacity(0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
+                          border: isSelected
+                              ? Border.all(
+                                  color: AppStyles.colorAvatarBorder.withOpacity(0.3),
+                                  width: 1,
+                                )
+                              : null,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    isSelected 
+                                        ? Icons.check_circle
+                                        : Icons.tag,
+                                    color: isSelected 
+                                        ? AppStyles.colorAvatarBorder 
+                                        : AppStyles.textColorLight,
+                                    size: AppStyles.iconSizeSmall,
+                                  ),
+                                  const SizedBox(width: AppStyles.spacingMedium),
+                                  Expanded(
+                                    child: Text(
+                                      tag,
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? AppStyles.colorAvatarBorder
+                                            : AppStyles.textColor,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.w500,
+                                        fontSize: AppStyles.fontSize,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -552,24 +589,16 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
   Widget _buildPostCard(SAPPost post, bool isMobile, {double? width}) {
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: isMobile ? 0 : 4.0,
-        vertical: 8.0,
+        horizontal: isMobile ? AppStyles.spacingSmall : AppStyles.spacingXSmall,
+        vertical: AppStyles.spacingXSmall,
       ),
       width: width,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-        color: Theme.of(context).colorScheme.surface,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppStyles.borderRadiusValue),
-        child: PostCard(
-          key: ValueKey(post.id),
-          onExpandChanged: (p0) => setState(() => widget.onPostExpanded(p0)),
-          tagPressed: widget.onTagSelected,
-          selectedTag: widget.selectedTag,
-          post: post,
-        ),
+      child: PostCard(
+        key: ValueKey(post.id),
+        onExpandChanged: (p0) => setState(() => widget.onPostExpanded(p0)),
+        tagPressed: widget.onTagSelected,
+        selectedTag: widget.selectedTag,
+        post: post,
       ),
     );
   }
@@ -591,7 +620,7 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
     if (!widget.isMobile) {
       if (index % 5 == 3 && index + 1 < _loadedPosts.length) {
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          padding: const EdgeInsets.symmetric(horizontal: AppStyles.spacingMedium),
           child: Row(
             children: [
               Expanded(
@@ -601,7 +630,7 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
                   width: null,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppStyles.spacingMedium),
               Expanded(
                 child: _buildPostCard(
                   _loadedPosts[index + 1],
@@ -805,8 +834,8 @@ class _PostsListWithSidebarState extends State<PostsListWithSidebar> {
               // Combined features row
               SliverToBoxAdapter(
                 child: Container(
-                  height: 8,
-                  color: AppStyles.scaffoldColor,
+                  height: AppStyles.spacingMedium,
+                  color: AppStyles.surfaceVariant,
                 ),
               ),
               SliverToBoxAdapter(
